@@ -2158,7 +2158,7 @@ const PDFViewerApplication = {
 exports.PDFViewerApplication = PDFViewerApplication;
 let validateFileURL;
 {
-  const HOSTED_VIEWER_ORIGIN = "moz-extension://";
+  const HOSTED_VIEWER_ORIGINS = [new URL(browser.runtime.getURL("")).origin];
 
   validateFileURL = function (file) {
     if (file === undefined) {
@@ -2168,7 +2168,7 @@ let validateFileURL;
     try {
       const viewerOrigin = new URL(window.location.href).origin || "null";
 
-      if (viewerOrigin.startsWith(HOSTED_VIEWER_ORIGIN)) {
+      if (HOSTED_VIEWER_ORIGINS.includes(viewerOrigin)) {
         return;
       }
 
