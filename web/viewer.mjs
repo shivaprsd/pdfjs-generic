@@ -18222,8 +18222,7 @@ initCom(PDFViewerApplication);
   PDFPrintServiceFactory.initGlobals(PDFViewerApplication);
 }
 {
-  const browser_ = typeof browser === "undefined" ? chrome : browser;
-  const HOSTED_VIEWER_ORIGINS = [new URL(browser_.runtime.getURL("")).origin];
+  const HOSTED_VIEWER_ORIGINS = ["https://shivaprsd.github.io/"];
   var validateFileURL = function (file) {
     if (!file) {
       return;
