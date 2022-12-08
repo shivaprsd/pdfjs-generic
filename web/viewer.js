@@ -3405,7 +3405,8 @@ const PDFViewerApplication = {
 exports.PDFViewerApplication = PDFViewerApplication;
 let validateFileURL;
 {
-  const HOSTED_VIEWER_ORIGINS = [new URL(browser.runtime.getURL("")).origin];
+  const browser_ = typeof browser === "undefined" ? chrome : browser;
+  const HOSTED_VIEWER_ORIGINS = [new URL(browser_.runtime.getURL("")).origin];
 
   validateFileURL = function (file) {
     if (!file) {
