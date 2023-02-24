@@ -1695,6 +1695,7 @@ body {
 .secondaryToolbar :is(input, button, a, select) {
   outline: none;
   font: message-box;
+  font-size: 12px;  line-height: 16px;        /* FIXME: PDF.js bug */
 }
 
 #toolbarContainer {
