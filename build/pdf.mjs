@@ -20,4676 +20,8 @@
  * JavaScript code in this page
  */
 
-/******/ var __webpack_modules__ = ({
-
-/***/ 9306:
-/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
-
-
-var isCallable = __webpack_require__(4901);
-var tryToString = __webpack_require__(6823);
-
-var $TypeError = TypeError;
-
-// `Assert: IsCallable(argument) is true`
-module.exports = function (argument) {
-  if (isCallable(argument)) return argument;
-  throw new $TypeError(tryToString(argument) + ' is not a function');
-};
-
-
-/***/ }),
-
-/***/ 3506:
-/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
-
-
-var isPossiblePrototype = __webpack_require__(3925);
-
-var $String = String;
-var $TypeError = TypeError;
-
-module.exports = function (argument) {
-  if (isPossiblePrototype(argument)) return argument;
-  throw new $TypeError("Can't set " + $String(argument) + ' as a prototype');
-};
-
-
-/***/ }),
-
-/***/ 7080:
-/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
-
-
-var has = (__webpack_require__(4402).has);
-
-// Perform ? RequireInternalSlot(M, [[SetData]])
-module.exports = function (it) {
-  has(it);
-  return it;
-};
-
-
-/***/ }),
-
-/***/ 679:
-/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
-
-
-var isPrototypeOf = __webpack_require__(1625);
-
-var $TypeError = TypeError;
-
-module.exports = function (it, Prototype) {
-  if (isPrototypeOf(Prototype, it)) return it;
-  throw new $TypeError('Incorrect invocation');
-};
-
-
-/***/ }),
-
-/***/ 8551:
-/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
-
-
-var isObject = __webpack_require__(34);
-
-var $String = String;
-var $TypeError = TypeError;
-
-// `Assert: Type(argument) is Object`
-module.exports = function (argument) {
-  if (isObject(argument)) return argument;
-  throw new $TypeError($String(argument) + ' is not an object');
-};
-
-
-/***/ }),
-
-/***/ 7811:
-/***/ ((module) => {
-
-
-// eslint-disable-next-line es/no-typed-arrays -- safe
-module.exports = typeof ArrayBuffer != 'undefined' && typeof DataView != 'undefined';
-
-
-/***/ }),
-
-/***/ 7394:
-/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
-
-
-var globalThis = __webpack_require__(4576);
-var uncurryThisAccessor = __webpack_require__(6706);
-var classof = __webpack_require__(2195);
-
-var ArrayBuffer = globalThis.ArrayBuffer;
-var TypeError = globalThis.TypeError;
-
-// Includes
-// - Perform ? RequireInternalSlot(O, [[ArrayBufferData]]).
-// - If IsSharedArrayBuffer(O) is true, throw a TypeError exception.
-module.exports = ArrayBuffer && uncurryThisAccessor(ArrayBuffer.prototype, 'byteLength', 'get') || function (O) {
-  if (classof(O) !== 'ArrayBuffer') throw new TypeError('ArrayBuffer expected');
-  return O.byteLength;
-};
-
-
-/***/ }),
-
-/***/ 3238:
-/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
-
-
-var globalThis = __webpack_require__(4576);
-var uncurryThis = __webpack_require__(7476);
-var arrayBufferByteLength = __webpack_require__(7394);
-
-var ArrayBuffer = globalThis.ArrayBuffer;
-var ArrayBufferPrototype = ArrayBuffer && ArrayBuffer.prototype;
-var slice = ArrayBufferPrototype && uncurryThis(ArrayBufferPrototype.slice);
-
-module.exports = function (O) {
-  if (arrayBufferByteLength(O) !== 0) return false;
-  if (!slice) return false;
-  try {
-    slice(O, 0, 0);
-    return false;
-  } catch (error) {
-    return true;
-  }
-};
-
-
-/***/ }),
-
-/***/ 5169:
-/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
-
-
-var isDetached = __webpack_require__(3238);
-
-var $TypeError = TypeError;
-
-module.exports = function (it) {
-  if (isDetached(it)) throw new $TypeError('ArrayBuffer is detached');
-  return it;
-};
-
-
-/***/ }),
-
-/***/ 5636:
-/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
-
-
-var globalThis = __webpack_require__(4576);
-var uncurryThis = __webpack_require__(9504);
-var uncurryThisAccessor = __webpack_require__(6706);
-var toIndex = __webpack_require__(7696);
-var notDetached = __webpack_require__(5169);
-var arrayBufferByteLength = __webpack_require__(7394);
-var detachTransferable = __webpack_require__(4483);
-var PROPER_STRUCTURED_CLONE_TRANSFER = __webpack_require__(1548);
-
-var structuredClone = globalThis.structuredClone;
-var ArrayBuffer = globalThis.ArrayBuffer;
-var DataView = globalThis.DataView;
-var min = Math.min;
-var ArrayBufferPrototype = ArrayBuffer.prototype;
-var DataViewPrototype = DataView.prototype;
-var slice = uncurryThis(ArrayBufferPrototype.slice);
-var isResizable = uncurryThisAccessor(ArrayBufferPrototype, 'resizable', 'get');
-var maxByteLength = uncurryThisAccessor(ArrayBufferPrototype, 'maxByteLength', 'get');
-var getInt8 = uncurryThis(DataViewPrototype.getInt8);
-var setInt8 = uncurryThis(DataViewPrototype.setInt8);
-
-module.exports = (PROPER_STRUCTURED_CLONE_TRANSFER || detachTransferable) && function (arrayBuffer, newLength, preserveResizability) {
-  var byteLength = arrayBufferByteLength(arrayBuffer);
-  var newByteLength = newLength === undefined ? byteLength : toIndex(newLength);
-  var fixedLength = !isResizable || !isResizable(arrayBuffer);
-  var newBuffer;
-  notDetached(arrayBuffer);
-  if (PROPER_STRUCTURED_CLONE_TRANSFER) {
-    arrayBuffer = structuredClone(arrayBuffer, { transfer: [arrayBuffer] });
-    if (byteLength === newByteLength && (preserveResizability || fixedLength)) return arrayBuffer;
-  }
-  if (byteLength >= newByteLength && (!preserveResizability || fixedLength)) {
-    newBuffer = slice(arrayBuffer, 0, newByteLength);
-  } else {
-    var options = preserveResizability && !fixedLength && maxByteLength ? { maxByteLength: maxByteLength(arrayBuffer) } : undefined;
-    newBuffer = new ArrayBuffer(newByteLength, options);
-    var a = new DataView(arrayBuffer);
-    var b = new DataView(newBuffer);
-    var copyLength = min(newByteLength, byteLength);
-    for (var i = 0; i < copyLength; i++) setInt8(b, i, getInt8(a, i));
-  }
-  if (!PROPER_STRUCTURED_CLONE_TRANSFER) detachTransferable(arrayBuffer);
-  return newBuffer;
-};
-
-
-/***/ }),
-
-/***/ 4644:
-/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
-
-
-var NATIVE_ARRAY_BUFFER = __webpack_require__(7811);
-var DESCRIPTORS = __webpack_require__(3724);
-var globalThis = __webpack_require__(4576);
-var isCallable = __webpack_require__(4901);
-var isObject = __webpack_require__(34);
-var hasOwn = __webpack_require__(9297);
-var classof = __webpack_require__(6955);
-var tryToString = __webpack_require__(6823);
-var createNonEnumerableProperty = __webpack_require__(6699);
-var defineBuiltIn = __webpack_require__(6840);
-var defineBuiltInAccessor = __webpack_require__(2106);
-var isPrototypeOf = __webpack_require__(1625);
-var getPrototypeOf = __webpack_require__(2787);
-var setPrototypeOf = __webpack_require__(2967);
-var wellKnownSymbol = __webpack_require__(8227);
-var uid = __webpack_require__(3392);
-var InternalStateModule = __webpack_require__(1181);
-
-var enforceInternalState = InternalStateModule.enforce;
-var getInternalState = InternalStateModule.get;
-var Int8Array = globalThis.Int8Array;
-var Int8ArrayPrototype = Int8Array && Int8Array.prototype;
-var Uint8ClampedArray = globalThis.Uint8ClampedArray;
-var Uint8ClampedArrayPrototype = Uint8ClampedArray && Uint8ClampedArray.prototype;
-var TypedArray = Int8Array && getPrototypeOf(Int8Array);
-var TypedArrayPrototype = Int8ArrayPrototype && getPrototypeOf(Int8ArrayPrototype);
-var ObjectPrototype = Object.prototype;
-var TypeError = globalThis.TypeError;
-
-var TO_STRING_TAG = wellKnownSymbol('toStringTag');
-var TYPED_ARRAY_TAG = uid('TYPED_ARRAY_TAG');
-var TYPED_ARRAY_CONSTRUCTOR = 'TypedArrayConstructor';
-// Fixing native typed arrays in Opera Presto crashes the browser, see #595
-var NATIVE_ARRAY_BUFFER_VIEWS = NATIVE_ARRAY_BUFFER && !!setPrototypeOf && classof(globalThis.opera) !== 'Opera';
-var TYPED_ARRAY_TAG_REQUIRED = false;
-var NAME, Constructor, Prototype;
-
-var TypedArrayConstructorsList = {
-  Int8Array: 1,
-  Uint8Array: 1,
-  Uint8ClampedArray: 1,
-  Int16Array: 2,
-  Uint16Array: 2,
-  Int32Array: 4,
-  Uint32Array: 4,
-  Float32Array: 4,
-  Float64Array: 8
-};
-
-var BigIntArrayConstructorsList = {
-  BigInt64Array: 8,
-  BigUint64Array: 8
-};
-
-var isView = function isView(it) {
-  if (!isObject(it)) return false;
-  var klass = classof(it);
-  return klass === 'DataView'
-    || hasOwn(TypedArrayConstructorsList, klass)
-    || hasOwn(BigIntArrayConstructorsList, klass);
-};
-
-var getTypedArrayConstructor = function (it) {
-  var proto = getPrototypeOf(it);
-  if (!isObject(proto)) return;
-  var state = getInternalState(proto);
-  return (state && hasOwn(state, TYPED_ARRAY_CONSTRUCTOR)) ? state[TYPED_ARRAY_CONSTRUCTOR] : getTypedArrayConstructor(proto);
-};
-
-var isTypedArray = function (it) {
-  if (!isObject(it)) return false;
-  var klass = classof(it);
-  return hasOwn(TypedArrayConstructorsList, klass)
-    || hasOwn(BigIntArrayConstructorsList, klass);
-};
-
-var aTypedArray = function (it) {
-  if (isTypedArray(it)) return it;
-  throw new TypeError('Target is not a typed array');
-};
-
-var aTypedArrayConstructor = function (C) {
-  if (isCallable(C) && (!setPrototypeOf || isPrototypeOf(TypedArray, C))) return C;
-  throw new TypeError(tryToString(C) + ' is not a typed array constructor');
-};
-
-var exportTypedArrayMethod = function (KEY, property, forced, options) {
-  if (!DESCRIPTORS) return;
-  if (forced) for (var ARRAY in TypedArrayConstructorsList) {
-    var TypedArrayConstructor = globalThis[ARRAY];
-    if (TypedArrayConstructor && hasOwn(TypedArrayConstructor.prototype, KEY)) try {
-      delete TypedArrayConstructor.prototype[KEY];
-    } catch (error) {
-      // old WebKit bug - some methods are non-configurable
-      try {
-        TypedArrayConstructor.prototype[KEY] = property;
-      } catch (error2) { /* empty */ }
-    }
-  }
-  if (!TypedArrayPrototype[KEY] || forced) {
-    defineBuiltIn(TypedArrayPrototype, KEY, forced ? property
-      : NATIVE_ARRAY_BUFFER_VIEWS && Int8ArrayPrototype[KEY] || property, options);
-  }
-};
-
-var exportTypedArrayStaticMethod = function (KEY, property, forced) {
-  var ARRAY, TypedArrayConstructor;
-  if (!DESCRIPTORS) return;
-  if (setPrototypeOf) {
-    if (forced) for (ARRAY in TypedArrayConstructorsList) {
-      TypedArrayConstructor = globalThis[ARRAY];
-      if (TypedArrayConstructor && hasOwn(TypedArrayConstructor, KEY)) try {
-        delete TypedArrayConstructor[KEY];
-      } catch (error) { /* empty */ }
-    }
-    if (!TypedArray[KEY] || forced) {
-      // V8 ~ Chrome 49-50 `%TypedArray%` methods are non-writable non-configurable
-      try {
-        return defineBuiltIn(TypedArray, KEY, forced ? property : NATIVE_ARRAY_BUFFER_VIEWS && TypedArray[KEY] || property);
-      } catch (error) { /* empty */ }
-    } else return;
-  }
-  for (ARRAY in TypedArrayConstructorsList) {
-    TypedArrayConstructor = globalThis[ARRAY];
-    if (TypedArrayConstructor && (!TypedArrayConstructor[KEY] || forced)) {
-      defineBuiltIn(TypedArrayConstructor, KEY, property);
-    }
-  }
-};
-
-for (NAME in TypedArrayConstructorsList) {
-  Constructor = globalThis[NAME];
-  Prototype = Constructor && Constructor.prototype;
-  if (Prototype) enforceInternalState(Prototype)[TYPED_ARRAY_CONSTRUCTOR] = Constructor;
-  else NATIVE_ARRAY_BUFFER_VIEWS = false;
-}
-
-for (NAME in BigIntArrayConstructorsList) {
-  Constructor = globalThis[NAME];
-  Prototype = Constructor && Constructor.prototype;
-  if (Prototype) enforceInternalState(Prototype)[TYPED_ARRAY_CONSTRUCTOR] = Constructor;
-}
-
-// WebKit bug - typed arrays constructors prototype is Object.prototype
-if (!NATIVE_ARRAY_BUFFER_VIEWS || !isCallable(TypedArray) || TypedArray === Function.prototype) {
-  // eslint-disable-next-line no-shadow -- safe
-  TypedArray = function TypedArray() {
-    throw new TypeError('Incorrect invocation');
-  };
-  if (NATIVE_ARRAY_BUFFER_VIEWS) for (NAME in TypedArrayConstructorsList) {
-    if (globalThis[NAME]) setPrototypeOf(globalThis[NAME], TypedArray);
-  }
-}
-
-if (!NATIVE_ARRAY_BUFFER_VIEWS || !TypedArrayPrototype || TypedArrayPrototype === ObjectPrototype) {
-  TypedArrayPrototype = TypedArray.prototype;
-  if (NATIVE_ARRAY_BUFFER_VIEWS) for (NAME in TypedArrayConstructorsList) {
-    if (globalThis[NAME]) setPrototypeOf(globalThis[NAME].prototype, TypedArrayPrototype);
-  }
-}
-
-// WebKit bug - one more object in Uint8ClampedArray prototype chain
-if (NATIVE_ARRAY_BUFFER_VIEWS && getPrototypeOf(Uint8ClampedArrayPrototype) !== TypedArrayPrototype) {
-  setPrototypeOf(Uint8ClampedArrayPrototype, TypedArrayPrototype);
-}
-
-if (DESCRIPTORS && !hasOwn(TypedArrayPrototype, TO_STRING_TAG)) {
-  TYPED_ARRAY_TAG_REQUIRED = true;
-  defineBuiltInAccessor(TypedArrayPrototype, TO_STRING_TAG, {
-    configurable: true,
-    get: function () {
-      return isObject(this) ? this[TYPED_ARRAY_TAG] : undefined;
-    }
-  });
-  for (NAME in TypedArrayConstructorsList) if (globalThis[NAME]) {
-    createNonEnumerableProperty(globalThis[NAME], TYPED_ARRAY_TAG, NAME);
-  }
-}
-
-module.exports = {
-  NATIVE_ARRAY_BUFFER_VIEWS: NATIVE_ARRAY_BUFFER_VIEWS,
-  TYPED_ARRAY_TAG: TYPED_ARRAY_TAG_REQUIRED && TYPED_ARRAY_TAG,
-  aTypedArray: aTypedArray,
-  aTypedArrayConstructor: aTypedArrayConstructor,
-  exportTypedArrayMethod: exportTypedArrayMethod,
-  exportTypedArrayStaticMethod: exportTypedArrayStaticMethod,
-  getTypedArrayConstructor: getTypedArrayConstructor,
-  isView: isView,
-  isTypedArray: isTypedArray,
-  TypedArray: TypedArray,
-  TypedArrayPrototype: TypedArrayPrototype
-};
-
-
-/***/ }),
-
-/***/ 5370:
-/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
-
-
-var lengthOfArrayLike = __webpack_require__(6198);
-
-module.exports = function (Constructor, list, $length) {
-  var index = 0;
-  var length = arguments.length > 2 ? $length : lengthOfArrayLike(list);
-  var result = new Constructor(length);
-  while (length > index) result[index] = list[index++];
-  return result;
-};
-
-
-/***/ }),
-
-/***/ 9617:
-/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
-
-
-var toIndexedObject = __webpack_require__(5397);
-var toAbsoluteIndex = __webpack_require__(5610);
-var lengthOfArrayLike = __webpack_require__(6198);
-
-// `Array.prototype.{ indexOf, includes }` methods implementation
-var createMethod = function (IS_INCLUDES) {
-  return function ($this, el, fromIndex) {
-    var O = toIndexedObject($this);
-    var length = lengthOfArrayLike(O);
-    if (length === 0) return !IS_INCLUDES && -1;
-    var index = toAbsoluteIndex(fromIndex, length);
-    var value;
-    // Array#includes uses SameValueZero equality algorithm
-    // eslint-disable-next-line no-self-compare -- NaN check
-    if (IS_INCLUDES && el !== el) while (length > index) {
-      value = O[index++];
-      // eslint-disable-next-line no-self-compare -- NaN check
-      if (value !== value) return true;
-    // Array#indexOf ignores holes, Array#includes - not
-    } else for (;length > index; index++) {
-      if ((IS_INCLUDES || index in O) && O[index] === el) return IS_INCLUDES || index || 0;
-    } return !IS_INCLUDES && -1;
-  };
-};
-
-module.exports = {
-  // `Array.prototype.includes` method
-  // https://tc39.es/ecma262/#sec-array.prototype.includes
-  includes: createMethod(true),
-  // `Array.prototype.indexOf` method
-  // https://tc39.es/ecma262/#sec-array.prototype.indexof
-  indexOf: createMethod(false)
-};
-
-
-/***/ }),
-
-/***/ 4527:
-/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
-
-
-var DESCRIPTORS = __webpack_require__(3724);
-var isArray = __webpack_require__(4376);
-
-var $TypeError = TypeError;
-// eslint-disable-next-line es/no-object-getownpropertydescriptor -- safe
-var getOwnPropertyDescriptor = Object.getOwnPropertyDescriptor;
-
-// Safari < 13 does not throw an error in this case
-var SILENT_ON_NON_WRITABLE_LENGTH_SET = DESCRIPTORS && !function () {
-  // makes no sense without proper strict mode support
-  if (this !== undefined) return true;
-  try {
-    // eslint-disable-next-line es/no-object-defineproperty -- safe
-    Object.defineProperty([], 'length', { writable: false }).length = 1;
-  } catch (error) {
-    return error instanceof TypeError;
-  }
-}();
-
-module.exports = SILENT_ON_NON_WRITABLE_LENGTH_SET ? function (O, length) {
-  if (isArray(O) && !getOwnPropertyDescriptor(O, 'length').writable) {
-    throw new $TypeError('Cannot set read only .length');
-  } return O.length = length;
-} : function (O, length) {
-  return O.length = length;
-};
-
-
-/***/ }),
-
-/***/ 7628:
-/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
-
-
-var lengthOfArrayLike = __webpack_require__(6198);
-
-// https://tc39.es/proposal-change-array-by-copy/#sec-array.prototype.toReversed
-// https://tc39.es/proposal-change-array-by-copy/#sec-%typedarray%.prototype.toReversed
-module.exports = function (O, C) {
-  var len = lengthOfArrayLike(O);
-  var A = new C(len);
-  var k = 0;
-  for (; k < len; k++) A[k] = O[len - k - 1];
-  return A;
-};
-
-
-/***/ }),
-
-/***/ 9928:
-/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
-
-
-var lengthOfArrayLike = __webpack_require__(6198);
-var toIntegerOrInfinity = __webpack_require__(1291);
-
-var $RangeError = RangeError;
-
-// https://tc39.es/proposal-change-array-by-copy/#sec-array.prototype.with
-// https://tc39.es/proposal-change-array-by-copy/#sec-%typedarray%.prototype.with
-module.exports = function (O, C, index, value) {
-  var len = lengthOfArrayLike(O);
-  var relativeIndex = toIntegerOrInfinity(index);
-  var actualIndex = relativeIndex < 0 ? len + relativeIndex : relativeIndex;
-  if (actualIndex >= len || actualIndex < 0) throw new $RangeError('Incorrect index');
-  var A = new C(len);
-  var k = 0;
-  for (; k < len; k++) A[k] = k === actualIndex ? value : O[k];
-  return A;
-};
-
-
-/***/ }),
-
-/***/ 6319:
-/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
-
-
-var anObject = __webpack_require__(8551);
-var iteratorClose = __webpack_require__(9539);
-
-// call something on iterator step with safe closing on error
-module.exports = function (iterator, fn, value, ENTRIES) {
-  try {
-    return ENTRIES ? fn(anObject(value)[0], value[1]) : fn(value);
-  } catch (error) {
-    iteratorClose(iterator, 'throw', error);
-  }
-};
-
-
-/***/ }),
-
-/***/ 2195:
-/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
-
-
-var uncurryThis = __webpack_require__(9504);
-
-var toString = uncurryThis({}.toString);
-var stringSlice = uncurryThis(''.slice);
-
-module.exports = function (it) {
-  return stringSlice(toString(it), 8, -1);
-};
-
-
-/***/ }),
-
-/***/ 6955:
-/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
-
-
-var TO_STRING_TAG_SUPPORT = __webpack_require__(2140);
-var isCallable = __webpack_require__(4901);
-var classofRaw = __webpack_require__(2195);
-var wellKnownSymbol = __webpack_require__(8227);
-
-var TO_STRING_TAG = wellKnownSymbol('toStringTag');
-var $Object = Object;
-
-// ES3 wrong here
-var CORRECT_ARGUMENTS = classofRaw(function () { return arguments; }()) === 'Arguments';
-
-// fallback for IE11 Script Access Denied error
-var tryGet = function (it, key) {
-  try {
-    return it[key];
-  } catch (error) { /* empty */ }
-};
-
-// getting tag from ES6+ `Object.prototype.toString`
-module.exports = TO_STRING_TAG_SUPPORT ? classofRaw : function (it) {
-  var O, tag, result;
-  return it === undefined ? 'Undefined' : it === null ? 'Null'
-    // @@toStringTag case
-    : typeof (tag = tryGet(O = $Object(it), TO_STRING_TAG)) == 'string' ? tag
-    // builtinTag case
-    : CORRECT_ARGUMENTS ? classofRaw(O)
-    // ES3 arguments fallback
-    : (result = classofRaw(O)) === 'Object' && isCallable(O.callee) ? 'Arguments' : result;
-};
-
-
-/***/ }),
-
-/***/ 7740:
-/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
-
-
-var hasOwn = __webpack_require__(9297);
-var ownKeys = __webpack_require__(5031);
-var getOwnPropertyDescriptorModule = __webpack_require__(7347);
-var definePropertyModule = __webpack_require__(4913);
-
-module.exports = function (target, source, exceptions) {
-  var keys = ownKeys(source);
-  var defineProperty = definePropertyModule.f;
-  var getOwnPropertyDescriptor = getOwnPropertyDescriptorModule.f;
-  for (var i = 0; i < keys.length; i++) {
-    var key = keys[i];
-    if (!hasOwn(target, key) && !(exceptions && hasOwn(exceptions, key))) {
-      defineProperty(target, key, getOwnPropertyDescriptor(source, key));
-    }
-  }
-};
-
-
-/***/ }),
-
-/***/ 2211:
-/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
-
-
-var fails = __webpack_require__(9039);
-
-module.exports = !fails(function () {
-  function F() { /* empty */ }
-  F.prototype.constructor = null;
-  // eslint-disable-next-line es/no-object-getprototypeof -- required for testing
-  return Object.getPrototypeOf(new F()) !== F.prototype;
-});
-
-
-/***/ }),
-
-/***/ 2529:
-/***/ ((module) => {
-
-
-// `CreateIterResultObject` abstract operation
-// https://tc39.es/ecma262/#sec-createiterresultobject
-module.exports = function (value, done) {
-  return { value: value, done: done };
-};
-
-
-/***/ }),
-
-/***/ 6699:
-/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
-
-
-var DESCRIPTORS = __webpack_require__(3724);
-var definePropertyModule = __webpack_require__(4913);
-var createPropertyDescriptor = __webpack_require__(6980);
-
-module.exports = DESCRIPTORS ? function (object, key, value) {
-  return definePropertyModule.f(object, key, createPropertyDescriptor(1, value));
-} : function (object, key, value) {
-  object[key] = value;
-  return object;
-};
-
-
-/***/ }),
-
-/***/ 6980:
-/***/ ((module) => {
-
-
-module.exports = function (bitmap, value) {
-  return {
-    enumerable: !(bitmap & 1),
-    configurable: !(bitmap & 2),
-    writable: !(bitmap & 4),
-    value: value
-  };
-};
-
-
-/***/ }),
-
-/***/ 4659:
-/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
-
-
-var DESCRIPTORS = __webpack_require__(3724);
-var definePropertyModule = __webpack_require__(4913);
-var createPropertyDescriptor = __webpack_require__(6980);
-
-module.exports = function (object, key, value) {
-  if (DESCRIPTORS) definePropertyModule.f(object, key, createPropertyDescriptor(0, value));
-  else object[key] = value;
-};
-
-
-/***/ }),
-
-/***/ 2106:
-/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
-
-
-var makeBuiltIn = __webpack_require__(283);
-var defineProperty = __webpack_require__(4913);
-
-module.exports = function (target, name, descriptor) {
-  if (descriptor.get) makeBuiltIn(descriptor.get, name, { getter: true });
-  if (descriptor.set) makeBuiltIn(descriptor.set, name, { setter: true });
-  return defineProperty.f(target, name, descriptor);
-};
-
-
-/***/ }),
-
-/***/ 6840:
-/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
-
-
-var isCallable = __webpack_require__(4901);
-var definePropertyModule = __webpack_require__(4913);
-var makeBuiltIn = __webpack_require__(283);
-var defineGlobalProperty = __webpack_require__(9433);
-
-module.exports = function (O, key, value, options) {
-  if (!options) options = {};
-  var simple = options.enumerable;
-  var name = options.name !== undefined ? options.name : key;
-  if (isCallable(value)) makeBuiltIn(value, name, options);
-  if (options.global) {
-    if (simple) O[key] = value;
-    else defineGlobalProperty(key, value);
-  } else {
-    try {
-      if (!options.unsafe) delete O[key];
-      else if (O[key]) simple = true;
-    } catch (error) { /* empty */ }
-    if (simple) O[key] = value;
-    else definePropertyModule.f(O, key, {
-      value: value,
-      enumerable: false,
-      configurable: !options.nonConfigurable,
-      writable: !options.nonWritable
-    });
-  } return O;
-};
-
-
-/***/ }),
-
-/***/ 6279:
-/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
-
-
-var defineBuiltIn = __webpack_require__(6840);
-
-module.exports = function (target, src, options) {
-  for (var key in src) defineBuiltIn(target, key, src[key], options);
-  return target;
-};
-
-
-/***/ }),
-
-/***/ 9433:
-/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
-
-
-var globalThis = __webpack_require__(4576);
-
-// eslint-disable-next-line es/no-object-defineproperty -- safe
-var defineProperty = Object.defineProperty;
-
-module.exports = function (key, value) {
-  try {
-    defineProperty(globalThis, key, { value: value, configurable: true, writable: true });
-  } catch (error) {
-    globalThis[key] = value;
-  } return value;
-};
-
-
-/***/ }),
-
-/***/ 3724:
-/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
-
-
-var fails = __webpack_require__(9039);
-
-// Detect IE8's incomplete defineProperty implementation
-module.exports = !fails(function () {
-  // eslint-disable-next-line es/no-object-defineproperty -- required for testing
-  return Object.defineProperty({}, 1, { get: function () { return 7; } })[1] !== 7;
-});
-
-
-/***/ }),
-
-/***/ 4483:
-/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
-
-
-var globalThis = __webpack_require__(4576);
-var getBuiltInNodeModule = __webpack_require__(9429);
-var PROPER_STRUCTURED_CLONE_TRANSFER = __webpack_require__(1548);
-
-var structuredClone = globalThis.structuredClone;
-var $ArrayBuffer = globalThis.ArrayBuffer;
-var $MessageChannel = globalThis.MessageChannel;
-var detach = false;
-var WorkerThreads, channel, buffer, $detach;
-
-if (PROPER_STRUCTURED_CLONE_TRANSFER) {
-  detach = function (transferable) {
-    structuredClone(transferable, { transfer: [transferable] });
-  };
-} else if ($ArrayBuffer) try {
-  if (!$MessageChannel) {
-    WorkerThreads = getBuiltInNodeModule('worker_threads');
-    if (WorkerThreads) $MessageChannel = WorkerThreads.MessageChannel;
-  }
-
-  if ($MessageChannel) {
-    channel = new $MessageChannel();
-    buffer = new $ArrayBuffer(2);
-
-    $detach = function (transferable) {
-      channel.port1.postMessage(null, [transferable]);
-    };
-
-    if (buffer.byteLength === 2) {
-      $detach(buffer);
-      if (buffer.byteLength === 0) detach = $detach;
-    }
-  }
-} catch (error) { /* empty */ }
-
-module.exports = detach;
-
-
-/***/ }),
-
-/***/ 4055:
-/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
-
-
-var globalThis = __webpack_require__(4576);
-var isObject = __webpack_require__(34);
-
-var document = globalThis.document;
-// typeof document.createElement is 'object' in old IE
-var EXISTS = isObject(document) && isObject(document.createElement);
-
-module.exports = function (it) {
-  return EXISTS ? document.createElement(it) : {};
-};
-
-
-/***/ }),
-
-/***/ 6837:
-/***/ ((module) => {
-
-
-var $TypeError = TypeError;
-var MAX_SAFE_INTEGER = 0x1FFFFFFFFFFFFF; // 2 ** 53 - 1 == 9007199254740991
-
-module.exports = function (it) {
-  if (it > MAX_SAFE_INTEGER) throw $TypeError('Maximum allowed index exceeded');
-  return it;
-};
-
-
-/***/ }),
-
-/***/ 5002:
-/***/ ((module) => {
-
-
-module.exports = {
-  IndexSizeError: { s: 'INDEX_SIZE_ERR', c: 1, m: 1 },
-  DOMStringSizeError: { s: 'DOMSTRING_SIZE_ERR', c: 2, m: 0 },
-  HierarchyRequestError: { s: 'HIERARCHY_REQUEST_ERR', c: 3, m: 1 },
-  WrongDocumentError: { s: 'WRONG_DOCUMENT_ERR', c: 4, m: 1 },
-  InvalidCharacterError: { s: 'INVALID_CHARACTER_ERR', c: 5, m: 1 },
-  NoDataAllowedError: { s: 'NO_DATA_ALLOWED_ERR', c: 6, m: 0 },
-  NoModificationAllowedError: { s: 'NO_MODIFICATION_ALLOWED_ERR', c: 7, m: 1 },
-  NotFoundError: { s: 'NOT_FOUND_ERR', c: 8, m: 1 },
-  NotSupportedError: { s: 'NOT_SUPPORTED_ERR', c: 9, m: 1 },
-  InUseAttributeError: { s: 'INUSE_ATTRIBUTE_ERR', c: 10, m: 1 },
-  InvalidStateError: { s: 'INVALID_STATE_ERR', c: 11, m: 1 },
-  SyntaxError: { s: 'SYNTAX_ERR', c: 12, m: 1 },
-  InvalidModificationError: { s: 'INVALID_MODIFICATION_ERR', c: 13, m: 1 },
-  NamespaceError: { s: 'NAMESPACE_ERR', c: 14, m: 1 },
-  InvalidAccessError: { s: 'INVALID_ACCESS_ERR', c: 15, m: 1 },
-  ValidationError: { s: 'VALIDATION_ERR', c: 16, m: 0 },
-  TypeMismatchError: { s: 'TYPE_MISMATCH_ERR', c: 17, m: 1 },
-  SecurityError: { s: 'SECURITY_ERR', c: 18, m: 1 },
-  NetworkError: { s: 'NETWORK_ERR', c: 19, m: 1 },
-  AbortError: { s: 'ABORT_ERR', c: 20, m: 1 },
-  URLMismatchError: { s: 'URL_MISMATCH_ERR', c: 21, m: 1 },
-  QuotaExceededError: { s: 'QUOTA_EXCEEDED_ERR', c: 22, m: 1 },
-  TimeoutError: { s: 'TIMEOUT_ERR', c: 23, m: 1 },
-  InvalidNodeTypeError: { s: 'INVALID_NODE_TYPE_ERR', c: 24, m: 1 },
-  DataCloneError: { s: 'DATA_CLONE_ERR', c: 25, m: 1 }
-};
-
-
-/***/ }),
-
-/***/ 8727:
-/***/ ((module) => {
-
-
-// IE8- don't enum bug keys
-module.exports = [
-  'constructor',
-  'hasOwnProperty',
-  'isPrototypeOf',
-  'propertyIsEnumerable',
-  'toLocaleString',
-  'toString',
-  'valueOf'
-];
-
-
-/***/ }),
-
-/***/ 6193:
-/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
-
-
-var ENVIRONMENT = __webpack_require__(4215);
-
-module.exports = ENVIRONMENT === 'NODE';
-
-
-/***/ }),
-
-/***/ 2839:
-/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
-
-
-var globalThis = __webpack_require__(4576);
-
-var navigator = globalThis.navigator;
-var userAgent = navigator && navigator.userAgent;
-
-module.exports = userAgent ? String(userAgent) : '';
-
-
-/***/ }),
-
-/***/ 9519:
-/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
-
-
-var globalThis = __webpack_require__(4576);
-var userAgent = __webpack_require__(2839);
-
-var process = globalThis.process;
-var Deno = globalThis.Deno;
-var versions = process && process.versions || Deno && Deno.version;
-var v8 = versions && versions.v8;
-var match, version;
-
-if (v8) {
-  match = v8.split('.');
-  // in old Chrome, versions of V8 isn't V8 = Chrome / 10
-  // but their correct versions are not interesting for us
-  version = match[0] > 0 && match[0] < 4 ? 1 : +(match[0] + match[1]);
-}
-
-// BrowserFS NodeJS `process` polyfill incorrectly set `.v8` to `0.0`
-// so check `userAgent` even if `.v8` exists, but 0
-if (!version && userAgent) {
-  match = userAgent.match(/Edge\/(\d+)/);
-  if (!match || match[1] >= 74) {
-    match = userAgent.match(/Chrome\/(\d+)/);
-    if (match) version = +match[1];
-  }
-}
-
-module.exports = version;
-
-
-/***/ }),
-
-/***/ 4215:
-/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
-
-
-/* global Bun, Deno -- detection */
-var globalThis = __webpack_require__(4576);
-var userAgent = __webpack_require__(2839);
-var classof = __webpack_require__(2195);
-
-var userAgentStartsWith = function (string) {
-  return userAgent.slice(0, string.length) === string;
-};
-
-module.exports = (function () {
-  if (userAgentStartsWith('Bun/')) return 'BUN';
-  if (userAgentStartsWith('Cloudflare-Workers')) return 'CLOUDFLARE';
-  if (userAgentStartsWith('Deno/')) return 'DENO';
-  if (userAgentStartsWith('Node.js/')) return 'NODE';
-  if (globalThis.Bun && typeof Bun.version == 'string') return 'BUN';
-  if (globalThis.Deno && typeof Deno.version == 'object') return 'DENO';
-  if (classof(globalThis.process) === 'process') return 'NODE';
-  if (globalThis.window && globalThis.document) return 'BROWSER';
-  return 'REST';
-})();
-
-
-/***/ }),
-
-/***/ 8574:
-/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
-
-
-var uncurryThis = __webpack_require__(9504);
-
-var $Error = Error;
-var replace = uncurryThis(''.replace);
-
-var TEST = (function (arg) { return String(new $Error(arg).stack); })('zxcasd');
-// eslint-disable-next-line redos/no-vulnerable -- safe
-var V8_OR_CHAKRA_STACK_ENTRY = /\n\s*at [^:]*:[^\n]*/;
-var IS_V8_OR_CHAKRA_STACK = V8_OR_CHAKRA_STACK_ENTRY.test(TEST);
-
-module.exports = function (stack, dropEntries) {
-  if (IS_V8_OR_CHAKRA_STACK && typeof stack == 'string' && !$Error.prepareStackTrace) {
-    while (dropEntries--) stack = replace(stack, V8_OR_CHAKRA_STACK_ENTRY, '');
-  } return stack;
-};
-
-
-/***/ }),
-
-/***/ 6518:
-/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
-
-
-var globalThis = __webpack_require__(4576);
-var getOwnPropertyDescriptor = (__webpack_require__(7347).f);
-var createNonEnumerableProperty = __webpack_require__(6699);
-var defineBuiltIn = __webpack_require__(6840);
-var defineGlobalProperty = __webpack_require__(9433);
-var copyConstructorProperties = __webpack_require__(7740);
-var isForced = __webpack_require__(2796);
-
-/*
-  options.target         - name of the target object
-  options.global         - target is the global object
-  options.stat           - export as static methods of target
-  options.proto          - export as prototype methods of target
-  options.real           - real prototype method for the `pure` version
-  options.forced         - export even if the native feature is available
-  options.bind           - bind methods to the target, required for the `pure` version
-  options.wrap           - wrap constructors to preventing global pollution, required for the `pure` version
-  options.unsafe         - use the simple assignment of property instead of delete + defineProperty
-  options.sham           - add a flag to not completely full polyfills
-  options.enumerable     - export as enumerable property
-  options.dontCallGetSet - prevent calling a getter on target
-  options.name           - the .name of the function if it does not match the key
-*/
-module.exports = function (options, source) {
-  var TARGET = options.target;
-  var GLOBAL = options.global;
-  var STATIC = options.stat;
-  var FORCED, target, key, targetProperty, sourceProperty, descriptor;
-  if (GLOBAL) {
-    target = globalThis;
-  } else if (STATIC) {
-    target = globalThis[TARGET] || defineGlobalProperty(TARGET, {});
-  } else {
-    target = globalThis[TARGET] && globalThis[TARGET].prototype;
-  }
-  if (target) for (key in source) {
-    sourceProperty = source[key];
-    if (options.dontCallGetSet) {
-      descriptor = getOwnPropertyDescriptor(target, key);
-      targetProperty = descriptor && descriptor.value;
-    } else targetProperty = target[key];
-    FORCED = isForced(GLOBAL ? key : TARGET + (STATIC ? '.' : '#') + key, options.forced);
-    // contained in target
-    if (!FORCED && targetProperty !== undefined) {
-      if (typeof sourceProperty == typeof targetProperty) continue;
-      copyConstructorProperties(sourceProperty, targetProperty);
-    }
-    // add a flag to not completely full polyfills
-    if (options.sham || (targetProperty && targetProperty.sham)) {
-      createNonEnumerableProperty(sourceProperty, 'sham', true);
-    }
-    defineBuiltIn(target, key, sourceProperty, options);
-  }
-};
-
-
-/***/ }),
-
-/***/ 9039:
-/***/ ((module) => {
-
-
-module.exports = function (exec) {
-  try {
-    return !!exec();
-  } catch (error) {
-    return true;
-  }
-};
-
-
-/***/ }),
-
-/***/ 6080:
-/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
-
-
-var uncurryThis = __webpack_require__(7476);
-var aCallable = __webpack_require__(9306);
-var NATIVE_BIND = __webpack_require__(616);
-
-var bind = uncurryThis(uncurryThis.bind);
-
-// optional / simple context binding
-module.exports = function (fn, that) {
-  aCallable(fn);
-  return that === undefined ? fn : NATIVE_BIND ? bind(fn, that) : function (/* ...args */) {
-    return fn.apply(that, arguments);
-  };
-};
-
-
-/***/ }),
-
-/***/ 616:
-/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
-
-
-var fails = __webpack_require__(9039);
-
-module.exports = !fails(function () {
-  // eslint-disable-next-line es/no-function-prototype-bind -- safe
-  var test = (function () { /* empty */ }).bind();
-  // eslint-disable-next-line no-prototype-builtins -- safe
-  return typeof test != 'function' || test.hasOwnProperty('prototype');
-});
-
-
-/***/ }),
-
-/***/ 9565:
-/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
-
-
-var NATIVE_BIND = __webpack_require__(616);
-
-var call = Function.prototype.call;
-
-module.exports = NATIVE_BIND ? call.bind(call) : function () {
-  return call.apply(call, arguments);
-};
-
-
-/***/ }),
-
-/***/ 350:
-/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
-
-
-var DESCRIPTORS = __webpack_require__(3724);
-var hasOwn = __webpack_require__(9297);
-
-var FunctionPrototype = Function.prototype;
-// eslint-disable-next-line es/no-object-getownpropertydescriptor -- safe
-var getDescriptor = DESCRIPTORS && Object.getOwnPropertyDescriptor;
-
-var EXISTS = hasOwn(FunctionPrototype, 'name');
-// additional protection from minified / mangled / dropped function names
-var PROPER = EXISTS && (function something() { /* empty */ }).name === 'something';
-var CONFIGURABLE = EXISTS && (!DESCRIPTORS || (DESCRIPTORS && getDescriptor(FunctionPrototype, 'name').configurable));
-
-module.exports = {
-  EXISTS: EXISTS,
-  PROPER: PROPER,
-  CONFIGURABLE: CONFIGURABLE
-};
-
-
-/***/ }),
-
-/***/ 6706:
-/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
-
-
-var uncurryThis = __webpack_require__(9504);
-var aCallable = __webpack_require__(9306);
-
-module.exports = function (object, key, method) {
-  try {
-    // eslint-disable-next-line es/no-object-getownpropertydescriptor -- safe
-    return uncurryThis(aCallable(Object.getOwnPropertyDescriptor(object, key)[method]));
-  } catch (error) { /* empty */ }
-};
-
-
-/***/ }),
-
-/***/ 7476:
-/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
-
-
-var classofRaw = __webpack_require__(2195);
-var uncurryThis = __webpack_require__(9504);
-
-module.exports = function (fn) {
-  // Nashorn bug:
-  //   https://github.com/zloirock/core-js/issues/1128
-  //   https://github.com/zloirock/core-js/issues/1130
-  if (classofRaw(fn) === 'Function') return uncurryThis(fn);
-};
-
-
-/***/ }),
-
-/***/ 9504:
-/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
-
-
-var NATIVE_BIND = __webpack_require__(616);
-
-var FunctionPrototype = Function.prototype;
-var call = FunctionPrototype.call;
-var uncurryThisWithBind = NATIVE_BIND && FunctionPrototype.bind.bind(call, call);
-
-module.exports = NATIVE_BIND ? uncurryThisWithBind : function (fn) {
-  return function () {
-    return call.apply(fn, arguments);
-  };
-};
-
-
-/***/ }),
-
-/***/ 9429:
-/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
-
-
-var globalThis = __webpack_require__(4576);
-var IS_NODE = __webpack_require__(6193);
-
-module.exports = function (name) {
-  if (IS_NODE) {
-    try {
-      return globalThis.process.getBuiltinModule(name);
-    } catch (error) { /* empty */ }
-    try {
-      // eslint-disable-next-line no-new-func -- safe
-      return Function('return require("' + name + '")')();
-    } catch (error) { /* empty */ }
-  }
-};
-
-
-/***/ }),
-
-/***/ 7751:
-/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
-
-
-var globalThis = __webpack_require__(4576);
-var isCallable = __webpack_require__(4901);
-
-var aFunction = function (argument) {
-  return isCallable(argument) ? argument : undefined;
-};
-
-module.exports = function (namespace, method) {
-  return arguments.length < 2 ? aFunction(globalThis[namespace]) : globalThis[namespace] && globalThis[namespace][method];
-};
-
-
-/***/ }),
-
-/***/ 1767:
-/***/ ((module) => {
-
-
-// `GetIteratorDirect(obj)` abstract operation
-// https://tc39.es/proposal-iterator-helpers/#sec-getiteratordirect
-module.exports = function (obj) {
-  return {
-    iterator: obj,
-    next: obj.next,
-    done: false
-  };
-};
-
-
-/***/ }),
-
-/***/ 8646:
-/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
-
-
-var call = __webpack_require__(9565);
-var anObject = __webpack_require__(8551);
-var getIteratorDirect = __webpack_require__(1767);
-var getIteratorMethod = __webpack_require__(851);
-
-module.exports = function (obj, stringHandling) {
-  if (!stringHandling || typeof obj !== 'string') anObject(obj);
-  var method = getIteratorMethod(obj);
-  return getIteratorDirect(anObject(method !== undefined ? call(method, obj) : obj));
-};
-
-
-/***/ }),
-
-/***/ 851:
-/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
-
-
-var classof = __webpack_require__(6955);
-var getMethod = __webpack_require__(5966);
-var isNullOrUndefined = __webpack_require__(4117);
-var Iterators = __webpack_require__(6269);
-var wellKnownSymbol = __webpack_require__(8227);
-
-var ITERATOR = wellKnownSymbol('iterator');
-
-module.exports = function (it) {
-  if (!isNullOrUndefined(it)) return getMethod(it, ITERATOR)
-    || getMethod(it, '@@iterator')
-    || Iterators[classof(it)];
-};
-
-
-/***/ }),
-
-/***/ 81:
-/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
-
-
-var call = __webpack_require__(9565);
-var aCallable = __webpack_require__(9306);
-var anObject = __webpack_require__(8551);
-var tryToString = __webpack_require__(6823);
-var getIteratorMethod = __webpack_require__(851);
-
-var $TypeError = TypeError;
-
-module.exports = function (argument, usingIterator) {
-  var iteratorMethod = arguments.length < 2 ? getIteratorMethod(argument) : usingIterator;
-  if (aCallable(iteratorMethod)) return anObject(call(iteratorMethod, argument));
-  throw new $TypeError(tryToString(argument) + ' is not iterable');
-};
-
-
-/***/ }),
-
-/***/ 5966:
-/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
-
-
-var aCallable = __webpack_require__(9306);
-var isNullOrUndefined = __webpack_require__(4117);
-
-// `GetMethod` abstract operation
-// https://tc39.es/ecma262/#sec-getmethod
-module.exports = function (V, P) {
-  var func = V[P];
-  return isNullOrUndefined(func) ? undefined : aCallable(func);
-};
-
-
-/***/ }),
-
-/***/ 3789:
-/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
-
-
-var aCallable = __webpack_require__(9306);
-var anObject = __webpack_require__(8551);
-var call = __webpack_require__(9565);
-var toIntegerOrInfinity = __webpack_require__(1291);
-var getIteratorDirect = __webpack_require__(1767);
-
-var INVALID_SIZE = 'Invalid size';
-var $RangeError = RangeError;
-var $TypeError = TypeError;
-var max = Math.max;
-
-var SetRecord = function (set, intSize) {
-  this.set = set;
-  this.size = max(intSize, 0);
-  this.has = aCallable(set.has);
-  this.keys = aCallable(set.keys);
-};
-
-SetRecord.prototype = {
-  getIterator: function () {
-    return getIteratorDirect(anObject(call(this.keys, this.set)));
-  },
-  includes: function (it) {
-    return call(this.has, this.set, it);
-  }
-};
-
-// `GetSetRecord` abstract operation
-// https://tc39.es/proposal-set-methods/#sec-getsetrecord
-module.exports = function (obj) {
-  anObject(obj);
-  var numSize = +obj.size;
-  // NOTE: If size is undefined, then numSize will be NaN
-  // eslint-disable-next-line no-self-compare -- NaN check
-  if (numSize !== numSize) throw new $TypeError(INVALID_SIZE);
-  var intSize = toIntegerOrInfinity(numSize);
-  if (intSize < 0) throw new $RangeError(INVALID_SIZE);
-  return new SetRecord(obj, intSize);
-};
-
-
-/***/ }),
-
-/***/ 4576:
-/***/ (function(module) {
-
-
-var check = function (it) {
-  return it && it.Math === Math && it;
-};
-
-// https://github.com/zloirock/core-js/issues/86#issuecomment-115759028
-module.exports =
-  // eslint-disable-next-line es/no-global-this -- safe
-  check(typeof globalThis == 'object' && globalThis) ||
-  check(typeof window == 'object' && window) ||
-  // eslint-disable-next-line no-restricted-globals -- safe
-  check(typeof self == 'object' && self) ||
-  check(typeof global == 'object' && global) ||
-  check(typeof this == 'object' && this) ||
-  // eslint-disable-next-line no-new-func -- fallback
-  (function () { return this; })() || Function('return this')();
-
-
-/***/ }),
-
-/***/ 9297:
-/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
-
-
-var uncurryThis = __webpack_require__(9504);
-var toObject = __webpack_require__(8981);
-
-var hasOwnProperty = uncurryThis({}.hasOwnProperty);
-
-// `HasOwnProperty` abstract operation
-// https://tc39.es/ecma262/#sec-hasownproperty
-// eslint-disable-next-line es/no-object-hasown -- safe
-module.exports = Object.hasOwn || function hasOwn(it, key) {
-  return hasOwnProperty(toObject(it), key);
-};
-
-
-/***/ }),
-
-/***/ 421:
-/***/ ((module) => {
-
-
-module.exports = {};
-
-
-/***/ }),
-
-/***/ 397:
-/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
-
-
-var getBuiltIn = __webpack_require__(7751);
-
-module.exports = getBuiltIn('document', 'documentElement');
-
-
-/***/ }),
-
-/***/ 5917:
-/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
-
-
-var DESCRIPTORS = __webpack_require__(3724);
-var fails = __webpack_require__(9039);
-var createElement = __webpack_require__(4055);
-
-// Thanks to IE8 for its funny defineProperty
-module.exports = !DESCRIPTORS && !fails(function () {
-  // eslint-disable-next-line es/no-object-defineproperty -- required for testing
-  return Object.defineProperty(createElement('div'), 'a', {
-    get: function () { return 7; }
-  }).a !== 7;
-});
-
-
-/***/ }),
-
-/***/ 7055:
-/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
-
-
-var uncurryThis = __webpack_require__(9504);
-var fails = __webpack_require__(9039);
-var classof = __webpack_require__(2195);
-
-var $Object = Object;
-var split = uncurryThis(''.split);
-
-// fallback for non-array-like ES3 and non-enumerable old V8 strings
-module.exports = fails(function () {
-  // throws an error in rhino, see https://github.com/mozilla/rhino/issues/346
-  // eslint-disable-next-line no-prototype-builtins -- safe
-  return !$Object('z').propertyIsEnumerable(0);
-}) ? function (it) {
-  return classof(it) === 'String' ? split(it, '') : $Object(it);
-} : $Object;
-
-
-/***/ }),
-
-/***/ 3167:
-/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
-
-
-var isCallable = __webpack_require__(4901);
-var isObject = __webpack_require__(34);
-var setPrototypeOf = __webpack_require__(2967);
-
-// makes subclassing work correct for wrapped built-ins
-module.exports = function ($this, dummy, Wrapper) {
-  var NewTarget, NewTargetPrototype;
-  if (
-    // it can work only with native `setPrototypeOf`
-    setPrototypeOf &&
-    // we haven't completely correct pre-ES6 way for getting `new.target`, so use this
-    isCallable(NewTarget = dummy.constructor) &&
-    NewTarget !== Wrapper &&
-    isObject(NewTargetPrototype = NewTarget.prototype) &&
-    NewTargetPrototype !== Wrapper.prototype
-  ) setPrototypeOf($this, NewTargetPrototype);
-  return $this;
-};
-
-
-/***/ }),
-
-/***/ 3706:
-/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
-
-
-var uncurryThis = __webpack_require__(9504);
-var isCallable = __webpack_require__(4901);
-var store = __webpack_require__(7629);
-
-var functionToString = uncurryThis(Function.toString);
-
-// this helper broken in `core-js@3.4.1-3.4.4`, so we can't use `shared` helper
-if (!isCallable(store.inspectSource)) {
-  store.inspectSource = function (it) {
-    return functionToString(it);
-  };
-}
-
-module.exports = store.inspectSource;
-
-
-/***/ }),
-
-/***/ 1181:
-/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
-
-
-var NATIVE_WEAK_MAP = __webpack_require__(8622);
-var globalThis = __webpack_require__(4576);
-var isObject = __webpack_require__(34);
-var createNonEnumerableProperty = __webpack_require__(6699);
-var hasOwn = __webpack_require__(9297);
-var shared = __webpack_require__(7629);
-var sharedKey = __webpack_require__(6119);
-var hiddenKeys = __webpack_require__(421);
-
-var OBJECT_ALREADY_INITIALIZED = 'Object already initialized';
-var TypeError = globalThis.TypeError;
-var WeakMap = globalThis.WeakMap;
-var set, get, has;
-
-var enforce = function (it) {
-  return has(it) ? get(it) : set(it, {});
-};
-
-var getterFor = function (TYPE) {
-  return function (it) {
-    var state;
-    if (!isObject(it) || (state = get(it)).type !== TYPE) {
-      throw new TypeError('Incompatible receiver, ' + TYPE + ' required');
-    } return state;
-  };
-};
-
-if (NATIVE_WEAK_MAP || shared.state) {
-  var store = shared.state || (shared.state = new WeakMap());
-  /* eslint-disable no-self-assign -- prototype methods protection */
-  store.get = store.get;
-  store.has = store.has;
-  store.set = store.set;
-  /* eslint-enable no-self-assign -- prototype methods protection */
-  set = function (it, metadata) {
-    if (store.has(it)) throw new TypeError(OBJECT_ALREADY_INITIALIZED);
-    metadata.facade = it;
-    store.set(it, metadata);
-    return metadata;
-  };
-  get = function (it) {
-    return store.get(it) || {};
-  };
-  has = function (it) {
-    return store.has(it);
-  };
-} else {
-  var STATE = sharedKey('state');
-  hiddenKeys[STATE] = true;
-  set = function (it, metadata) {
-    if (hasOwn(it, STATE)) throw new TypeError(OBJECT_ALREADY_INITIALIZED);
-    metadata.facade = it;
-    createNonEnumerableProperty(it, STATE, metadata);
-    return metadata;
-  };
-  get = function (it) {
-    return hasOwn(it, STATE) ? it[STATE] : {};
-  };
-  has = function (it) {
-    return hasOwn(it, STATE);
-  };
-}
-
-module.exports = {
-  set: set,
-  get: get,
-  has: has,
-  enforce: enforce,
-  getterFor: getterFor
-};
-
-
-/***/ }),
-
-/***/ 4209:
-/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
-
-
-var wellKnownSymbol = __webpack_require__(8227);
-var Iterators = __webpack_require__(6269);
-
-var ITERATOR = wellKnownSymbol('iterator');
-var ArrayPrototype = Array.prototype;
-
-// check on default Array iterator
-module.exports = function (it) {
-  return it !== undefined && (Iterators.Array === it || ArrayPrototype[ITERATOR] === it);
-};
-
-
-/***/ }),
-
-/***/ 4376:
-/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
-
-
-var classof = __webpack_require__(2195);
-
-// `IsArray` abstract operation
-// https://tc39.es/ecma262/#sec-isarray
-// eslint-disable-next-line es/no-array-isarray -- safe
-module.exports = Array.isArray || function isArray(argument) {
-  return classof(argument) === 'Array';
-};
-
-
-/***/ }),
-
-/***/ 1108:
-/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
-
-
-var classof = __webpack_require__(6955);
-
-module.exports = function (it) {
-  var klass = classof(it);
-  return klass === 'BigInt64Array' || klass === 'BigUint64Array';
-};
-
-
-/***/ }),
-
-/***/ 4901:
-/***/ ((module) => {
-
-
-// https://tc39.es/ecma262/#sec-IsHTMLDDA-internal-slot
-var documentAll = typeof document == 'object' && document.all;
-
-// `IsCallable` abstract operation
-// https://tc39.es/ecma262/#sec-iscallable
-// eslint-disable-next-line unicorn/no-typeof-undefined -- required for testing
-module.exports = typeof documentAll == 'undefined' && documentAll !== undefined ? function (argument) {
-  return typeof argument == 'function' || argument === documentAll;
-} : function (argument) {
-  return typeof argument == 'function';
-};
-
-
-/***/ }),
-
-/***/ 2796:
-/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
-
-
-var fails = __webpack_require__(9039);
-var isCallable = __webpack_require__(4901);
-
-var replacement = /#|\.prototype\./;
-
-var isForced = function (feature, detection) {
-  var value = data[normalize(feature)];
-  return value === POLYFILL ? true
-    : value === NATIVE ? false
-    : isCallable(detection) ? fails(detection)
-    : !!detection;
-};
-
-var normalize = isForced.normalize = function (string) {
-  return String(string).replace(replacement, '.').toLowerCase();
-};
-
-var data = isForced.data = {};
-var NATIVE = isForced.NATIVE = 'N';
-var POLYFILL = isForced.POLYFILL = 'P';
-
-module.exports = isForced;
-
-
-/***/ }),
-
-/***/ 4117:
-/***/ ((module) => {
-
-
-// we can't use just `it == null` since of `document.all` special case
-// https://tc39.es/ecma262/#sec-IsHTMLDDA-internal-slot-aec
-module.exports = function (it) {
-  return it === null || it === undefined;
-};
-
-
-/***/ }),
-
-/***/ 34:
-/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
-
-
-var isCallable = __webpack_require__(4901);
-
-module.exports = function (it) {
-  return typeof it == 'object' ? it !== null : isCallable(it);
-};
-
-
-/***/ }),
-
-/***/ 3925:
-/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
-
-
-var isObject = __webpack_require__(34);
-
-module.exports = function (argument) {
-  return isObject(argument) || argument === null;
-};
-
-
-/***/ }),
-
-/***/ 6395:
-/***/ ((module) => {
-
-
-module.exports = false;
-
-
-/***/ }),
-
-/***/ 757:
-/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
-
-
-var getBuiltIn = __webpack_require__(7751);
-var isCallable = __webpack_require__(4901);
-var isPrototypeOf = __webpack_require__(1625);
-var USE_SYMBOL_AS_UID = __webpack_require__(7040);
-
-var $Object = Object;
-
-module.exports = USE_SYMBOL_AS_UID ? function (it) {
-  return typeof it == 'symbol';
-} : function (it) {
-  var $Symbol = getBuiltIn('Symbol');
-  return isCallable($Symbol) && isPrototypeOf($Symbol.prototype, $Object(it));
-};
-
-
-/***/ }),
-
-/***/ 507:
-/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
-
-
-var call = __webpack_require__(9565);
-
-module.exports = function (record, fn, ITERATOR_INSTEAD_OF_RECORD) {
-  var iterator = ITERATOR_INSTEAD_OF_RECORD ? record : record.iterator;
-  var next = record.next;
-  var step, result;
-  while (!(step = call(next, iterator)).done) {
-    result = fn(step.value);
-    if (result !== undefined) return result;
-  }
-};
-
-
-/***/ }),
-
-/***/ 2652:
-/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
-
-
-var bind = __webpack_require__(6080);
-var call = __webpack_require__(9565);
-var anObject = __webpack_require__(8551);
-var tryToString = __webpack_require__(6823);
-var isArrayIteratorMethod = __webpack_require__(4209);
-var lengthOfArrayLike = __webpack_require__(6198);
-var isPrototypeOf = __webpack_require__(1625);
-var getIterator = __webpack_require__(81);
-var getIteratorMethod = __webpack_require__(851);
-var iteratorClose = __webpack_require__(9539);
-
-var $TypeError = TypeError;
-
-var Result = function (stopped, result) {
-  this.stopped = stopped;
-  this.result = result;
-};
-
-var ResultPrototype = Result.prototype;
-
-module.exports = function (iterable, unboundFunction, options) {
-  var that = options && options.that;
-  var AS_ENTRIES = !!(options && options.AS_ENTRIES);
-  var IS_RECORD = !!(options && options.IS_RECORD);
-  var IS_ITERATOR = !!(options && options.IS_ITERATOR);
-  var INTERRUPTED = !!(options && options.INTERRUPTED);
-  var fn = bind(unboundFunction, that);
-  var iterator, iterFn, index, length, result, next, step;
-
-  var stop = function (condition) {
-    if (iterator) iteratorClose(iterator, 'normal', condition);
-    return new Result(true, condition);
-  };
-
-  var callFn = function (value) {
-    if (AS_ENTRIES) {
-      anObject(value);
-      return INTERRUPTED ? fn(value[0], value[1], stop) : fn(value[0], value[1]);
-    } return INTERRUPTED ? fn(value, stop) : fn(value);
-  };
-
-  if (IS_RECORD) {
-    iterator = iterable.iterator;
-  } else if (IS_ITERATOR) {
-    iterator = iterable;
-  } else {
-    iterFn = getIteratorMethod(iterable);
-    if (!iterFn) throw new $TypeError(tryToString(iterable) + ' is not iterable');
-    // optimisation for array iterators
-    if (isArrayIteratorMethod(iterFn)) {
-      for (index = 0, length = lengthOfArrayLike(iterable); length > index; index++) {
-        result = callFn(iterable[index]);
-        if (result && isPrototypeOf(ResultPrototype, result)) return result;
-      } return new Result(false);
-    }
-    iterator = getIterator(iterable, iterFn);
-  }
-
-  next = IS_RECORD ? iterable.next : iterator.next;
-  while (!(step = call(next, iterator)).done) {
-    try {
-      result = callFn(step.value);
-    } catch (error) {
-      iteratorClose(iterator, 'throw', error);
-    }
-    if (typeof result == 'object' && result && isPrototypeOf(ResultPrototype, result)) return result;
-  } return new Result(false);
-};
-
-
-/***/ }),
-
-/***/ 9539:
-/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
-
-
-var call = __webpack_require__(9565);
-var anObject = __webpack_require__(8551);
-var getMethod = __webpack_require__(5966);
-
-module.exports = function (iterator, kind, value) {
-  var innerResult, innerError;
-  anObject(iterator);
-  try {
-    innerResult = getMethod(iterator, 'return');
-    if (!innerResult) {
-      if (kind === 'throw') throw value;
-      return value;
-    }
-    innerResult = call(innerResult, iterator);
-  } catch (error) {
-    innerError = true;
-    innerResult = error;
-  }
-  if (kind === 'throw') throw value;
-  if (innerError) throw innerResult;
-  anObject(innerResult);
-  return value;
-};
-
-
-/***/ }),
-
-/***/ 9462:
-/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
-
-
-var call = __webpack_require__(9565);
-var create = __webpack_require__(2360);
-var createNonEnumerableProperty = __webpack_require__(6699);
-var defineBuiltIns = __webpack_require__(6279);
-var wellKnownSymbol = __webpack_require__(8227);
-var InternalStateModule = __webpack_require__(1181);
-var getMethod = __webpack_require__(5966);
-var IteratorPrototype = (__webpack_require__(7657).IteratorPrototype);
-var createIterResultObject = __webpack_require__(2529);
-var iteratorClose = __webpack_require__(9539);
-
-var TO_STRING_TAG = wellKnownSymbol('toStringTag');
-var ITERATOR_HELPER = 'IteratorHelper';
-var WRAP_FOR_VALID_ITERATOR = 'WrapForValidIterator';
-var setInternalState = InternalStateModule.set;
-
-var createIteratorProxyPrototype = function (IS_ITERATOR) {
-  var getInternalState = InternalStateModule.getterFor(IS_ITERATOR ? WRAP_FOR_VALID_ITERATOR : ITERATOR_HELPER);
-
-  return defineBuiltIns(create(IteratorPrototype), {
-    next: function next() {
-      var state = getInternalState(this);
-      // for simplification:
-      //   for `%WrapForValidIteratorPrototype%.next` our `nextHandler` returns `IterResultObject`
-      //   for `%IteratorHelperPrototype%.next` - just a value
-      if (IS_ITERATOR) return state.nextHandler();
-      try {
-        var result = state.done ? undefined : state.nextHandler();
-        return createIterResultObject(result, state.done);
-      } catch (error) {
-        state.done = true;
-        throw error;
-      }
-    },
-    'return': function () {
-      var state = getInternalState(this);
-      var iterator = state.iterator;
-      state.done = true;
-      if (IS_ITERATOR) {
-        var returnMethod = getMethod(iterator, 'return');
-        return returnMethod ? call(returnMethod, iterator) : createIterResultObject(undefined, true);
-      }
-      if (state.inner) try {
-        iteratorClose(state.inner.iterator, 'normal');
-      } catch (error) {
-        return iteratorClose(iterator, 'throw', error);
-      }
-      iteratorClose(iterator, 'normal');
-      return createIterResultObject(undefined, true);
-    }
-  });
-};
-
-var WrapForValidIteratorPrototype = createIteratorProxyPrototype(true);
-var IteratorHelperPrototype = createIteratorProxyPrototype(false);
-
-createNonEnumerableProperty(IteratorHelperPrototype, TO_STRING_TAG, 'Iterator Helper');
-
-module.exports = function (nextHandler, IS_ITERATOR) {
-  var IteratorProxy = function Iterator(record, state) {
-    if (state) {
-      state.iterator = record.iterator;
-      state.next = record.next;
-    } else state = record;
-    state.type = IS_ITERATOR ? WRAP_FOR_VALID_ITERATOR : ITERATOR_HELPER;
-    state.nextHandler = nextHandler;
-    state.counter = 0;
-    state.done = false;
-    setInternalState(this, state);
-  };
-
-  IteratorProxy.prototype = IS_ITERATOR ? WrapForValidIteratorPrototype : IteratorHelperPrototype;
-
-  return IteratorProxy;
-};
-
-
-/***/ }),
-
-/***/ 713:
-/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
-
-
-var call = __webpack_require__(9565);
-var aCallable = __webpack_require__(9306);
-var anObject = __webpack_require__(8551);
-var getIteratorDirect = __webpack_require__(1767);
-var createIteratorProxy = __webpack_require__(9462);
-var callWithSafeIterationClosing = __webpack_require__(6319);
-
-var IteratorProxy = createIteratorProxy(function () {
-  var iterator = this.iterator;
-  var result = anObject(call(this.next, iterator));
-  var done = this.done = !!result.done;
-  if (!done) return callWithSafeIterationClosing(iterator, this.mapper, [result.value, this.counter++], true);
-});
-
-// `Iterator.prototype.map` method
-// https://github.com/tc39/proposal-iterator-helpers
-module.exports = function map(mapper) {
-  anObject(this);
-  aCallable(mapper);
-  return new IteratorProxy(getIteratorDirect(this), {
-    mapper: mapper
-  });
-};
-
-
-/***/ }),
-
-/***/ 7657:
-/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
-
-
-var fails = __webpack_require__(9039);
-var isCallable = __webpack_require__(4901);
-var isObject = __webpack_require__(34);
-var create = __webpack_require__(2360);
-var getPrototypeOf = __webpack_require__(2787);
-var defineBuiltIn = __webpack_require__(6840);
-var wellKnownSymbol = __webpack_require__(8227);
-var IS_PURE = __webpack_require__(6395);
-
-var ITERATOR = wellKnownSymbol('iterator');
-var BUGGY_SAFARI_ITERATORS = false;
-
-// `%IteratorPrototype%` object
-// https://tc39.es/ecma262/#sec-%iteratorprototype%-object
-var IteratorPrototype, PrototypeOfArrayIteratorPrototype, arrayIterator;
-
-/* eslint-disable es/no-array-prototype-keys -- safe */
-if ([].keys) {
-  arrayIterator = [].keys();
-  // Safari 8 has buggy iterators w/o `next`
-  if (!('next' in arrayIterator)) BUGGY_SAFARI_ITERATORS = true;
-  else {
-    PrototypeOfArrayIteratorPrototype = getPrototypeOf(getPrototypeOf(arrayIterator));
-    if (PrototypeOfArrayIteratorPrototype !== Object.prototype) IteratorPrototype = PrototypeOfArrayIteratorPrototype;
-  }
-}
-
-var NEW_ITERATOR_PROTOTYPE = !isObject(IteratorPrototype) || fails(function () {
-  var test = {};
-  // FF44- legacy iterators case
-  return IteratorPrototype[ITERATOR].call(test) !== test;
-});
-
-if (NEW_ITERATOR_PROTOTYPE) IteratorPrototype = {};
-else if (IS_PURE) IteratorPrototype = create(IteratorPrototype);
-
-// `%IteratorPrototype%[@@iterator]()` method
-// https://tc39.es/ecma262/#sec-%iteratorprototype%-@@iterator
-if (!isCallable(IteratorPrototype[ITERATOR])) {
-  defineBuiltIn(IteratorPrototype, ITERATOR, function () {
-    return this;
-  });
-}
-
-module.exports = {
-  IteratorPrototype: IteratorPrototype,
-  BUGGY_SAFARI_ITERATORS: BUGGY_SAFARI_ITERATORS
-};
-
-
-/***/ }),
-
-/***/ 6269:
-/***/ ((module) => {
-
-
-module.exports = {};
-
-
-/***/ }),
-
-/***/ 6198:
-/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
-
-
-var toLength = __webpack_require__(8014);
-
-// `LengthOfArrayLike` abstract operation
-// https://tc39.es/ecma262/#sec-lengthofarraylike
-module.exports = function (obj) {
-  return toLength(obj.length);
-};
-
-
-/***/ }),
-
-/***/ 283:
-/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
-
-
-var uncurryThis = __webpack_require__(9504);
-var fails = __webpack_require__(9039);
-var isCallable = __webpack_require__(4901);
-var hasOwn = __webpack_require__(9297);
-var DESCRIPTORS = __webpack_require__(3724);
-var CONFIGURABLE_FUNCTION_NAME = (__webpack_require__(350).CONFIGURABLE);
-var inspectSource = __webpack_require__(3706);
-var InternalStateModule = __webpack_require__(1181);
-
-var enforceInternalState = InternalStateModule.enforce;
-var getInternalState = InternalStateModule.get;
-var $String = String;
-// eslint-disable-next-line es/no-object-defineproperty -- safe
-var defineProperty = Object.defineProperty;
-var stringSlice = uncurryThis(''.slice);
-var replace = uncurryThis(''.replace);
-var join = uncurryThis([].join);
-
-var CONFIGURABLE_LENGTH = DESCRIPTORS && !fails(function () {
-  return defineProperty(function () { /* empty */ }, 'length', { value: 8 }).length !== 8;
-});
-
-var TEMPLATE = String(String).split('String');
-
-var makeBuiltIn = module.exports = function (value, name, options) {
-  if (stringSlice($String(name), 0, 7) === 'Symbol(') {
-    name = '[' + replace($String(name), /^Symbol\(([^)]*)\).*$/, '$1') + ']';
-  }
-  if (options && options.getter) name = 'get ' + name;
-  if (options && options.setter) name = 'set ' + name;
-  if (!hasOwn(value, 'name') || (CONFIGURABLE_FUNCTION_NAME && value.name !== name)) {
-    if (DESCRIPTORS) defineProperty(value, 'name', { value: name, configurable: true });
-    else value.name = name;
-  }
-  if (CONFIGURABLE_LENGTH && options && hasOwn(options, 'arity') && value.length !== options.arity) {
-    defineProperty(value, 'length', { value: options.arity });
-  }
-  try {
-    if (options && hasOwn(options, 'constructor') && options.constructor) {
-      if (DESCRIPTORS) defineProperty(value, 'prototype', { writable: false });
-    // in V8 ~ Chrome 53, prototypes of some methods, like `Array.prototype.values`, are non-writable
-    } else if (value.prototype) value.prototype = undefined;
-  } catch (error) { /* empty */ }
-  var state = enforceInternalState(value);
-  if (!hasOwn(state, 'source')) {
-    state.source = join(TEMPLATE, typeof name == 'string' ? name : '');
-  } return value;
-};
-
-// add fake Function#toString for correct work wrapped methods / constructors with methods like LoDash isNative
-// eslint-disable-next-line no-extend-native -- required
-Function.prototype.toString = makeBuiltIn(function toString() {
-  return isCallable(this) && getInternalState(this).source || inspectSource(this);
-}, 'toString');
-
-
-/***/ }),
-
-/***/ 741:
-/***/ ((module) => {
-
-
-var ceil = Math.ceil;
-var floor = Math.floor;
-
-// `Math.trunc` method
-// https://tc39.es/ecma262/#sec-math.trunc
-// eslint-disable-next-line es/no-math-trunc -- safe
-module.exports = Math.trunc || function trunc(x) {
-  var n = +x;
-  return (n > 0 ? floor : ceil)(n);
-};
-
-
-/***/ }),
-
-/***/ 6043:
-/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
-
-
-var aCallable = __webpack_require__(9306);
-
-var $TypeError = TypeError;
-
-var PromiseCapability = function (C) {
-  var resolve, reject;
-  this.promise = new C(function ($$resolve, $$reject) {
-    if (resolve !== undefined || reject !== undefined) throw new $TypeError('Bad Promise constructor');
-    resolve = $$resolve;
-    reject = $$reject;
-  });
-  this.resolve = aCallable(resolve);
-  this.reject = aCallable(reject);
-};
-
-// `NewPromiseCapability` abstract operation
-// https://tc39.es/ecma262/#sec-newpromisecapability
-module.exports.f = function (C) {
-  return new PromiseCapability(C);
-};
-
-
-/***/ }),
-
-/***/ 2603:
-/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
-
-
-var toString = __webpack_require__(655);
-
-module.exports = function (argument, $default) {
-  return argument === undefined ? arguments.length < 2 ? '' : $default : toString(argument);
-};
-
-
-/***/ }),
-
-/***/ 4149:
-/***/ ((module) => {
-
-
-var $RangeError = RangeError;
-
-module.exports = function (it) {
-  // eslint-disable-next-line no-self-compare -- NaN check
-  if (it === it) return it;
-  throw new $RangeError('NaN is not allowed');
-};
-
-
-/***/ }),
-
-/***/ 2360:
-/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
-
-
-/* global ActiveXObject -- old IE, WSH */
-var anObject = __webpack_require__(8551);
-var definePropertiesModule = __webpack_require__(6801);
-var enumBugKeys = __webpack_require__(8727);
-var hiddenKeys = __webpack_require__(421);
-var html = __webpack_require__(397);
-var documentCreateElement = __webpack_require__(4055);
-var sharedKey = __webpack_require__(6119);
-
-var GT = '>';
-var LT = '<';
-var PROTOTYPE = 'prototype';
-var SCRIPT = 'script';
-var IE_PROTO = sharedKey('IE_PROTO');
-
-var EmptyConstructor = function () { /* empty */ };
-
-var scriptTag = function (content) {
-  return LT + SCRIPT + GT + content + LT + '/' + SCRIPT + GT;
-};
-
-// Create object with fake `null` prototype: use ActiveX Object with cleared prototype
-var NullProtoObjectViaActiveX = function (activeXDocument) {
-  activeXDocument.write(scriptTag(''));
-  activeXDocument.close();
-  var temp = activeXDocument.parentWindow.Object;
-  // eslint-disable-next-line no-useless-assignment -- avoid memory leak
-  activeXDocument = null;
-  return temp;
-};
-
-// Create object with fake `null` prototype: use iframe Object with cleared prototype
-var NullProtoObjectViaIFrame = function () {
-  // Thrash, waste and sodomy: IE GC bug
-  var iframe = documentCreateElement('iframe');
-  var JS = 'java' + SCRIPT + ':';
-  var iframeDocument;
-  iframe.style.display = 'none';
-  html.appendChild(iframe);
-  // https://github.com/zloirock/core-js/issues/475
-  iframe.src = String(JS);
-  iframeDocument = iframe.contentWindow.document;
-  iframeDocument.open();
-  iframeDocument.write(scriptTag('document.F=Object'));
-  iframeDocument.close();
-  return iframeDocument.F;
-};
-
-// Check for document.domain and active x support
-// No need to use active x approach when document.domain is not set
-// see https://github.com/es-shims/es5-shim/issues/150
-// variation of https://github.com/kitcambridge/es5-shim/commit/4f738ac066346
-// avoid IE GC bug
-var activeXDocument;
-var NullProtoObject = function () {
-  try {
-    activeXDocument = new ActiveXObject('htmlfile');
-  } catch (error) { /* ignore */ }
-  NullProtoObject = typeof document != 'undefined'
-    ? document.domain && activeXDocument
-      ? NullProtoObjectViaActiveX(activeXDocument) // old IE
-      : NullProtoObjectViaIFrame()
-    : NullProtoObjectViaActiveX(activeXDocument); // WSH
-  var length = enumBugKeys.length;
-  while (length--) delete NullProtoObject[PROTOTYPE][enumBugKeys[length]];
-  return NullProtoObject();
-};
-
-hiddenKeys[IE_PROTO] = true;
-
-// `Object.create` method
-// https://tc39.es/ecma262/#sec-object.create
-// eslint-disable-next-line es/no-object-create -- safe
-module.exports = Object.create || function create(O, Properties) {
-  var result;
-  if (O !== null) {
-    EmptyConstructor[PROTOTYPE] = anObject(O);
-    result = new EmptyConstructor();
-    EmptyConstructor[PROTOTYPE] = null;
-    // add "__proto__" for Object.getPrototypeOf polyfill
-    result[IE_PROTO] = O;
-  } else result = NullProtoObject();
-  return Properties === undefined ? result : definePropertiesModule.f(result, Properties);
-};
-
-
-/***/ }),
-
-/***/ 6801:
-/***/ ((__unused_webpack_module, exports, __webpack_require__) => {
-
-
-var DESCRIPTORS = __webpack_require__(3724);
-var V8_PROTOTYPE_DEFINE_BUG = __webpack_require__(8686);
-var definePropertyModule = __webpack_require__(4913);
-var anObject = __webpack_require__(8551);
-var toIndexedObject = __webpack_require__(5397);
-var objectKeys = __webpack_require__(1072);
-
-// `Object.defineProperties` method
-// https://tc39.es/ecma262/#sec-object.defineproperties
-// eslint-disable-next-line es/no-object-defineproperties -- safe
-exports.f = DESCRIPTORS && !V8_PROTOTYPE_DEFINE_BUG ? Object.defineProperties : function defineProperties(O, Properties) {
-  anObject(O);
-  var props = toIndexedObject(Properties);
-  var keys = objectKeys(Properties);
-  var length = keys.length;
-  var index = 0;
-  var key;
-  while (length > index) definePropertyModule.f(O, key = keys[index++], props[key]);
-  return O;
-};
-
-
-/***/ }),
-
-/***/ 4913:
-/***/ ((__unused_webpack_module, exports, __webpack_require__) => {
-
-
-var DESCRIPTORS = __webpack_require__(3724);
-var IE8_DOM_DEFINE = __webpack_require__(5917);
-var V8_PROTOTYPE_DEFINE_BUG = __webpack_require__(8686);
-var anObject = __webpack_require__(8551);
-var toPropertyKey = __webpack_require__(6969);
-
-var $TypeError = TypeError;
-// eslint-disable-next-line es/no-object-defineproperty -- safe
-var $defineProperty = Object.defineProperty;
-// eslint-disable-next-line es/no-object-getownpropertydescriptor -- safe
-var $getOwnPropertyDescriptor = Object.getOwnPropertyDescriptor;
-var ENUMERABLE = 'enumerable';
-var CONFIGURABLE = 'configurable';
-var WRITABLE = 'writable';
-
-// `Object.defineProperty` method
-// https://tc39.es/ecma262/#sec-object.defineproperty
-exports.f = DESCRIPTORS ? V8_PROTOTYPE_DEFINE_BUG ? function defineProperty(O, P, Attributes) {
-  anObject(O);
-  P = toPropertyKey(P);
-  anObject(Attributes);
-  if (typeof O === 'function' && P === 'prototype' && 'value' in Attributes && WRITABLE in Attributes && !Attributes[WRITABLE]) {
-    var current = $getOwnPropertyDescriptor(O, P);
-    if (current && current[WRITABLE]) {
-      O[P] = Attributes.value;
-      Attributes = {
-        configurable: CONFIGURABLE in Attributes ? Attributes[CONFIGURABLE] : current[CONFIGURABLE],
-        enumerable: ENUMERABLE in Attributes ? Attributes[ENUMERABLE] : current[ENUMERABLE],
-        writable: false
-      };
-    }
-  } return $defineProperty(O, P, Attributes);
-} : $defineProperty : function defineProperty(O, P, Attributes) {
-  anObject(O);
-  P = toPropertyKey(P);
-  anObject(Attributes);
-  if (IE8_DOM_DEFINE) try {
-    return $defineProperty(O, P, Attributes);
-  } catch (error) { /* empty */ }
-  if ('get' in Attributes || 'set' in Attributes) throw new $TypeError('Accessors not supported');
-  if ('value' in Attributes) O[P] = Attributes.value;
-  return O;
-};
-
-
-/***/ }),
-
-/***/ 7347:
-/***/ ((__unused_webpack_module, exports, __webpack_require__) => {
-
-
-var DESCRIPTORS = __webpack_require__(3724);
-var call = __webpack_require__(9565);
-var propertyIsEnumerableModule = __webpack_require__(8773);
-var createPropertyDescriptor = __webpack_require__(6980);
-var toIndexedObject = __webpack_require__(5397);
-var toPropertyKey = __webpack_require__(6969);
-var hasOwn = __webpack_require__(9297);
-var IE8_DOM_DEFINE = __webpack_require__(5917);
-
-// eslint-disable-next-line es/no-object-getownpropertydescriptor -- safe
-var $getOwnPropertyDescriptor = Object.getOwnPropertyDescriptor;
-
-// `Object.getOwnPropertyDescriptor` method
-// https://tc39.es/ecma262/#sec-object.getownpropertydescriptor
-exports.f = DESCRIPTORS ? $getOwnPropertyDescriptor : function getOwnPropertyDescriptor(O, P) {
-  O = toIndexedObject(O);
-  P = toPropertyKey(P);
-  if (IE8_DOM_DEFINE) try {
-    return $getOwnPropertyDescriptor(O, P);
-  } catch (error) { /* empty */ }
-  if (hasOwn(O, P)) return createPropertyDescriptor(!call(propertyIsEnumerableModule.f, O, P), O[P]);
-};
-
-
-/***/ }),
-
-/***/ 8480:
-/***/ ((__unused_webpack_module, exports, __webpack_require__) => {
-
-
-var internalObjectKeys = __webpack_require__(1828);
-var enumBugKeys = __webpack_require__(8727);
-
-var hiddenKeys = enumBugKeys.concat('length', 'prototype');
-
-// `Object.getOwnPropertyNames` method
-// https://tc39.es/ecma262/#sec-object.getownpropertynames
-// eslint-disable-next-line es/no-object-getownpropertynames -- safe
-exports.f = Object.getOwnPropertyNames || function getOwnPropertyNames(O) {
-  return internalObjectKeys(O, hiddenKeys);
-};
-
-
-/***/ }),
-
-/***/ 3717:
-/***/ ((__unused_webpack_module, exports) => {
-
-
-// eslint-disable-next-line es/no-object-getownpropertysymbols -- safe
-exports.f = Object.getOwnPropertySymbols;
-
-
-/***/ }),
-
-/***/ 2787:
-/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
-
-
-var hasOwn = __webpack_require__(9297);
-var isCallable = __webpack_require__(4901);
-var toObject = __webpack_require__(8981);
-var sharedKey = __webpack_require__(6119);
-var CORRECT_PROTOTYPE_GETTER = __webpack_require__(2211);
-
-var IE_PROTO = sharedKey('IE_PROTO');
-var $Object = Object;
-var ObjectPrototype = $Object.prototype;
-
-// `Object.getPrototypeOf` method
-// https://tc39.es/ecma262/#sec-object.getprototypeof
-// eslint-disable-next-line es/no-object-getprototypeof -- safe
-module.exports = CORRECT_PROTOTYPE_GETTER ? $Object.getPrototypeOf : function (O) {
-  var object = toObject(O);
-  if (hasOwn(object, IE_PROTO)) return object[IE_PROTO];
-  var constructor = object.constructor;
-  if (isCallable(constructor) && object instanceof constructor) {
-    return constructor.prototype;
-  } return object instanceof $Object ? ObjectPrototype : null;
-};
-
-
-/***/ }),
-
-/***/ 1625:
-/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
-
-
-var uncurryThis = __webpack_require__(9504);
-
-module.exports = uncurryThis({}.isPrototypeOf);
-
-
-/***/ }),
-
-/***/ 1828:
-/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
-
-
-var uncurryThis = __webpack_require__(9504);
-var hasOwn = __webpack_require__(9297);
-var toIndexedObject = __webpack_require__(5397);
-var indexOf = (__webpack_require__(9617).indexOf);
-var hiddenKeys = __webpack_require__(421);
-
-var push = uncurryThis([].push);
-
-module.exports = function (object, names) {
-  var O = toIndexedObject(object);
-  var i = 0;
-  var result = [];
-  var key;
-  for (key in O) !hasOwn(hiddenKeys, key) && hasOwn(O, key) && push(result, key);
-  // Don't enum bug & hidden keys
-  while (names.length > i) if (hasOwn(O, key = names[i++])) {
-    ~indexOf(result, key) || push(result, key);
-  }
-  return result;
-};
-
-
-/***/ }),
-
-/***/ 1072:
-/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
-
-
-var internalObjectKeys = __webpack_require__(1828);
-var enumBugKeys = __webpack_require__(8727);
-
-// `Object.keys` method
-// https://tc39.es/ecma262/#sec-object.keys
-// eslint-disable-next-line es/no-object-keys -- safe
-module.exports = Object.keys || function keys(O) {
-  return internalObjectKeys(O, enumBugKeys);
-};
-
-
-/***/ }),
-
-/***/ 8773:
-/***/ ((__unused_webpack_module, exports) => {
-
-
-var $propertyIsEnumerable = {}.propertyIsEnumerable;
-// eslint-disable-next-line es/no-object-getownpropertydescriptor -- safe
-var getOwnPropertyDescriptor = Object.getOwnPropertyDescriptor;
-
-// Nashorn ~ JDK8 bug
-var NASHORN_BUG = getOwnPropertyDescriptor && !$propertyIsEnumerable.call({ 1: 2 }, 1);
-
-// `Object.prototype.propertyIsEnumerable` method implementation
-// https://tc39.es/ecma262/#sec-object.prototype.propertyisenumerable
-exports.f = NASHORN_BUG ? function propertyIsEnumerable(V) {
-  var descriptor = getOwnPropertyDescriptor(this, V);
-  return !!descriptor && descriptor.enumerable;
-} : $propertyIsEnumerable;
-
-
-/***/ }),
-
-/***/ 2967:
-/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
-
-
-/* eslint-disable no-proto -- safe */
-var uncurryThisAccessor = __webpack_require__(6706);
-var isObject = __webpack_require__(34);
-var requireObjectCoercible = __webpack_require__(7750);
-var aPossiblePrototype = __webpack_require__(3506);
-
-// `Object.setPrototypeOf` method
-// https://tc39.es/ecma262/#sec-object.setprototypeof
-// Works with __proto__ only. Old v8 can't work with null proto objects.
-// eslint-disable-next-line es/no-object-setprototypeof -- safe
-module.exports = Object.setPrototypeOf || ('__proto__' in {} ? function () {
-  var CORRECT_SETTER = false;
-  var test = {};
-  var setter;
-  try {
-    setter = uncurryThisAccessor(Object.prototype, '__proto__', 'set');
-    setter(test, []);
-    CORRECT_SETTER = test instanceof Array;
-  } catch (error) { /* empty */ }
-  return function setPrototypeOf(O, proto) {
-    requireObjectCoercible(O);
-    aPossiblePrototype(proto);
-    if (!isObject(O)) return O;
-    if (CORRECT_SETTER) setter(O, proto);
-    else O.__proto__ = proto;
-    return O;
-  };
-}() : undefined);
-
-
-/***/ }),
-
-/***/ 4270:
-/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
-
-
-var call = __webpack_require__(9565);
-var isCallable = __webpack_require__(4901);
-var isObject = __webpack_require__(34);
-
-var $TypeError = TypeError;
-
-// `OrdinaryToPrimitive` abstract operation
-// https://tc39.es/ecma262/#sec-ordinarytoprimitive
-module.exports = function (input, pref) {
-  var fn, val;
-  if (pref === 'string' && isCallable(fn = input.toString) && !isObject(val = call(fn, input))) return val;
-  if (isCallable(fn = input.valueOf) && !isObject(val = call(fn, input))) return val;
-  if (pref !== 'string' && isCallable(fn = input.toString) && !isObject(val = call(fn, input))) return val;
-  throw new $TypeError("Can't convert object to primitive value");
-};
-
-
-/***/ }),
-
-/***/ 5031:
-/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
-
-
-var getBuiltIn = __webpack_require__(7751);
-var uncurryThis = __webpack_require__(9504);
-var getOwnPropertyNamesModule = __webpack_require__(8480);
-var getOwnPropertySymbolsModule = __webpack_require__(3717);
-var anObject = __webpack_require__(8551);
-
-var concat = uncurryThis([].concat);
-
-// all object keys, includes non-enumerable and symbols
-module.exports = getBuiltIn('Reflect', 'ownKeys') || function ownKeys(it) {
-  var keys = getOwnPropertyNamesModule.f(anObject(it));
-  var getOwnPropertySymbols = getOwnPropertySymbolsModule.f;
-  return getOwnPropertySymbols ? concat(keys, getOwnPropertySymbols(it)) : keys;
-};
-
-
-/***/ }),
-
-/***/ 8235:
-/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
-
-
-var uncurryThis = __webpack_require__(9504);
-var hasOwn = __webpack_require__(9297);
-
-var $SyntaxError = SyntaxError;
-var $parseInt = parseInt;
-var fromCharCode = String.fromCharCode;
-var at = uncurryThis(''.charAt);
-var slice = uncurryThis(''.slice);
-var exec = uncurryThis(/./.exec);
-
-var codePoints = {
-  '\\"': '"',
-  '\\\\': '\\',
-  '\\/': '/',
-  '\\b': '\b',
-  '\\f': '\f',
-  '\\n': '\n',
-  '\\r': '\r',
-  '\\t': '\t'
-};
-
-var IS_4_HEX_DIGITS = /^[\da-f]{4}$/i;
-// eslint-disable-next-line regexp/no-control-character -- safe
-var IS_C0_CONTROL_CODE = /^[\u0000-\u001F]$/;
-
-module.exports = function (source, i) {
-  var unterminated = true;
-  var value = '';
-  while (i < source.length) {
-    var chr = at(source, i);
-    if (chr === '\\') {
-      var twoChars = slice(source, i, i + 2);
-      if (hasOwn(codePoints, twoChars)) {
-        value += codePoints[twoChars];
-        i += 2;
-      } else if (twoChars === '\\u') {
-        i += 2;
-        var fourHexDigits = slice(source, i, i + 4);
-        if (!exec(IS_4_HEX_DIGITS, fourHexDigits)) throw new $SyntaxError('Bad Unicode escape at: ' + i);
-        value += fromCharCode($parseInt(fourHexDigits, 16));
-        i += 4;
-      } else throw new $SyntaxError('Unknown escape sequence: "' + twoChars + '"');
-    } else if (chr === '"') {
-      unterminated = false;
-      i++;
-      break;
-    } else {
-      if (exec(IS_C0_CONTROL_CODE, chr)) throw new $SyntaxError('Bad control character in string literal at: ' + i);
-      value += chr;
-      i++;
-    }
-  }
-  if (unterminated) throw new $SyntaxError('Unterminated string at: ' + i);
-  return { value: value, end: i };
-};
-
-
-/***/ }),
-
-/***/ 7750:
-/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
-
-
-var isNullOrUndefined = __webpack_require__(4117);
-
-var $TypeError = TypeError;
-
-// `RequireObjectCoercible` abstract operation
-// https://tc39.es/ecma262/#sec-requireobjectcoercible
-module.exports = function (it) {
-  if (isNullOrUndefined(it)) throw new $TypeError("Can't call method on " + it);
-  return it;
-};
-
-
-/***/ }),
-
-/***/ 9286:
-/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
-
-
-var SetHelpers = __webpack_require__(4402);
-var iterate = __webpack_require__(8469);
-
-var Set = SetHelpers.Set;
-var add = SetHelpers.add;
-
-module.exports = function (set) {
-  var result = new Set();
-  iterate(set, function (it) {
-    add(result, it);
-  });
-  return result;
-};
-
-
-/***/ }),
-
-/***/ 3440:
-/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
-
-
-var aSet = __webpack_require__(7080);
-var SetHelpers = __webpack_require__(4402);
-var clone = __webpack_require__(9286);
-var size = __webpack_require__(5170);
-var getSetRecord = __webpack_require__(3789);
-var iterateSet = __webpack_require__(8469);
-var iterateSimple = __webpack_require__(507);
-
-var has = SetHelpers.has;
-var remove = SetHelpers.remove;
-
-// `Set.prototype.difference` method
-// https://github.com/tc39/proposal-set-methods
-module.exports = function difference(other) {
-  var O = aSet(this);
-  var otherRec = getSetRecord(other);
-  var result = clone(O);
-  if (size(O) <= otherRec.size) iterateSet(O, function (e) {
-    if (otherRec.includes(e)) remove(result, e);
-  });
-  else iterateSimple(otherRec.getIterator(), function (e) {
-    if (has(O, e)) remove(result, e);
-  });
-  return result;
-};
-
-
-/***/ }),
-
-/***/ 4402:
-/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
-
-
-var uncurryThis = __webpack_require__(9504);
-
-// eslint-disable-next-line es/no-set -- safe
-var SetPrototype = Set.prototype;
-
-module.exports = {
-  // eslint-disable-next-line es/no-set -- safe
-  Set: Set,
-  add: uncurryThis(SetPrototype.add),
-  has: uncurryThis(SetPrototype.has),
-  remove: uncurryThis(SetPrototype['delete']),
-  proto: SetPrototype
-};
-
-
-/***/ }),
-
-/***/ 8750:
-/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
-
-
-var aSet = __webpack_require__(7080);
-var SetHelpers = __webpack_require__(4402);
-var size = __webpack_require__(5170);
-var getSetRecord = __webpack_require__(3789);
-var iterateSet = __webpack_require__(8469);
-var iterateSimple = __webpack_require__(507);
-
-var Set = SetHelpers.Set;
-var add = SetHelpers.add;
-var has = SetHelpers.has;
-
-// `Set.prototype.intersection` method
-// https://github.com/tc39/proposal-set-methods
-module.exports = function intersection(other) {
-  var O = aSet(this);
-  var otherRec = getSetRecord(other);
-  var result = new Set();
-
-  if (size(O) > otherRec.size) {
-    iterateSimple(otherRec.getIterator(), function (e) {
-      if (has(O, e)) add(result, e);
-    });
-  } else {
-    iterateSet(O, function (e) {
-      if (otherRec.includes(e)) add(result, e);
-    });
-  }
-
-  return result;
-};
-
-
-/***/ }),
-
-/***/ 4449:
-/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
-
-
-var aSet = __webpack_require__(7080);
-var has = (__webpack_require__(4402).has);
-var size = __webpack_require__(5170);
-var getSetRecord = __webpack_require__(3789);
-var iterateSet = __webpack_require__(8469);
-var iterateSimple = __webpack_require__(507);
-var iteratorClose = __webpack_require__(9539);
-
-// `Set.prototype.isDisjointFrom` method
-// https://tc39.github.io/proposal-set-methods/#Set.prototype.isDisjointFrom
-module.exports = function isDisjointFrom(other) {
-  var O = aSet(this);
-  var otherRec = getSetRecord(other);
-  if (size(O) <= otherRec.size) return iterateSet(O, function (e) {
-    if (otherRec.includes(e)) return false;
-  }, true) !== false;
-  var iterator = otherRec.getIterator();
-  return iterateSimple(iterator, function (e) {
-    if (has(O, e)) return iteratorClose(iterator, 'normal', false);
-  }) !== false;
-};
-
-
-/***/ }),
-
-/***/ 3838:
-/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
-
-
-var aSet = __webpack_require__(7080);
-var size = __webpack_require__(5170);
-var iterate = __webpack_require__(8469);
-var getSetRecord = __webpack_require__(3789);
-
-// `Set.prototype.isSubsetOf` method
-// https://tc39.github.io/proposal-set-methods/#Set.prototype.isSubsetOf
-module.exports = function isSubsetOf(other) {
-  var O = aSet(this);
-  var otherRec = getSetRecord(other);
-  if (size(O) > otherRec.size) return false;
-  return iterate(O, function (e) {
-    if (!otherRec.includes(e)) return false;
-  }, true) !== false;
-};
-
-
-/***/ }),
-
-/***/ 8527:
-/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
-
-
-var aSet = __webpack_require__(7080);
-var has = (__webpack_require__(4402).has);
-var size = __webpack_require__(5170);
-var getSetRecord = __webpack_require__(3789);
-var iterateSimple = __webpack_require__(507);
-var iteratorClose = __webpack_require__(9539);
-
-// `Set.prototype.isSupersetOf` method
-// https://tc39.github.io/proposal-set-methods/#Set.prototype.isSupersetOf
-module.exports = function isSupersetOf(other) {
-  var O = aSet(this);
-  var otherRec = getSetRecord(other);
-  if (size(O) < otherRec.size) return false;
-  var iterator = otherRec.getIterator();
-  return iterateSimple(iterator, function (e) {
-    if (!has(O, e)) return iteratorClose(iterator, 'normal', false);
-  }) !== false;
-};
-
-
-/***/ }),
-
-/***/ 8469:
-/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
-
-
-var uncurryThis = __webpack_require__(9504);
-var iterateSimple = __webpack_require__(507);
-var SetHelpers = __webpack_require__(4402);
-
-var Set = SetHelpers.Set;
-var SetPrototype = SetHelpers.proto;
-var forEach = uncurryThis(SetPrototype.forEach);
-var keys = uncurryThis(SetPrototype.keys);
-var next = keys(new Set()).next;
-
-module.exports = function (set, fn, interruptible) {
-  return interruptible ? iterateSimple({ iterator: keys(set), next: next }, fn) : forEach(set, fn);
-};
-
-
-/***/ }),
-
-/***/ 4916:
-/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
-
-
-var getBuiltIn = __webpack_require__(7751);
-
-var createSetLike = function (size) {
-  return {
-    size: size,
-    has: function () {
-      return false;
-    },
-    keys: function () {
-      return {
-        next: function () {
-          return { done: true };
-        }
-      };
-    }
-  };
-};
-
-module.exports = function (name) {
-  var Set = getBuiltIn('Set');
-  try {
-    new Set()[name](createSetLike(0));
-    try {
-      // late spec change, early WebKit ~ Safari 17.0 beta implementation does not pass it
-      // https://github.com/tc39/proposal-set-methods/pull/88
-      new Set()[name](createSetLike(-1));
-      return false;
-    } catch (error2) {
-      return true;
-    }
-  } catch (error) {
-    return false;
-  }
-};
-
-
-/***/ }),
-
-/***/ 5170:
-/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
-
-
-var uncurryThisAccessor = __webpack_require__(6706);
-var SetHelpers = __webpack_require__(4402);
-
-module.exports = uncurryThisAccessor(SetHelpers.proto, 'size', 'get') || function (set) {
-  return set.size;
-};
-
-
-/***/ }),
-
-/***/ 3650:
-/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
-
-
-var aSet = __webpack_require__(7080);
-var SetHelpers = __webpack_require__(4402);
-var clone = __webpack_require__(9286);
-var getSetRecord = __webpack_require__(3789);
-var iterateSimple = __webpack_require__(507);
-
-var add = SetHelpers.add;
-var has = SetHelpers.has;
-var remove = SetHelpers.remove;
-
-// `Set.prototype.symmetricDifference` method
-// https://github.com/tc39/proposal-set-methods
-module.exports = function symmetricDifference(other) {
-  var O = aSet(this);
-  var keysIter = getSetRecord(other).getIterator();
-  var result = clone(O);
-  iterateSimple(keysIter, function (e) {
-    if (has(O, e)) remove(result, e);
-    else add(result, e);
-  });
-  return result;
-};
-
-
-/***/ }),
-
-/***/ 4204:
-/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
-
-
-var aSet = __webpack_require__(7080);
-var add = (__webpack_require__(4402).add);
-var clone = __webpack_require__(9286);
-var getSetRecord = __webpack_require__(3789);
-var iterateSimple = __webpack_require__(507);
-
-// `Set.prototype.union` method
-// https://github.com/tc39/proposal-set-methods
-module.exports = function union(other) {
-  var O = aSet(this);
-  var keysIter = getSetRecord(other).getIterator();
-  var result = clone(O);
-  iterateSimple(keysIter, function (it) {
-    add(result, it);
-  });
-  return result;
-};
-
-
-/***/ }),
-
-/***/ 6119:
-/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
-
-
-var shared = __webpack_require__(5745);
-var uid = __webpack_require__(3392);
-
-var keys = shared('keys');
-
-module.exports = function (key) {
-  return keys[key] || (keys[key] = uid(key));
-};
-
-
-/***/ }),
-
-/***/ 7629:
-/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
-
-
-var IS_PURE = __webpack_require__(6395);
-var globalThis = __webpack_require__(4576);
-var defineGlobalProperty = __webpack_require__(9433);
-
-var SHARED = '__core-js_shared__';
-var store = module.exports = globalThis[SHARED] || defineGlobalProperty(SHARED, {});
-
-(store.versions || (store.versions = [])).push({
-  version: '3.38.1',
-  mode: IS_PURE ? 'pure' : 'global',
-  copyright: '© 2014-2024 Denis Pushkarev (zloirock.ru)',
-  license: 'https://github.com/zloirock/core-js/blob/v3.38.1/LICENSE',
-  source: 'https://github.com/zloirock/core-js'
-});
-
-
-/***/ }),
-
-/***/ 5745:
-/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
-
-
-var store = __webpack_require__(7629);
-
-module.exports = function (key, value) {
-  return store[key] || (store[key] = value || {});
-};
-
-
-/***/ }),
-
-/***/ 1548:
-/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
-
-
-var globalThis = __webpack_require__(4576);
-var fails = __webpack_require__(9039);
-var V8 = __webpack_require__(9519);
-var ENVIRONMENT = __webpack_require__(4215);
-
-var structuredClone = globalThis.structuredClone;
-
-module.exports = !!structuredClone && !fails(function () {
-  // prevent V8 ArrayBufferDetaching protector cell invalidation and performance degradation
-  // https://github.com/zloirock/core-js/issues/679
-  if ((ENVIRONMENT === 'DENO' && V8 > 92) || (ENVIRONMENT === 'NODE' && V8 > 94) || (ENVIRONMENT === 'BROWSER' && V8 > 97)) return false;
-  var buffer = new ArrayBuffer(8);
-  var clone = structuredClone(buffer, { transfer: [buffer] });
-  return buffer.byteLength !== 0 || clone.byteLength !== 8;
-});
-
-
-/***/ }),
-
-/***/ 4495:
-/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
-
-
-/* eslint-disable es/no-symbol -- required for testing */
-var V8_VERSION = __webpack_require__(9519);
-var fails = __webpack_require__(9039);
-var globalThis = __webpack_require__(4576);
-
-var $String = globalThis.String;
-
-// eslint-disable-next-line es/no-object-getownpropertysymbols -- required for testing
-module.exports = !!Object.getOwnPropertySymbols && !fails(function () {
-  var symbol = Symbol('symbol detection');
-  // Chrome 38 Symbol has incorrect toString conversion
-  // `get-own-property-symbols` polyfill symbols converted to object are not Symbol instances
-  // nb: Do not call `String` directly to avoid this being optimized out to `symbol+''` which will,
-  // of course, fail.
-  return !$String(symbol) || !(Object(symbol) instanceof Symbol) ||
-    // Chrome 38-40 symbols are not inherited from DOM collections prototypes to instances
-    !Symbol.sham && V8_VERSION && V8_VERSION < 41;
-});
-
-
-/***/ }),
-
-/***/ 5610:
-/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
-
-
-var toIntegerOrInfinity = __webpack_require__(1291);
-
-var max = Math.max;
-var min = Math.min;
-
-// Helper for a popular repeating case of the spec:
-// Let integer be ? ToInteger(index).
-// If integer < 0, let result be max((length + integer), 0); else let result be min(integer, length).
-module.exports = function (index, length) {
-  var integer = toIntegerOrInfinity(index);
-  return integer < 0 ? max(integer + length, 0) : min(integer, length);
-};
-
-
-/***/ }),
-
-/***/ 5854:
-/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
-
-
-var toPrimitive = __webpack_require__(2777);
-
-var $TypeError = TypeError;
-
-// `ToBigInt` abstract operation
-// https://tc39.es/ecma262/#sec-tobigint
-module.exports = function (argument) {
-  var prim = toPrimitive(argument, 'number');
-  if (typeof prim == 'number') throw new $TypeError("Can't convert number to bigint");
-  // eslint-disable-next-line es/no-bigint -- safe
-  return BigInt(prim);
-};
-
-
-/***/ }),
-
-/***/ 7696:
-/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
-
-
-var toIntegerOrInfinity = __webpack_require__(1291);
-var toLength = __webpack_require__(8014);
-
-var $RangeError = RangeError;
-
-// `ToIndex` abstract operation
-// https://tc39.es/ecma262/#sec-toindex
-module.exports = function (it) {
-  if (it === undefined) return 0;
-  var number = toIntegerOrInfinity(it);
-  var length = toLength(number);
-  if (number !== length) throw new $RangeError('Wrong length or index');
-  return length;
-};
-
-
-/***/ }),
-
-/***/ 5397:
-/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
-
-
-// toObject with fallback for non-array-like ES3 strings
-var IndexedObject = __webpack_require__(7055);
-var requireObjectCoercible = __webpack_require__(7750);
-
-module.exports = function (it) {
-  return IndexedObject(requireObjectCoercible(it));
-};
-
-
-/***/ }),
-
-/***/ 1291:
-/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
-
-
-var trunc = __webpack_require__(741);
-
-// `ToIntegerOrInfinity` abstract operation
-// https://tc39.es/ecma262/#sec-tointegerorinfinity
-module.exports = function (argument) {
-  var number = +argument;
-  // eslint-disable-next-line no-self-compare -- NaN check
-  return number !== number || number === 0 ? 0 : trunc(number);
-};
-
-
-/***/ }),
-
-/***/ 8014:
-/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
-
-
-var toIntegerOrInfinity = __webpack_require__(1291);
-
-var min = Math.min;
-
-// `ToLength` abstract operation
-// https://tc39.es/ecma262/#sec-tolength
-module.exports = function (argument) {
-  var len = toIntegerOrInfinity(argument);
-  return len > 0 ? min(len, 0x1FFFFFFFFFFFFF) : 0; // 2 ** 53 - 1 == 9007199254740991
-};
-
-
-/***/ }),
-
-/***/ 8981:
-/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
-
-
-var requireObjectCoercible = __webpack_require__(7750);
-
-var $Object = Object;
-
-// `ToObject` abstract operation
-// https://tc39.es/ecma262/#sec-toobject
-module.exports = function (argument) {
-  return $Object(requireObjectCoercible(argument));
-};
-
-
-/***/ }),
-
-/***/ 9590:
-/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
-
-
-var toIntegerOrInfinity = __webpack_require__(1291);
-
-var $RangeError = RangeError;
-
-module.exports = function (it) {
-  var result = toIntegerOrInfinity(it);
-  if (result < 0) throw new $RangeError("The argument can't be less than 0");
-  return result;
-};
-
-
-/***/ }),
-
-/***/ 2777:
-/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
-
-
-var call = __webpack_require__(9565);
-var isObject = __webpack_require__(34);
-var isSymbol = __webpack_require__(757);
-var getMethod = __webpack_require__(5966);
-var ordinaryToPrimitive = __webpack_require__(4270);
-var wellKnownSymbol = __webpack_require__(8227);
-
-var $TypeError = TypeError;
-var TO_PRIMITIVE = wellKnownSymbol('toPrimitive');
-
-// `ToPrimitive` abstract operation
-// https://tc39.es/ecma262/#sec-toprimitive
-module.exports = function (input, pref) {
-  if (!isObject(input) || isSymbol(input)) return input;
-  var exoticToPrim = getMethod(input, TO_PRIMITIVE);
-  var result;
-  if (exoticToPrim) {
-    if (pref === undefined) pref = 'default';
-    result = call(exoticToPrim, input, pref);
-    if (!isObject(result) || isSymbol(result)) return result;
-    throw new $TypeError("Can't convert object to primitive value");
-  }
-  if (pref === undefined) pref = 'number';
-  return ordinaryToPrimitive(input, pref);
-};
-
-
-/***/ }),
-
-/***/ 6969:
-/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
-
-
-var toPrimitive = __webpack_require__(2777);
-var isSymbol = __webpack_require__(757);
-
-// `ToPropertyKey` abstract operation
-// https://tc39.es/ecma262/#sec-topropertykey
-module.exports = function (argument) {
-  var key = toPrimitive(argument, 'string');
-  return isSymbol(key) ? key : key + '';
-};
-
-
-/***/ }),
-
-/***/ 2140:
-/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
-
-
-var wellKnownSymbol = __webpack_require__(8227);
-
-var TO_STRING_TAG = wellKnownSymbol('toStringTag');
-var test = {};
-
-test[TO_STRING_TAG] = 'z';
-
-module.exports = String(test) === '[object z]';
-
-
-/***/ }),
-
-/***/ 655:
-/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
-
-
-var classof = __webpack_require__(6955);
-
-var $String = String;
-
-module.exports = function (argument) {
-  if (classof(argument) === 'Symbol') throw new TypeError('Cannot convert a Symbol value to a string');
-  return $String(argument);
-};
-
-
-/***/ }),
-
-/***/ 6823:
-/***/ ((module) => {
-
-
-var $String = String;
-
-module.exports = function (argument) {
-  try {
-    return $String(argument);
-  } catch (error) {
-    return 'Object';
-  }
-};
-
-
-/***/ }),
-
-/***/ 3392:
-/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
-
-
-var uncurryThis = __webpack_require__(9504);
-
-var id = 0;
-var postfix = Math.random();
-var toString = uncurryThis(1.0.toString);
-
-module.exports = function (key) {
-  return 'Symbol(' + (key === undefined ? '' : key) + ')_' + toString(++id + postfix, 36);
-};
-
-
-/***/ }),
-
-/***/ 7040:
-/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
-
-
-/* eslint-disable es/no-symbol -- required for testing */
-var NATIVE_SYMBOL = __webpack_require__(4495);
-
-module.exports = NATIVE_SYMBOL
-  && !Symbol.sham
-  && typeof Symbol.iterator == 'symbol';
-
-
-/***/ }),
-
-/***/ 8686:
-/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
-
-
-var DESCRIPTORS = __webpack_require__(3724);
-var fails = __webpack_require__(9039);
-
-// V8 ~ Chrome 36-
-// https://bugs.chromium.org/p/v8/issues/detail?id=3334
-module.exports = DESCRIPTORS && fails(function () {
-  // eslint-disable-next-line es/no-object-defineproperty -- required for testing
-  return Object.defineProperty(function () { /* empty */ }, 'prototype', {
-    value: 42,
-    writable: false
-  }).prototype !== 42;
-});
-
-
-/***/ }),
-
-/***/ 2812:
-/***/ ((module) => {
-
-
-var $TypeError = TypeError;
-
-module.exports = function (passed, required) {
-  if (passed < required) throw new $TypeError('Not enough arguments');
-  return passed;
-};
-
-
-/***/ }),
-
-/***/ 8622:
-/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
-
-
-var globalThis = __webpack_require__(4576);
-var isCallable = __webpack_require__(4901);
-
-var WeakMap = globalThis.WeakMap;
-
-module.exports = isCallable(WeakMap) && /native code/.test(String(WeakMap));
-
-
-/***/ }),
-
-/***/ 8227:
-/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
-
-
-var globalThis = __webpack_require__(4576);
-var shared = __webpack_require__(5745);
-var hasOwn = __webpack_require__(9297);
-var uid = __webpack_require__(3392);
-var NATIVE_SYMBOL = __webpack_require__(4495);
-var USE_SYMBOL_AS_UID = __webpack_require__(7040);
-
-var Symbol = globalThis.Symbol;
-var WellKnownSymbolsStore = shared('wks');
-var createWellKnownSymbol = USE_SYMBOL_AS_UID ? Symbol['for'] || Symbol : Symbol && Symbol.withoutSetter || uid;
-
-module.exports = function (name) {
-  if (!hasOwn(WellKnownSymbolsStore, name)) {
-    WellKnownSymbolsStore[name] = NATIVE_SYMBOL && hasOwn(Symbol, name)
-      ? Symbol[name]
-      : createWellKnownSymbol('Symbol.' + name);
-  } return WellKnownSymbolsStore[name];
-};
-
-
-/***/ }),
-
-/***/ 6573:
-/***/ ((__unused_webpack_module, __unused_webpack_exports, __webpack_require__) => {
-
-
-var DESCRIPTORS = __webpack_require__(3724);
-var defineBuiltInAccessor = __webpack_require__(2106);
-var isDetached = __webpack_require__(3238);
-
-var ArrayBufferPrototype = ArrayBuffer.prototype;
-
-if (DESCRIPTORS && !('detached' in ArrayBufferPrototype)) {
-  defineBuiltInAccessor(ArrayBufferPrototype, 'detached', {
-    configurable: true,
-    get: function detached() {
-      return isDetached(this);
-    }
-  });
-}
-
-
-/***/ }),
-
-/***/ 7936:
-/***/ ((__unused_webpack_module, __unused_webpack_exports, __webpack_require__) => {
-
-
-var $ = __webpack_require__(6518);
-var $transfer = __webpack_require__(5636);
-
-// `ArrayBuffer.prototype.transferToFixedLength` method
-// https://tc39.es/proposal-arraybuffer-transfer/#sec-arraybuffer.prototype.transfertofixedlength
-if ($transfer) $({ target: 'ArrayBuffer', proto: true }, {
-  transferToFixedLength: function transferToFixedLength() {
-    return $transfer(this, arguments.length ? arguments[0] : undefined, false);
-  }
-});
-
-
-/***/ }),
-
-/***/ 8100:
-/***/ ((__unused_webpack_module, __unused_webpack_exports, __webpack_require__) => {
-
-
-var $ = __webpack_require__(6518);
-var $transfer = __webpack_require__(5636);
-
-// `ArrayBuffer.prototype.transfer` method
-// https://tc39.es/proposal-arraybuffer-transfer/#sec-arraybuffer.prototype.transfer
-if ($transfer) $({ target: 'ArrayBuffer', proto: true }, {
-  transfer: function transfer() {
-    return $transfer(this, arguments.length ? arguments[0] : undefined, true);
-  }
-});
-
-
-/***/ }),
-
-/***/ 4114:
-/***/ ((__unused_webpack_module, __unused_webpack_exports, __webpack_require__) => {
-
-
-var $ = __webpack_require__(6518);
-var toObject = __webpack_require__(8981);
-var lengthOfArrayLike = __webpack_require__(6198);
-var setArrayLength = __webpack_require__(4527);
-var doesNotExceedSafeInteger = __webpack_require__(6837);
-var fails = __webpack_require__(9039);
-
-var INCORRECT_TO_LENGTH = fails(function () {
-  return [].push.call({ length: 0x100000000 }, 1) !== 4294967297;
-});
-
-// V8 <= 121 and Safari <= 15.4; FF < 23 throws InternalError
-// https://bugs.chromium.org/p/v8/issues/detail?id=12681
-var properErrorOnNonWritableLength = function () {
-  try {
-    // eslint-disable-next-line es/no-object-defineproperty -- safe
-    Object.defineProperty([], 'length', { writable: false }).push();
-  } catch (error) {
-    return error instanceof TypeError;
-  }
-};
-
-var FORCED = INCORRECT_TO_LENGTH || !properErrorOnNonWritableLength();
-
-// `Array.prototype.push` method
-// https://tc39.es/ecma262/#sec-array.prototype.push
-$({ target: 'Array', proto: true, arity: 1, forced: FORCED }, {
-  // eslint-disable-next-line no-unused-vars -- required for `.length`
-  push: function push(item) {
-    var O = toObject(this);
-    var len = lengthOfArrayLike(O);
-    var argCount = arguments.length;
-    doesNotExceedSafeInteger(len + argCount);
-    for (var i = 0; i < argCount; i++) {
-      O[len] = arguments[i];
-      len++;
-    }
-    setArrayLength(O, len);
-    return len;
-  }
-});
-
-
-/***/ }),
-
-/***/ 4628:
-/***/ ((__unused_webpack_module, __unused_webpack_exports, __webpack_require__) => {
-
-
-var $ = __webpack_require__(6518);
-var newPromiseCapabilityModule = __webpack_require__(6043);
-
-// `Promise.withResolvers` method
-// https://github.com/tc39/proposal-promise-with-resolvers
-$({ target: 'Promise', stat: true }, {
-  withResolvers: function withResolvers() {
-    var promiseCapability = newPromiseCapabilityModule.f(this);
-    return {
-      promise: promiseCapability.promise,
-      resolve: promiseCapability.resolve,
-      reject: promiseCapability.reject
-    };
-  }
-});
-
-
-/***/ }),
-
-/***/ 7642:
-/***/ ((__unused_webpack_module, __unused_webpack_exports, __webpack_require__) => {
-
-
-var $ = __webpack_require__(6518);
-var difference = __webpack_require__(3440);
-var setMethodAcceptSetLike = __webpack_require__(4916);
-
-// `Set.prototype.difference` method
-// https://github.com/tc39/proposal-set-methods
-$({ target: 'Set', proto: true, real: true, forced: !setMethodAcceptSetLike('difference') }, {
-  difference: difference
-});
-
-
-/***/ }),
-
-/***/ 8004:
-/***/ ((__unused_webpack_module, __unused_webpack_exports, __webpack_require__) => {
-
-
-var $ = __webpack_require__(6518);
-var fails = __webpack_require__(9039);
-var intersection = __webpack_require__(8750);
-var setMethodAcceptSetLike = __webpack_require__(4916);
-
-var INCORRECT = !setMethodAcceptSetLike('intersection') || fails(function () {
-  // eslint-disable-next-line es/no-array-from, es/no-set -- testing
-  return String(Array.from(new Set([1, 2, 3]).intersection(new Set([3, 2])))) !== '3,2';
-});
-
-// `Set.prototype.intersection` method
-// https://github.com/tc39/proposal-set-methods
-$({ target: 'Set', proto: true, real: true, forced: INCORRECT }, {
-  intersection: intersection
-});
-
-
-/***/ }),
-
-/***/ 3853:
-/***/ ((__unused_webpack_module, __unused_webpack_exports, __webpack_require__) => {
-
-
-var $ = __webpack_require__(6518);
-var isDisjointFrom = __webpack_require__(4449);
-var setMethodAcceptSetLike = __webpack_require__(4916);
-
-// `Set.prototype.isDisjointFrom` method
-// https://github.com/tc39/proposal-set-methods
-$({ target: 'Set', proto: true, real: true, forced: !setMethodAcceptSetLike('isDisjointFrom') }, {
-  isDisjointFrom: isDisjointFrom
-});
-
-
-/***/ }),
-
-/***/ 5876:
-/***/ ((__unused_webpack_module, __unused_webpack_exports, __webpack_require__) => {
-
-
-var $ = __webpack_require__(6518);
-var isSubsetOf = __webpack_require__(3838);
-var setMethodAcceptSetLike = __webpack_require__(4916);
-
-// `Set.prototype.isSubsetOf` method
-// https://github.com/tc39/proposal-set-methods
-$({ target: 'Set', proto: true, real: true, forced: !setMethodAcceptSetLike('isSubsetOf') }, {
-  isSubsetOf: isSubsetOf
-});
-
-
-/***/ }),
-
-/***/ 2475:
-/***/ ((__unused_webpack_module, __unused_webpack_exports, __webpack_require__) => {
-
-
-var $ = __webpack_require__(6518);
-var isSupersetOf = __webpack_require__(8527);
-var setMethodAcceptSetLike = __webpack_require__(4916);
-
-// `Set.prototype.isSupersetOf` method
-// https://github.com/tc39/proposal-set-methods
-$({ target: 'Set', proto: true, real: true, forced: !setMethodAcceptSetLike('isSupersetOf') }, {
-  isSupersetOf: isSupersetOf
-});
-
-
-/***/ }),
-
-/***/ 5024:
-/***/ ((__unused_webpack_module, __unused_webpack_exports, __webpack_require__) => {
-
-
-var $ = __webpack_require__(6518);
-var symmetricDifference = __webpack_require__(3650);
-var setMethodAcceptSetLike = __webpack_require__(4916);
-
-// `Set.prototype.symmetricDifference` method
-// https://github.com/tc39/proposal-set-methods
-$({ target: 'Set', proto: true, real: true, forced: !setMethodAcceptSetLike('symmetricDifference') }, {
-  symmetricDifference: symmetricDifference
-});
-
-
-/***/ }),
-
-/***/ 1698:
-/***/ ((__unused_webpack_module, __unused_webpack_exports, __webpack_require__) => {
-
-
-var $ = __webpack_require__(6518);
-var union = __webpack_require__(4204);
-var setMethodAcceptSetLike = __webpack_require__(4916);
-
-// `Set.prototype.union` method
-// https://github.com/tc39/proposal-set-methods
-$({ target: 'Set', proto: true, real: true, forced: !setMethodAcceptSetLike('union') }, {
-  union: union
-});
-
-
-/***/ }),
-
-/***/ 7467:
-/***/ ((__unused_webpack_module, __unused_webpack_exports, __webpack_require__) => {
-
-
-var arrayToReversed = __webpack_require__(7628);
-var ArrayBufferViewCore = __webpack_require__(4644);
-
-var aTypedArray = ArrayBufferViewCore.aTypedArray;
-var exportTypedArrayMethod = ArrayBufferViewCore.exportTypedArrayMethod;
-var getTypedArrayConstructor = ArrayBufferViewCore.getTypedArrayConstructor;
-
-// `%TypedArray%.prototype.toReversed` method
-// https://tc39.es/ecma262/#sec-%typedarray%.prototype.toreversed
-exportTypedArrayMethod('toReversed', function toReversed() {
-  return arrayToReversed(aTypedArray(this), getTypedArrayConstructor(this));
-});
-
-
-/***/ }),
-
-/***/ 4732:
-/***/ ((__unused_webpack_module, __unused_webpack_exports, __webpack_require__) => {
-
-
-var ArrayBufferViewCore = __webpack_require__(4644);
-var uncurryThis = __webpack_require__(9504);
-var aCallable = __webpack_require__(9306);
-var arrayFromConstructorAndList = __webpack_require__(5370);
-
-var aTypedArray = ArrayBufferViewCore.aTypedArray;
-var getTypedArrayConstructor = ArrayBufferViewCore.getTypedArrayConstructor;
-var exportTypedArrayMethod = ArrayBufferViewCore.exportTypedArrayMethod;
-var sort = uncurryThis(ArrayBufferViewCore.TypedArrayPrototype.sort);
-
-// `%TypedArray%.prototype.toSorted` method
-// https://tc39.es/ecma262/#sec-%typedarray%.prototype.tosorted
-exportTypedArrayMethod('toSorted', function toSorted(compareFn) {
-  if (compareFn !== undefined) aCallable(compareFn);
-  var O = aTypedArray(this);
-  var A = arrayFromConstructorAndList(getTypedArrayConstructor(O), O);
-  return sort(A, compareFn);
-});
-
-
-/***/ }),
-
-/***/ 9577:
-/***/ ((__unused_webpack_module, __unused_webpack_exports, __webpack_require__) => {
-
-
-var arrayWith = __webpack_require__(9928);
-var ArrayBufferViewCore = __webpack_require__(4644);
-var isBigIntArray = __webpack_require__(1108);
-var toIntegerOrInfinity = __webpack_require__(1291);
-var toBigInt = __webpack_require__(5854);
-
-var aTypedArray = ArrayBufferViewCore.aTypedArray;
-var getTypedArrayConstructor = ArrayBufferViewCore.getTypedArrayConstructor;
-var exportTypedArrayMethod = ArrayBufferViewCore.exportTypedArrayMethod;
-
-var PROPER_ORDER = !!function () {
-  try {
-    // eslint-disable-next-line no-throw-literal, es/no-typed-arrays, es/no-array-prototype-with -- required for testing
-    new Int8Array(1)['with'](2, { valueOf: function () { throw 8; } });
-  } catch (error) {
-    // some early implementations, like WebKit, does not follow the final semantic
-    // https://github.com/tc39/proposal-change-array-by-copy/pull/86
-    return error === 8;
-  }
-}();
-
-// `%TypedArray%.prototype.with` method
-// https://tc39.es/ecma262/#sec-%typedarray%.prototype.with
-exportTypedArrayMethod('with', { 'with': function (index, value) {
-  var O = aTypedArray(this);
-  var relativeIndex = toIntegerOrInfinity(index);
-  var actualValue = isBigIntArray(O) ? toBigInt(value) : +value;
-  return arrayWith(O, getTypedArrayConstructor(O), relativeIndex, actualValue);
-} }['with'], !PROPER_ORDER);
-
-
-/***/ }),
-
-/***/ 8992:
-/***/ ((__unused_webpack_module, __unused_webpack_exports, __webpack_require__) => {
-
-
-var $ = __webpack_require__(6518);
-var globalThis = __webpack_require__(4576);
-var anInstance = __webpack_require__(679);
-var anObject = __webpack_require__(8551);
-var isCallable = __webpack_require__(4901);
-var getPrototypeOf = __webpack_require__(2787);
-var defineBuiltInAccessor = __webpack_require__(2106);
-var createProperty = __webpack_require__(4659);
-var fails = __webpack_require__(9039);
-var hasOwn = __webpack_require__(9297);
-var wellKnownSymbol = __webpack_require__(8227);
-var IteratorPrototype = (__webpack_require__(7657).IteratorPrototype);
-var DESCRIPTORS = __webpack_require__(3724);
-var IS_PURE = __webpack_require__(6395);
-
-var CONSTRUCTOR = 'constructor';
-var ITERATOR = 'Iterator';
-var TO_STRING_TAG = wellKnownSymbol('toStringTag');
-
-var $TypeError = TypeError;
-var NativeIterator = globalThis[ITERATOR];
-
-// FF56- have non-standard global helper `Iterator`
-var FORCED = IS_PURE
-  || !isCallable(NativeIterator)
-  || NativeIterator.prototype !== IteratorPrototype
-  // FF44- non-standard `Iterator` passes previous tests
-  || !fails(function () { NativeIterator({}); });
-
-var IteratorConstructor = function Iterator() {
-  anInstance(this, IteratorPrototype);
-  if (getPrototypeOf(this) === IteratorPrototype) throw new $TypeError('Abstract class Iterator not directly constructable');
-};
-
-var defineIteratorPrototypeAccessor = function (key, value) {
-  if (DESCRIPTORS) {
-    defineBuiltInAccessor(IteratorPrototype, key, {
-      configurable: true,
-      get: function () {
-        return value;
-      },
-      set: function (replacement) {
-        anObject(this);
-        if (this === IteratorPrototype) throw new $TypeError("You can't redefine this property");
-        if (hasOwn(this, key)) this[key] = replacement;
-        else createProperty(this, key, replacement);
-      }
-    });
-  } else IteratorPrototype[key] = value;
-};
-
-if (!hasOwn(IteratorPrototype, TO_STRING_TAG)) defineIteratorPrototypeAccessor(TO_STRING_TAG, ITERATOR);
-
-if (FORCED || !hasOwn(IteratorPrototype, CONSTRUCTOR) || IteratorPrototype[CONSTRUCTOR] === Object) {
-  defineIteratorPrototypeAccessor(CONSTRUCTOR, IteratorConstructor);
-}
-
-IteratorConstructor.prototype = IteratorPrototype;
-
-// `Iterator` constructor
-// https://github.com/tc39/proposal-iterator-helpers
-$({ global: true, constructor: true, forced: FORCED }, {
-  Iterator: IteratorConstructor
-});
-
-
-/***/ }),
-
-/***/ 4743:
-/***/ ((__unused_webpack_module, __unused_webpack_exports, __webpack_require__) => {
-
-
-var $ = __webpack_require__(6518);
-var call = __webpack_require__(9565);
-var anObject = __webpack_require__(8551);
-var getIteratorDirect = __webpack_require__(1767);
-var notANaN = __webpack_require__(4149);
-var toPositiveInteger = __webpack_require__(9590);
-var createIteratorProxy = __webpack_require__(9462);
-var IS_PURE = __webpack_require__(6395);
-
-var IteratorProxy = createIteratorProxy(function () {
-  var iterator = this.iterator;
-  var next = this.next;
-  var result, done;
-  while (this.remaining) {
-    this.remaining--;
-    result = anObject(call(next, iterator));
-    done = this.done = !!result.done;
-    if (done) return;
-  }
-  result = anObject(call(next, iterator));
-  done = this.done = !!result.done;
-  if (!done) return result.value;
-});
-
-// `Iterator.prototype.drop` method
-// https://github.com/tc39/proposal-iterator-helpers
-$({ target: 'Iterator', proto: true, real: true, forced: IS_PURE }, {
-  drop: function drop(limit) {
-    anObject(this);
-    var remaining = toPositiveInteger(notANaN(+limit));
-    return new IteratorProxy(getIteratorDirect(this), {
-      remaining: remaining
-    });
-  }
-});
-
-
-/***/ }),
-
-/***/ 3215:
-/***/ ((__unused_webpack_module, __unused_webpack_exports, __webpack_require__) => {
-
-
-var $ = __webpack_require__(6518);
-var iterate = __webpack_require__(2652);
-var aCallable = __webpack_require__(9306);
-var anObject = __webpack_require__(8551);
-var getIteratorDirect = __webpack_require__(1767);
-
-// `Iterator.prototype.every` method
-// https://github.com/tc39/proposal-iterator-helpers
-$({ target: 'Iterator', proto: true, real: true }, {
-  every: function every(predicate) {
-    anObject(this);
-    aCallable(predicate);
-    var record = getIteratorDirect(this);
-    var counter = 0;
-    return !iterate(record, function (value, stop) {
-      if (!predicate(value, counter++)) return stop();
-    }, { IS_RECORD: true, INTERRUPTED: true }).stopped;
-  }
-});
-
-
-/***/ }),
-
-/***/ 4520:
-/***/ ((__unused_webpack_module, __unused_webpack_exports, __webpack_require__) => {
-
-
-var $ = __webpack_require__(6518);
-var call = __webpack_require__(9565);
-var aCallable = __webpack_require__(9306);
-var anObject = __webpack_require__(8551);
-var getIteratorDirect = __webpack_require__(1767);
-var createIteratorProxy = __webpack_require__(9462);
-var callWithSafeIterationClosing = __webpack_require__(6319);
-var IS_PURE = __webpack_require__(6395);
-
-var IteratorProxy = createIteratorProxy(function () {
-  var iterator = this.iterator;
-  var predicate = this.predicate;
-  var next = this.next;
-  var result, done, value;
-  while (true) {
-    result = anObject(call(next, iterator));
-    done = this.done = !!result.done;
-    if (done) return;
-    value = result.value;
-    if (callWithSafeIterationClosing(iterator, predicate, [value, this.counter++], true)) return value;
-  }
-});
-
-// `Iterator.prototype.filter` method
-// https://github.com/tc39/proposal-iterator-helpers
-$({ target: 'Iterator', proto: true, real: true, forced: IS_PURE }, {
-  filter: function filter(predicate) {
-    anObject(this);
-    aCallable(predicate);
-    return new IteratorProxy(getIteratorDirect(this), {
-      predicate: predicate
-    });
-  }
-});
-
-
-/***/ }),
-
-/***/ 670:
-/***/ ((__unused_webpack_module, __unused_webpack_exports, __webpack_require__) => {
-
-
-var $ = __webpack_require__(6518);
-var call = __webpack_require__(9565);
-var aCallable = __webpack_require__(9306);
-var anObject = __webpack_require__(8551);
-var getIteratorDirect = __webpack_require__(1767);
-var getIteratorFlattenable = __webpack_require__(8646);
-var createIteratorProxy = __webpack_require__(9462);
-var iteratorClose = __webpack_require__(9539);
-var IS_PURE = __webpack_require__(6395);
-
-var IteratorProxy = createIteratorProxy(function () {
-  var iterator = this.iterator;
-  var mapper = this.mapper;
-  var result, inner;
-
-  while (true) {
-    if (inner = this.inner) try {
-      result = anObject(call(inner.next, inner.iterator));
-      if (!result.done) return result.value;
-      this.inner = null;
-    } catch (error) { iteratorClose(iterator, 'throw', error); }
-
-    result = anObject(call(this.next, iterator));
-
-    if (this.done = !!result.done) return;
-
-    try {
-      this.inner = getIteratorFlattenable(mapper(result.value, this.counter++), false);
-    } catch (error) { iteratorClose(iterator, 'throw', error); }
-  }
-});
-
-// `Iterator.prototype.flatMap` method
-// https://github.com/tc39/proposal-iterator-helpers
-$({ target: 'Iterator', proto: true, real: true, forced: IS_PURE }, {
-  flatMap: function flatMap(mapper) {
-    anObject(this);
-    aCallable(mapper);
-    return new IteratorProxy(getIteratorDirect(this), {
-      mapper: mapper,
-      inner: null
-    });
-  }
-});
-
-
-/***/ }),
-
-/***/ 1454:
-/***/ ((__unused_webpack_module, __unused_webpack_exports, __webpack_require__) => {
-
-
-var $ = __webpack_require__(6518);
-var map = __webpack_require__(713);
-var IS_PURE = __webpack_require__(6395);
-
-// `Iterator.prototype.map` method
-// https://github.com/tc39/proposal-iterator-helpers
-$({ target: 'Iterator', proto: true, real: true, forced: IS_PURE }, {
-  map: map
-});
-
-
-/***/ }),
-
-/***/ 7550:
-/***/ ((__unused_webpack_module, __unused_webpack_exports, __webpack_require__) => {
-
-
-var $ = __webpack_require__(6518);
-var iterate = __webpack_require__(2652);
-var aCallable = __webpack_require__(9306);
-var anObject = __webpack_require__(8551);
-var getIteratorDirect = __webpack_require__(1767);
-
-// `Iterator.prototype.some` method
-// https://github.com/tc39/proposal-iterator-helpers
-$({ target: 'Iterator', proto: true, real: true }, {
-  some: function some(predicate) {
-    anObject(this);
-    aCallable(predicate);
-    var record = getIteratorDirect(this);
-    var counter = 0;
-    return iterate(record, function (value, stop) {
-      if (predicate(value, counter++)) return stop();
-    }, { IS_RECORD: true, INTERRUPTED: true }).stopped;
-  }
-});
-
-
-/***/ }),
-
-/***/ 8335:
-/***/ ((__unused_webpack_module, __unused_webpack_exports, __webpack_require__) => {
-
-
-var $ = __webpack_require__(6518);
-var DESCRIPTORS = __webpack_require__(3724);
-var globalThis = __webpack_require__(4576);
-var getBuiltIn = __webpack_require__(7751);
-var uncurryThis = __webpack_require__(9504);
-var call = __webpack_require__(9565);
-var isCallable = __webpack_require__(4901);
-var isObject = __webpack_require__(34);
-var isArray = __webpack_require__(4376);
-var hasOwn = __webpack_require__(9297);
-var toString = __webpack_require__(655);
-var lengthOfArrayLike = __webpack_require__(6198);
-var createProperty = __webpack_require__(4659);
-var fails = __webpack_require__(9039);
-var parseJSONString = __webpack_require__(8235);
-var NATIVE_SYMBOL = __webpack_require__(4495);
-
-var JSON = globalThis.JSON;
-var Number = globalThis.Number;
-var SyntaxError = globalThis.SyntaxError;
-var nativeParse = JSON && JSON.parse;
-var enumerableOwnProperties = getBuiltIn('Object', 'keys');
-// eslint-disable-next-line es/no-object-getownpropertydescriptor -- safe
-var getOwnPropertyDescriptor = Object.getOwnPropertyDescriptor;
-var at = uncurryThis(''.charAt);
-var slice = uncurryThis(''.slice);
-var exec = uncurryThis(/./.exec);
-var push = uncurryThis([].push);
-
-var IS_DIGIT = /^\d$/;
-var IS_NON_ZERO_DIGIT = /^[1-9]$/;
-var IS_NUMBER_START = /^[\d-]$/;
-var IS_WHITESPACE = /^[\t\n\r ]$/;
-
-var PRIMITIVE = 0;
-var OBJECT = 1;
-
-var $parse = function (source, reviver) {
-  source = toString(source);
-  var context = new Context(source, 0, '');
-  var root = context.parse();
-  var value = root.value;
-  var endIndex = context.skip(IS_WHITESPACE, root.end);
-  if (endIndex < source.length) {
-    throw new SyntaxError('Unexpected extra character: "' + at(source, endIndex) + '" after the parsed data at: ' + endIndex);
-  }
-  return isCallable(reviver) ? internalize({ '': value }, '', reviver, root) : value;
-};
-
-var internalize = function (holder, name, reviver, node) {
-  var val = holder[name];
-  var unmodified = node && val === node.value;
-  var context = unmodified && typeof node.source == 'string' ? { source: node.source } : {};
-  var elementRecordsLen, keys, len, i, P;
-  if (isObject(val)) {
-    var nodeIsArray = isArray(val);
-    var nodes = unmodified ? node.nodes : nodeIsArray ? [] : {};
-    if (nodeIsArray) {
-      elementRecordsLen = nodes.length;
-      len = lengthOfArrayLike(val);
-      for (i = 0; i < len; i++) {
-        internalizeProperty(val, i, internalize(val, '' + i, reviver, i < elementRecordsLen ? nodes[i] : undefined));
-      }
-    } else {
-      keys = enumerableOwnProperties(val);
-      len = lengthOfArrayLike(keys);
-      for (i = 0; i < len; i++) {
-        P = keys[i];
-        internalizeProperty(val, P, internalize(val, P, reviver, hasOwn(nodes, P) ? nodes[P] : undefined));
-      }
-    }
-  }
-  return call(reviver, holder, name, val, context);
-};
-
-var internalizeProperty = function (object, key, value) {
-  if (DESCRIPTORS) {
-    var descriptor = getOwnPropertyDescriptor(object, key);
-    if (descriptor && !descriptor.configurable) return;
-  }
-  if (value === undefined) delete object[key];
-  else createProperty(object, key, value);
-};
-
-var Node = function (value, end, source, nodes) {
-  this.value = value;
-  this.end = end;
-  this.source = source;
-  this.nodes = nodes;
-};
-
-var Context = function (source, index) {
-  this.source = source;
-  this.index = index;
-};
-
-// https://www.json.org/json-en.html
-Context.prototype = {
-  fork: function (nextIndex) {
-    return new Context(this.source, nextIndex);
-  },
-  parse: function () {
-    var source = this.source;
-    var i = this.skip(IS_WHITESPACE, this.index);
-    var fork = this.fork(i);
-    var chr = at(source, i);
-    if (exec(IS_NUMBER_START, chr)) return fork.number();
-    switch (chr) {
-      case '{':
-        return fork.object();
-      case '[':
-        return fork.array();
-      case '"':
-        return fork.string();
-      case 't':
-        return fork.keyword(true);
-      case 'f':
-        return fork.keyword(false);
-      case 'n':
-        return fork.keyword(null);
-    } throw new SyntaxError('Unexpected character: "' + chr + '" at: ' + i);
-  },
-  node: function (type, value, start, end, nodes) {
-    return new Node(value, end, type ? null : slice(this.source, start, end), nodes);
-  },
-  object: function () {
-    var source = this.source;
-    var i = this.index + 1;
-    var expectKeypair = false;
-    var object = {};
-    var nodes = {};
-    while (i < source.length) {
-      i = this.until(['"', '}'], i);
-      if (at(source, i) === '}' && !expectKeypair) {
-        i++;
-        break;
-      }
-      // Parsing the key
-      var result = this.fork(i).string();
-      var key = result.value;
-      i = result.end;
-      i = this.until([':'], i) + 1;
-      // Parsing value
-      i = this.skip(IS_WHITESPACE, i);
-      result = this.fork(i).parse();
-      createProperty(nodes, key, result);
-      createProperty(object, key, result.value);
-      i = this.until([',', '}'], result.end);
-      var chr = at(source, i);
-      if (chr === ',') {
-        expectKeypair = true;
-        i++;
-      } else if (chr === '}') {
-        i++;
-        break;
-      }
-    }
-    return this.node(OBJECT, object, this.index, i, nodes);
-  },
-  array: function () {
-    var source = this.source;
-    var i = this.index + 1;
-    var expectElement = false;
-    var array = [];
-    var nodes = [];
-    while (i < source.length) {
-      i = this.skip(IS_WHITESPACE, i);
-      if (at(source, i) === ']' && !expectElement) {
-        i++;
-        break;
-      }
-      var result = this.fork(i).parse();
-      push(nodes, result);
-      push(array, result.value);
-      i = this.until([',', ']'], result.end);
-      if (at(source, i) === ',') {
-        expectElement = true;
-        i++;
-      } else if (at(source, i) === ']') {
-        i++;
-        break;
-      }
-    }
-    return this.node(OBJECT, array, this.index, i, nodes);
-  },
-  string: function () {
-    var index = this.index;
-    var parsed = parseJSONString(this.source, this.index + 1);
-    return this.node(PRIMITIVE, parsed.value, index, parsed.end);
-  },
-  number: function () {
-    var source = this.source;
-    var startIndex = this.index;
-    var i = startIndex;
-    if (at(source, i) === '-') i++;
-    if (at(source, i) === '0') i++;
-    else if (exec(IS_NON_ZERO_DIGIT, at(source, i))) i = this.skip(IS_DIGIT, i + 1);
-    else throw new SyntaxError('Failed to parse number at: ' + i);
-    if (at(source, i) === '.') i = this.skip(IS_DIGIT, i + 1);
-    if (at(source, i) === 'e' || at(source, i) === 'E') {
-      i++;
-      if (at(source, i) === '+' || at(source, i) === '-') i++;
-      var exponentStartIndex = i;
-      i = this.skip(IS_DIGIT, i);
-      if (exponentStartIndex === i) throw new SyntaxError("Failed to parse number's exponent value at: " + i);
-    }
-    return this.node(PRIMITIVE, Number(slice(source, startIndex, i)), startIndex, i);
-  },
-  keyword: function (value) {
-    var keyword = '' + value;
-    var index = this.index;
-    var endIndex = index + keyword.length;
-    if (slice(this.source, index, endIndex) !== keyword) throw new SyntaxError('Failed to parse value at: ' + index);
-    return this.node(PRIMITIVE, value, index, endIndex);
-  },
-  skip: function (regex, i) {
-    var source = this.source;
-    for (; i < source.length; i++) if (!exec(regex, at(source, i))) break;
-    return i;
-  },
-  until: function (array, i) {
-    i = this.skip(IS_WHITESPACE, i);
-    var chr = at(this.source, i);
-    for (var j = 0; j < array.length; j++) if (array[j] === chr) return i;
-    throw new SyntaxError('Unexpected character: "' + chr + '" at: ' + i);
-  }
-};
-
-var NO_SOURCE_SUPPORT = fails(function () {
-  var unsafeInt = '9007199254740993';
-  var source;
-  nativeParse(unsafeInt, function (key, value, context) {
-    source = context.source;
-  });
-  return source !== unsafeInt;
-});
-
-var PROPER_BASE_PARSE = NATIVE_SYMBOL && !fails(function () {
-  // Safari 9 bug
-  return 1 / nativeParse('-0 \t') !== -Infinity;
-});
-
-// `JSON.parse` method
-// https://tc39.es/ecma262/#sec-json.parse
-// https://github.com/tc39/proposal-json-parse-with-source
-$({ target: 'JSON', stat: true, forced: NO_SOURCE_SUPPORT }, {
-  parse: function parse(text, reviver) {
-    return PROPER_BASE_PARSE && !isCallable(reviver) ? nativeParse(text) : $parse(text, reviver);
-  }
-});
-
-
-/***/ }),
-
-/***/ 4979:
-/***/ ((__unused_webpack_module, __unused_webpack_exports, __webpack_require__) => {
-
-
-var $ = __webpack_require__(6518);
-var globalThis = __webpack_require__(4576);
-var getBuiltIn = __webpack_require__(7751);
-var createPropertyDescriptor = __webpack_require__(6980);
-var defineProperty = (__webpack_require__(4913).f);
-var hasOwn = __webpack_require__(9297);
-var anInstance = __webpack_require__(679);
-var inheritIfRequired = __webpack_require__(3167);
-var normalizeStringArgument = __webpack_require__(2603);
-var DOMExceptionConstants = __webpack_require__(5002);
-var clearErrorStack = __webpack_require__(8574);
-var DESCRIPTORS = __webpack_require__(3724);
-var IS_PURE = __webpack_require__(6395);
-
-var DOM_EXCEPTION = 'DOMException';
-var Error = getBuiltIn('Error');
-var NativeDOMException = getBuiltIn(DOM_EXCEPTION);
-
-var $DOMException = function DOMException() {
-  anInstance(this, DOMExceptionPrototype);
-  var argumentsLength = arguments.length;
-  var message = normalizeStringArgument(argumentsLength < 1 ? undefined : arguments[0]);
-  var name = normalizeStringArgument(argumentsLength < 2 ? undefined : arguments[1], 'Error');
-  var that = new NativeDOMException(message, name);
-  var error = new Error(message);
-  error.name = DOM_EXCEPTION;
-  defineProperty(that, 'stack', createPropertyDescriptor(1, clearErrorStack(error.stack, 1)));
-  inheritIfRequired(that, this, $DOMException);
-  return that;
-};
-
-var DOMExceptionPrototype = $DOMException.prototype = NativeDOMException.prototype;
-
-var ERROR_HAS_STACK = 'stack' in new Error(DOM_EXCEPTION);
-var DOM_EXCEPTION_HAS_STACK = 'stack' in new NativeDOMException(1, 2);
-
-// eslint-disable-next-line es/no-object-getownpropertydescriptor -- safe
-var descriptor = NativeDOMException && DESCRIPTORS && Object.getOwnPropertyDescriptor(globalThis, DOM_EXCEPTION);
-
-// Bun ~ 0.1.1 DOMException have incorrect descriptor and we can't redefine it
-// https://github.com/Jarred-Sumner/bun/issues/399
-var BUGGY_DESCRIPTOR = !!descriptor && !(descriptor.writable && descriptor.configurable);
-
-var FORCED_CONSTRUCTOR = ERROR_HAS_STACK && !BUGGY_DESCRIPTOR && !DOM_EXCEPTION_HAS_STACK;
-
-// `DOMException` constructor patch for `.stack` where it's required
-// https://webidl.spec.whatwg.org/#es-DOMException-specialness
-$({ global: true, constructor: true, forced: IS_PURE || FORCED_CONSTRUCTOR }, { // TODO: fix export logic
-  DOMException: FORCED_CONSTRUCTOR ? $DOMException : NativeDOMException
-});
-
-var PolyfilledDOMException = getBuiltIn(DOM_EXCEPTION);
-var PolyfilledDOMExceptionPrototype = PolyfilledDOMException.prototype;
-
-if (PolyfilledDOMExceptionPrototype.constructor !== PolyfilledDOMException) {
-  if (!IS_PURE) {
-    defineProperty(PolyfilledDOMExceptionPrototype, 'constructor', createPropertyDescriptor(1, PolyfilledDOMException));
-  }
-
-  for (var key in DOMExceptionConstants) if (hasOwn(DOMExceptionConstants, key)) {
-    var constant = DOMExceptionConstants[key];
-    var constantName = constant.s;
-    if (!hasOwn(PolyfilledDOMException, constantName)) {
-      defineProperty(PolyfilledDOMException, constantName, createPropertyDescriptor(6, constant.c));
-    }
-  }
-}
-
-
-/***/ }),
-
-/***/ 4603:
-/***/ ((__unused_webpack_module, __unused_webpack_exports, __webpack_require__) => {
-
-
-var defineBuiltIn = __webpack_require__(6840);
-var uncurryThis = __webpack_require__(9504);
-var toString = __webpack_require__(655);
-var validateArgumentsLength = __webpack_require__(2812);
-
-var $URLSearchParams = URLSearchParams;
-var URLSearchParamsPrototype = $URLSearchParams.prototype;
-var append = uncurryThis(URLSearchParamsPrototype.append);
-var $delete = uncurryThis(URLSearchParamsPrototype['delete']);
-var forEach = uncurryThis(URLSearchParamsPrototype.forEach);
-var push = uncurryThis([].push);
-var params = new $URLSearchParams('a=1&a=2&b=3');
-
-params['delete']('a', 1);
-// `undefined` case is a Chromium 117 bug
-// https://bugs.chromium.org/p/v8/issues/detail?id=14222
-params['delete']('b', undefined);
-
-if (params + '' !== 'a=2') {
-  defineBuiltIn(URLSearchParamsPrototype, 'delete', function (name /* , value */) {
-    var length = arguments.length;
-    var $value = length < 2 ? undefined : arguments[1];
-    if (length && $value === undefined) return $delete(this, name);
-    var entries = [];
-    forEach(this, function (v, k) { // also validates `this`
-      push(entries, { key: k, value: v });
-    });
-    validateArgumentsLength(length, 1);
-    var key = toString(name);
-    var value = toString($value);
-    var index = 0;
-    var dindex = 0;
-    var found = false;
-    var entriesLength = entries.length;
-    var entry;
-    while (index < entriesLength) {
-      entry = entries[index++];
-      if (found || entry.key === key) {
-        found = true;
-        $delete(this, entry.key);
-      } else dindex++;
-    }
-    while (dindex < entriesLength) {
-      entry = entries[dindex++];
-      if (!(entry.key === key && entry.value === value)) append(this, entry.key, entry.value);
-    }
-  }, { enumerable: true, unsafe: true });
-}
-
-
-/***/ }),
-
-/***/ 7566:
-/***/ ((__unused_webpack_module, __unused_webpack_exports, __webpack_require__) => {
-
-
-var defineBuiltIn = __webpack_require__(6840);
-var uncurryThis = __webpack_require__(9504);
-var toString = __webpack_require__(655);
-var validateArgumentsLength = __webpack_require__(2812);
-
-var $URLSearchParams = URLSearchParams;
-var URLSearchParamsPrototype = $URLSearchParams.prototype;
-var getAll = uncurryThis(URLSearchParamsPrototype.getAll);
-var $has = uncurryThis(URLSearchParamsPrototype.has);
-var params = new $URLSearchParams('a=1');
-
-// `undefined` case is a Chromium 117 bug
-// https://bugs.chromium.org/p/v8/issues/detail?id=14222
-if (params.has('a', 2) || !params.has('a', undefined)) {
-  defineBuiltIn(URLSearchParamsPrototype, 'has', function has(name /* , value */) {
-    var length = arguments.length;
-    var $value = length < 2 ? undefined : arguments[1];
-    if (length && $value === undefined) return $has(this, name);
-    var values = getAll(this, name); // also validates `this`
-    validateArgumentsLength(length, 1);
-    var value = toString($value);
-    var index = 0;
-    while (index < values.length) {
-      if (values[index++] === value) return true;
-    } return false;
-  }, { enumerable: true, unsafe: true });
-}
-
-
-/***/ }),
-
-/***/ 8721:
-/***/ ((__unused_webpack_module, __unused_webpack_exports, __webpack_require__) => {
-
-
-var DESCRIPTORS = __webpack_require__(3724);
-var uncurryThis = __webpack_require__(9504);
-var defineBuiltInAccessor = __webpack_require__(2106);
-
-var URLSearchParamsPrototype = URLSearchParams.prototype;
-var forEach = uncurryThis(URLSearchParamsPrototype.forEach);
-
-// `URLSearchParams.prototype.size` getter
-// https://github.com/whatwg/url/pull/734
-if (DESCRIPTORS && !('size' in URLSearchParamsPrototype)) {
-  defineBuiltInAccessor(URLSearchParamsPrototype, 'size', {
-    get: function size() {
-      var count = 0;
-      forEach(this, function () { count++; });
-      return count;
-    },
-    configurable: true,
-    enumerable: true
-  });
-}
-
-
-/***/ })
-
-/******/ });
-/************************************************************************/
-/******/ // The module cache
-/******/ var __webpack_module_cache__ = {};
-/******/ 
-/******/ // The require function
-/******/ function __webpack_require__(moduleId) {
-/******/ 	// Check if module is in cache
-/******/ 	var cachedModule = __webpack_module_cache__[moduleId];
-/******/ 	if (cachedModule !== undefined) {
-/******/ 		return cachedModule.exports;
-/******/ 	}
-/******/ 	// Create a new module (and put it into the cache)
-/******/ 	var module = __webpack_module_cache__[moduleId] = {
-/******/ 		// no module.id needed
-/******/ 		// no module.loaded needed
-/******/ 		exports: {}
-/******/ 	};
-/******/ 
-/******/ 	// Execute the module function
-/******/ 	__webpack_modules__[moduleId].call(module.exports, module, module.exports, __webpack_require__);
-/******/ 
-/******/ 	// Return the exports of the module
-/******/ 	return module.exports;
-/******/ }
+/******/ // The require scope
+/******/ var __webpack_require__ = {};
 /******/ 
 /************************************************************************/
 /******/ /* webpack/runtime/define property getters */
@@ -4756,43 +88,11 @@ __webpack_require__.d(__webpack_exports__, {
   normalizeUnicode: () => (/* reexport */ normalizeUnicode),
   setLayerDimensions: () => (/* reexport */ setLayerDimensions),
   shadow: () => (/* reexport */ shadow),
+  stopEvent: () => (/* reexport */ stopEvent),
   version: () => (/* reexport */ version)
 });
 
-// EXTERNAL MODULE: ./node_modules/core-js/modules/es.array.push.js
-var es_array_push = __webpack_require__(4114);
-// EXTERNAL MODULE: ./node_modules/core-js/modules/es.array-buffer.detached.js
-var es_array_buffer_detached = __webpack_require__(6573);
-// EXTERNAL MODULE: ./node_modules/core-js/modules/es.array-buffer.transfer.js
-var es_array_buffer_transfer = __webpack_require__(8100);
-// EXTERNAL MODULE: ./node_modules/core-js/modules/es.array-buffer.transfer-to-fixed-length.js
-var es_array_buffer_transfer_to_fixed_length = __webpack_require__(7936);
-// EXTERNAL MODULE: ./node_modules/core-js/modules/es.typed-array.to-reversed.js
-var es_typed_array_to_reversed = __webpack_require__(7467);
-// EXTERNAL MODULE: ./node_modules/core-js/modules/es.typed-array.to-sorted.js
-var es_typed_array_to_sorted = __webpack_require__(4732);
-// EXTERNAL MODULE: ./node_modules/core-js/modules/es.typed-array.with.js
-var es_typed_array_with = __webpack_require__(9577);
-// EXTERNAL MODULE: ./node_modules/core-js/modules/web.dom-exception.stack.js
-var web_dom_exception_stack = __webpack_require__(4979);
-// EXTERNAL MODULE: ./node_modules/core-js/modules/web.url-search-params.delete.js
-var web_url_search_params_delete = __webpack_require__(4603);
-// EXTERNAL MODULE: ./node_modules/core-js/modules/web.url-search-params.has.js
-var web_url_search_params_has = __webpack_require__(7566);
-// EXTERNAL MODULE: ./node_modules/core-js/modules/web.url-search-params.size.js
-var web_url_search_params_size = __webpack_require__(8721);
 ;// ./src/shared/util.js
-
-
-
-
-
-
-
-
-
-
-
 const isNodeJS = typeof process === "object" && process + "" === "[object process]" && !process.versions.nw && !(process.versions.electron && process.type && process.type !== "browser");
 const IDENTITY_MATRIX = [1, 0, 0, 1, 0, 0];
 const FONT_IDENTITY_MATRIX = [0.001, 0, 0, 0.001, 0, 0];
@@ -4839,7 +139,8 @@ const AnnotationEditorParamsType = {
   HIGHLIGHT_DEFAULT_COLOR: 32,
   HIGHLIGHT_THICKNESS: 33,
   HIGHLIGHT_FREE: 34,
-  HIGHLIGHT_SHOW_ALL: 35
+  HIGHLIGHT_SHOW_ALL: 35,
+  DRAW_STEP: 41
 };
 const PermissionFlag = {
   PRINT: 0x04,
@@ -5253,6 +554,9 @@ class util_FeatureTest {
   static get isOffscreenCanvasSupported() {
     return shadow(this, "isOffscreenCanvasSupported", typeof OffscreenCanvas !== "undefined");
   }
+  static get isImageDecoderSupported() {
+    return shadow(this, "isImageDecoderSupported", typeof ImageDecoder !== "undefined");
+  }
   static get platform() {
     if (typeof navigator !== "undefined" && typeof navigator?.platform === "string") {
       return shadow(this, "platform", {
@@ -5502,17 +806,11 @@ function normalizeUnicode(str) {
   return str.replaceAll(NormalizeRegex, (_, p1, p2) => p1 ? p1.normalize("NFKC") : NormalizationMap.get(p2));
 }
 function getUuid() {
-  if (typeof crypto !== "undefined" && typeof crypto?.randomUUID === "function") {
+  if (typeof crypto.randomUUID === "function") {
     return crypto.randomUUID();
   }
   const buf = new Uint8Array(32);
-  if (typeof crypto !== "undefined" && typeof crypto?.getRandomValues === "function") {
-    crypto.getRandomValues(buf);
-  } else {
-    for (let i = 0; i < 32; i++) {
-      buf[i] = Math.floor(Math.random() * 255);
-    }
-  }
+  crypto.getRandomValues(buf);
   return bytesToString(buf);
 }
 const AnnotationPrefix = "pdfjs_internal_id_";
@@ -5545,41 +843,15 @@ function fromBase64Util(str) {
   }
   return stringToBytes(atob(str));
 }
+if (typeof Promise.try !== "function") {
+  Promise.try = function (fn, ...args) {
+    return new Promise(resolve => {
+      resolve(fn(...args));
+    });
+  };
+}
 
-// EXTERNAL MODULE: ./node_modules/core-js/modules/es.promise.with-resolvers.js
-var es_promise_with_resolvers = __webpack_require__(4628);
-// EXTERNAL MODULE: ./node_modules/core-js/modules/es.set.difference.v2.js
-var es_set_difference_v2 = __webpack_require__(7642);
-// EXTERNAL MODULE: ./node_modules/core-js/modules/es.set.intersection.v2.js
-var es_set_intersection_v2 = __webpack_require__(8004);
-// EXTERNAL MODULE: ./node_modules/core-js/modules/es.set.is-disjoint-from.v2.js
-var es_set_is_disjoint_from_v2 = __webpack_require__(3853);
-// EXTERNAL MODULE: ./node_modules/core-js/modules/es.set.is-subset-of.v2.js
-var es_set_is_subset_of_v2 = __webpack_require__(5876);
-// EXTERNAL MODULE: ./node_modules/core-js/modules/es.set.is-superset-of.v2.js
-var es_set_is_superset_of_v2 = __webpack_require__(2475);
-// EXTERNAL MODULE: ./node_modules/core-js/modules/es.set.symmetric-difference.v2.js
-var es_set_symmetric_difference_v2 = __webpack_require__(5024);
-// EXTERNAL MODULE: ./node_modules/core-js/modules/es.set.union.v2.js
-var es_set_union_v2 = __webpack_require__(1698);
-// EXTERNAL MODULE: ./node_modules/core-js/modules/esnext.iterator.map.js
-var esnext_iterator_map = __webpack_require__(1454);
-// EXTERNAL MODULE: ./node_modules/core-js/modules/esnext.iterator.constructor.js
-var esnext_iterator_constructor = __webpack_require__(8992);
-// EXTERNAL MODULE: ./node_modules/core-js/modules/esnext.iterator.drop.js
-var esnext_iterator_drop = __webpack_require__(4743);
-// EXTERNAL MODULE: ./node_modules/core-js/modules/esnext.iterator.every.js
-var esnext_iterator_every = __webpack_require__(3215);
-// EXTERNAL MODULE: ./node_modules/core-js/modules/esnext.iterator.some.js
-var esnext_iterator_some = __webpack_require__(7550);
-// EXTERNAL MODULE: ./node_modules/core-js/modules/esnext.json.parse.js
-var esnext_json_parse = __webpack_require__(8335);
 ;// ./src/display/display_utils.js
-
-
-
-
-
 
 const SVG_NS = "http://www.w3.org/2000/svg";
 class PixelsPerInch {
@@ -5830,6 +1102,10 @@ function isValidFetchUrl(url, baseUrl) {
 function noContextMenu(e) {
   e.preventDefault();
 }
+function stopEvent(e) {
+  e.preventDefault();
+  e.stopPropagation();
+}
 function deprecated(details) {
   console.log("Deprecated API usage: " + details);
 }
@@ -6024,13 +1300,11 @@ class EditorToolbar {
   }
   #focusIn(e) {
     this.#editor._focusEventsAllowed = false;
-    e.preventDefault();
-    e.stopPropagation();
+    stopEvent(e);
   }
   #focusOut(e) {
     this.#editor._focusEventsAllowed = true;
-    e.preventDefault();
-    e.stopPropagation();
+    stopEvent(e);
   }
   #addListenersToElement(element) {
     const signal = this.#editor._uiManager._signal;
@@ -6176,27 +1450,6 @@ class HighlightToolbar {
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 function bindEvents(obj, element, names) {
   for (const name of names) {
     element.addEventListener(name, obj[name].bind(obj));
@@ -6278,7 +1531,7 @@ class ImageManager {
       }
       data.refCounter = 1;
     } catch (e) {
-      console.error(e);
+      warn(e);
       data = null;
     }
     this.#cache.set(key, data);
@@ -6466,6 +1719,20 @@ class CommandManager {
   hasSomethingToRedo() {
     return this.#position < this.#commands.length - 1;
   }
+  cleanType(type) {
+    if (this.#position === -1) {
+      return;
+    }
+    for (let i = this.#position; i >= 0; i--) {
+      if (this.#commands[i].type !== type) {
+        this.#commands.splice(i + 1, this.#position - i);
+        this.#position = i;
+        return;
+      }
+    }
+    this.#commands.length = 0;
+    this.#position = -1;
+  }
   destroy() {
     this.#commands = null;
   }
@@ -6536,8 +1803,7 @@ class KeyboardManager {
     }
     callback.bind(self, ...args, event)();
     if (!bubbles) {
-      event.stopPropagation();
-      event.preventDefault();
+      stopEvent(event);
     }
   }
 }
@@ -6578,11 +1844,13 @@ class AnnotationEditorUIManager {
   #changedExistingAnnotations = null;
   #commandManager = new CommandManager();
   #copyPasteAC = null;
+  #currentDrawingSession = null;
   #currentPageIndex = 0;
   #deletedAnnotationsElementIds = new Set();
   #draggingEditors = null;
   #editorTypes = null;
   #editorsToRescale = new Set();
+  _editorUndoBar = null;
   #enableHighlightFloatingButton = false;
   #enableUpdatedAddImage = false;
   #enableNewAltTextWhenAddingImage = false;
@@ -6677,7 +1945,7 @@ class AnnotationEditorUIManager {
       checker: arrowChecker
     }]]));
   }
-  constructor(container, viewer, altTextManager, eventBus, pdfDocument, pageColors, highlightColors, enableHighlightFloatingButton, enableUpdatedAddImage, enableNewAltTextWhenAddingImage, mlManager) {
+  constructor(container, viewer, altTextManager, eventBus, pdfDocument, pageColors, highlightColors, enableHighlightFloatingButton, enableUpdatedAddImage, enableNewAltTextWhenAddingImage, mlManager, editorUndoBar) {
     const signal = this._signal = this.#abortController.signal;
     this.#container = container;
     this.#viewer = viewer;
@@ -6717,6 +1985,7 @@ class AnnotationEditorUIManager {
       rotation: 0
     };
     this.isShiftKeyDown = false;
+    this._editorUndoBar = editorUndoBar || null;
   }
   destroy() {
     this.#updateModeCapability?.resolve();
@@ -6744,6 +2013,7 @@ class AnnotationEditorUIManager {
       clearTimeout(this.#translationTimeoutId);
       this.#translationTimeoutId = null;
     }
+    this._editorUndoBar?.destroy();
   }
   combinedSignal(ac) {
     return AbortSignal.any([this._signal, ac.signal]);
@@ -6768,6 +2038,15 @@ class AnnotationEditorUIManager {
   }
   get highlightColorNames() {
     return shadow(this, "highlightColorNames", this.highlightColors ? new Map(Array.from(this.highlightColors, e => e.reverse())) : null);
+  }
+  setCurrentDrawingSession(layer) {
+    if (layer) {
+      this.unselectAll();
+      this.disableUserSelect(true);
+    } else {
+      this.disableUserSelect(false);
+    }
+    this.#currentDrawingSession = layer;
   }
   setMainHighlightColorPicker(colorPicker) {
     this.#mainHighlightColorPicker = colorPicker;
@@ -6841,6 +2120,7 @@ class AnnotationEditorUIManager {
     for (const editor of this.#editorsToRescale) {
       editor.onScaleChanging();
     }
+    this.#currentDrawingSession?.onScaleChanging();
   }
   onRotationChanging({
     pagesRotation
@@ -7332,6 +2612,7 @@ class AnnotationEditorUIManager {
     if (mode === AnnotationEditorType.NONE) {
       this.setEditingState(false);
       this.#disableAll();
+      this._editorUndoBar?.hide();
       this.#updateModeCapability.resolve();
       return;
     }
@@ -7527,6 +2808,9 @@ class AnnotationEditorUIManager {
       this.#dispatchUpdateUI(editor.propertiesToUpdate);
     }
   }
+  updateUIForDefaultProperties(editorType) {
+    this.#dispatchUpdateUI(editorType.defaultPropertiesToUpdate);
+  }
   toggleSelected(editor) {
     if (this.#selectedEditors.has(editor)) {
       this.#selectedEditors.delete(editor);
@@ -7544,6 +2828,7 @@ class AnnotationEditorUIManager {
     });
   }
   setSelected(editor) {
+    this.#currentDrawingSession?.commitOrRemove();
     for (const ed of this.#selectedEditors) {
       if (ed !== editor) {
         ed.unselect();
@@ -7583,6 +2868,7 @@ class AnnotationEditorUIManager {
       hasSomethingToRedo: true,
       isEmpty: this.#isEmpty()
     });
+    this._editorUndoBar?.hide();
   }
   redo() {
     this.#commandManager.redo();
@@ -7600,6 +2886,9 @@ class AnnotationEditorUIManager {
       isEmpty: this.#isEmpty()
     });
   }
+  cleanUndoStack(type) {
+    this.#commandManager.cleanType(type);
+  }
   #isEmpty() {
     if (this.#allEditors.size === 0) {
       return true;
@@ -7613,11 +2902,13 @@ class AnnotationEditorUIManager {
   }
   delete() {
     this.commitOrRemove();
-    if (!this.hasSelection) {
+    const drawingEditor = this.currentLayer?.endDrawingSession(true);
+    if (!this.hasSelection && !drawingEditor) {
       return;
     }
-    const editors = [...this.#selectedEditors];
+    const editors = drawingEditor ? [drawingEditor] : [...this.#selectedEditors];
     const cmd = () => {
+      this._editorUndoBar?.show(undo, editors.length === 1 ? editors[0].editorType : editors.length);
       for (const editor of editors) {
         editor.remove();
       }
@@ -7667,6 +2958,9 @@ class AnnotationEditorUIManager {
       if (this.#mode !== AnnotationEditorType.NONE) {
         return;
       }
+    }
+    if (this.#currentDrawingSession?.commitOrRemove()) {
+      return;
     }
     if (!this.hasSelection) {
       return;
@@ -8204,13 +3498,16 @@ class AnnotationEditor {
   #allResizerDivs = null;
   #altText = null;
   #disabled = false;
+  #dragPointerId = null;
+  #dragPointerType = "";
   #keepAspectRatio = false;
   #resizersDiv = null;
+  #lastPointerCoords = null;
   #savedDimensions = null;
   #focusAC = null;
   #focusedResizerName = "";
   #hasBeenClicked = false;
-  #initialPosition = null;
+  #initialRect = null;
   #isEditing = false;
   #isInEditMode = false;
   #isResizerEnabledForKeyboard = false;
@@ -8287,6 +3584,9 @@ class AnnotationEditor {
   }
   get editorType() {
     return Object.getPrototypeOf(this).constructor._type;
+  }
+  static get isDrawer() {
+    return false;
   }
   static get _defaultLineColor() {
     return shadow(this, "_defaultLineColor", this._colorManager.getHexCode("CanvasText"));
@@ -8435,21 +3735,25 @@ class AnnotationEditor {
     [x, y] = this.screenToPageTranslation(x, y);
     this.x += x / width;
     this.y += y / height;
+    this._onTranslating(this.x, this.y);
     this.fixAndSetPosition();
   }
   translate(x, y) {
     this.#translate(this.parentDimensions, x, y);
   }
   translateInPage(x, y) {
-    this.#initialPosition ||= [this.x, this.y];
+    this.#initialRect ||= [this.x, this.y, this.width, this.height];
     this.#translate(this.pageDimensions, x, y);
     this.div.scrollIntoView({
       block: "nearest"
     });
   }
   drag(tx, ty) {
-    this.#initialPosition ||= [this.x, this.y];
-    const [parentWidth, parentHeight] = this.parentDimensions;
+    this.#initialRect ||= [this.x, this.y, this.width, this.height];
+    const {
+      div,
+      parentDimensions: [parentWidth, parentHeight]
+    } = this;
     this.x += tx / parentWidth;
     this.y += ty / parentHeight;
     if (this.parent && (this.x < 0 || this.x > 1 || this.y < 0 || this.y > 1)) {
@@ -8469,14 +3773,23 @@ class AnnotationEditor {
     const [bx, by] = this.getBaseTranslation();
     x += bx;
     y += by;
-    this.div.style.left = `${(100 * x).toFixed(2)}%`;
-    this.div.style.top = `${(100 * y).toFixed(2)}%`;
-    this.div.scrollIntoView({
+    const {
+      style
+    } = div;
+    style.left = `${(100 * x).toFixed(2)}%`;
+    style.top = `${(100 * y).toFixed(2)}%`;
+    this._onTranslating(x, y);
+    div.scrollIntoView({
       block: "nearest"
     });
   }
+  _onTranslating(x, y) {}
+  _onTranslated(x, y) {}
   get _hasBeenMoved() {
-    return !!this.#initialPosition && (this.#initialPosition[0] !== this.x || this.#initialPosition[1] !== this.y);
+    return !!this.#initialRect && (this.#initialRect[0] !== this.x || this.#initialRect[1] !== this.y);
+  }
+  get _hasBeenResized() {
+    return !!this.#initialRect && (this.#initialRect[2] !== this.width || this.#initialRect[3] !== this.height);
   }
   getBaseTranslation() {
     const [parentWidth, parentHeight] = this.parentDimensions;
@@ -8500,7 +3813,12 @@ class AnnotationEditor {
     return true;
   }
   fixAndSetPosition(rotation = this.rotation) {
-    const [pageWidth, pageHeight] = this.pageDimensions;
+    const {
+      div: {
+        style
+      },
+      pageDimensions: [pageWidth, pageHeight]
+    } = this;
     let {
       x,
       y,
@@ -8536,9 +3854,6 @@ class AnnotationEditor {
     const [bx, by] = this.getBaseTranslation();
     x += bx;
     y += by;
-    const {
-      style
-    } = this.div;
     style.left = `${(100 * x).toFixed(2)}%`;
     style.top = `${(100 * y).toFixed(2)}%`;
     this.moveInDOM();
@@ -8594,9 +3909,12 @@ class AnnotationEditor {
   }
   setDims(width, height) {
     const [parentWidth, parentHeight] = this.parentDimensions;
-    this.div.style.width = `${(100 * width / parentWidth).toFixed(2)}%`;
+    const {
+      style
+    } = this.div;
+    style.width = `${(100 * width / parentWidth).toFixed(2)}%`;
     if (!this.#keepAspectRatio) {
-      this.div.style.height = `${(100 * height / parentHeight).toFixed(2)}%`;
+      style.height = `${(100 * height / parentHeight).toFixed(2)}%`;
     }
   }
   fixDims() {
@@ -8657,6 +3975,7 @@ class AnnotationEditor {
     this.#altText?.toggle(false);
     const savedDraggable = this._isDraggable;
     this._isDraggable = false;
+    this.#lastPointerCoords = [event.screenX, event.screenY];
     const ac = new AbortController();
     const signal = this._uiManager.combinedSignal(ac);
     this.parent.togglePointerEvents(false);
@@ -8665,13 +3984,19 @@ class AnnotationEditor {
       capture: true,
       signal
     });
+    window.addEventListener("touchmove", stopEvent, {
+      passive: false,
+      signal
+    });
     window.addEventListener("contextmenu", noContextMenu, {
       signal
     });
-    const savedX = this.x;
-    const savedY = this.y;
-    const savedWidth = this.width;
-    const savedHeight = this.height;
+    this.#savedDimensions = {
+      savedX: this.x,
+      savedY: this.y,
+      savedWidth: this.width,
+      savedHeight: this.height
+    };
     const savedParentCursor = this.parent.div.style.cursor;
     const savedCursor = this.div.style.cursor;
     this.div.style.cursor = this.parent.div.style.cursor = window.getComputedStyle(event.target).cursor;
@@ -8682,7 +4007,7 @@ class AnnotationEditor {
       this._isDraggable = savedDraggable;
       this.parent.div.style.cursor = savedParentCursor;
       this.div.style.cursor = savedCursor;
-      this.#addResizeToUndoStack(savedX, savedY, savedWidth, savedHeight);
+      this.#addResizeToUndoStack();
     };
     window.addEventListener("pointerup", pointerUpCallback, {
       signal
@@ -8691,7 +4016,28 @@ class AnnotationEditor {
       signal
     });
   }
-  #addResizeToUndoStack(savedX, savedY, savedWidth, savedHeight) {
+  #resize(x, y, width, height) {
+    this.width = width;
+    this.height = height;
+    this.x = x;
+    this.y = y;
+    const [parentWidth, parentHeight] = this.parentDimensions;
+    this.setDims(parentWidth * width, parentHeight * height);
+    this.fixAndSetPosition();
+    this._onResized();
+  }
+  _onResized() {}
+  #addResizeToUndoStack() {
+    if (!this.#savedDimensions) {
+      return;
+    }
+    const {
+      savedX,
+      savedY,
+      savedWidth,
+      savedHeight
+    } = this.#savedDimensions;
+    this.#savedDimensions = null;
     const newX = this.x;
     const newY = this.y;
     const newWidth = this.width;
@@ -8700,24 +4046,8 @@ class AnnotationEditor {
       return;
     }
     this.addCommands({
-      cmd: () => {
-        this.width = newWidth;
-        this.height = newHeight;
-        this.x = newX;
-        this.y = newY;
-        const [parentWidth, parentHeight] = this.parentDimensions;
-        this.setDims(parentWidth * newWidth, parentHeight * newHeight);
-        this.fixAndSetPosition();
-      },
-      undo: () => {
-        this.width = savedWidth;
-        this.height = savedHeight;
-        this.x = savedX;
-        this.y = savedY;
-        const [parentWidth, parentHeight] = this.parentDimensions;
-        this.setDims(parentWidth * savedWidth, parentHeight * savedHeight);
-        this.fixAndSetPosition();
-      },
+      cmd: this.#resize.bind(this, newX, newY, newWidth, newHeight),
+      undo: this.#resize.bind(this, savedX, savedY, savedWidth, savedHeight),
       mustExec: true
     });
   }
@@ -8785,7 +4115,22 @@ class AnnotationEditor {
     const oppositeY = round(savedY + transfOppositePoint[1]);
     let ratioX = 1;
     let ratioY = 1;
-    let [deltaX, deltaY] = this.screenToPageTranslation(event.movementX, event.movementY);
+    let deltaX, deltaY;
+    if (!event.fromKeyboard) {
+      const {
+        screenX,
+        screenY
+      } = event;
+      const [lastScreenX, lastScreenY] = this.#lastPointerCoords;
+      [deltaX, deltaY] = this.screenToPageTranslation(screenX - lastScreenX, screenY - lastScreenY);
+      this.#lastPointerCoords[0] = screenX;
+      this.#lastPointerCoords[1] = screenY;
+    } else {
+      ({
+        deltaX,
+        deltaY
+      } = event);
+    }
     [deltaX, deltaY] = invTransf(deltaX / parentWidth, deltaY / parentHeight);
     if (isDiagonal) {
       const oldDiag = Math.hypot(savedWidth, savedHeight);
@@ -8800,13 +4145,16 @@ class AnnotationEditor {
     transfOppositePoint = transf(...getOpposite(newWidth, newHeight));
     const newX = oppositeX - transfOppositePoint[0];
     const newY = oppositeY - transfOppositePoint[1];
+    this.#initialRect ||= [this.x, this.y, this.width, this.height];
     this.width = newWidth;
     this.height = newHeight;
     this.x = newX;
     this.y = newY;
     this.setDims(parentWidth * newWidth, parentHeight * newHeight);
     this.fixAndSetPosition();
+    this._onResizing();
   }
+  _onResizing() {}
   altTextFinish() {
     this.#altText?.finish();
   }
@@ -8895,6 +4243,7 @@ class AnnotationEditor {
     const [tx, ty] = this.getInitialTranslation();
     this.translate(tx, ty);
     bindEvents(this, this.div, ["pointerdown"]);
+    this._uiManager._editorUndoBar?.hide();
     return this.div;
   }
   pointerdown(event) {
@@ -8932,35 +4281,55 @@ class AnnotationEditor {
     this._uiManager.setUpDragSession();
     const ac = new AbortController();
     const signal = this._uiManager.combinedSignal(ac);
+    const opts = {
+      capture: true,
+      passive: false,
+      signal
+    };
+    const cancelDrag = e => {
+      ac.abort();
+      this.#dragPointerId = null;
+      this.#hasBeenClicked = false;
+      if (!this._uiManager.endDragSession()) {
+        this.#selectOnPointerEvent(e);
+      }
+    };
     if (isSelected) {
-      this.div.classList.add("moving");
       this.#prevDragX = event.clientX;
       this.#prevDragY = event.clientY;
-      const pointerMoveCallback = e => {
+      this.#dragPointerId = event.pointerId;
+      this.#dragPointerType = event.pointerType;
+      window.addEventListener("pointermove", e => {
         const {
           clientX: x,
-          clientY: y
+          clientY: y,
+          pointerId
         } = e;
+        if (pointerId !== this.#dragPointerId) {
+          stopEvent(e);
+          return;
+        }
         const [tx, ty] = this.screenToPageTranslation(x - this.#prevDragX, y - this.#prevDragY);
         this.#prevDragX = x;
         this.#prevDragY = y;
         this._uiManager.dragSelectedEditors(tx, ty);
-      };
-      window.addEventListener("pointermove", pointerMoveCallback, {
-        passive: true,
-        capture: true,
-        signal
-      });
+      }, opts);
+      window.addEventListener("touchmove", stopEvent, opts);
+      window.addEventListener("pointerdown", e => {
+        if (e.isPrimary && e.pointerType === this.#dragPointerType) {
+          cancelDrag(e);
+        }
+        stopEvent(e);
+      }, opts);
     }
-    const pointerUpCallback = () => {
-      ac.abort();
-      if (isSelected) {
-        this.div.classList.remove("moving");
+    this._onStartDragging();
+    const pointerUpCallback = e => {
+      if (!this.#dragPointerId || this.#dragPointerId === e.pointerId) {
+        cancelDrag(e);
+        this._onStopDragging();
+        return;
       }
-      this.#hasBeenClicked = false;
-      if (!this._uiManager.endDragSession()) {
-        this.#selectOnPointerEvent(event);
-      }
+      stopEvent(e);
     };
     window.addEventListener("pointerup", pointerUpCallback, {
       signal
@@ -8969,6 +4338,8 @@ class AnnotationEditor {
       signal
     });
   }
+  _onStartDragging() {}
+  _onStopDragging() {}
   moveInDOM() {
     if (this.#moveInDOMTimeout) {
       clearTimeout(this.#moveInDOMTimeout);
@@ -8983,6 +4354,7 @@ class AnnotationEditor {
     this.x = x;
     this.y = y;
     this.fixAndSetPosition();
+    this._onTranslated();
   }
   getRect(tx, ty, rotation = this.rotation) {
     const scale = this.parentScale;
@@ -9043,6 +4415,19 @@ class AnnotationEditor {
   needsToBeRebuilt() {
     return this.div && !this.isAttachedToDOM;
   }
+  get isOnScreen() {
+    const {
+      top,
+      left,
+      bottom,
+      right
+    } = this.getClientDimensions();
+    const {
+      innerHeight,
+      innerWidth
+    } = window;
+    return left < innerWidth && right > 0 && top < innerHeight && bottom > 0;
+  }
   #addFocusListeners() {
     if (this.#focusAC || !this.div) {
       return;
@@ -9060,6 +4445,7 @@ class AnnotationEditor {
     this.#addFocusListeners();
   }
   rotate(_angle) {}
+  resize() {}
   serializeDeleted() {
     return {
       id: this.annotationElementId,
@@ -9218,23 +4604,15 @@ class AnnotationEditor {
       return;
     }
     this.#resizerPointermove(this.#focusedResizerName, {
-      movementX: x,
-      movementY: y
+      deltaX: x,
+      deltaY: y,
+      fromKeyboard: true
     });
   }
   #stopResizing() {
     this.#isResizerEnabledForKeyboard = false;
     this.#setResizerTabIndex(-1);
-    if (this.#savedDimensions) {
-      const {
-        savedX,
-        savedY,
-        savedWidth,
-        savedHeight
-      } = this.#savedDimensions;
-      this.#addResizeToUndoStack(savedX, savedY, savedWidth, savedHeight);
-      this.#savedDimensions = null;
-    }
+    this.#addResizeToUndoStack();
   }
   _stopResizingWithKeyboard() {
     this.#stopResizing();
@@ -9393,12 +4771,6 @@ class FakeEditor extends AnnotationEditor {
 }
 
 ;// ./src/shared/murmurhash3.js
-
-
-
-
-
-
 const SEED = 0xc3d2e1f0;
 const MASK_HIGH = 0xffff0000;
 const MASK_LOW = 0xffff;
@@ -9492,16 +4864,6 @@ class MurmurHash3_64 {
 }
 
 ;// ./src/display/annotation_storage.js
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -9717,15 +5079,6 @@ class PrintAnnotationStorage extends AnnotationStorage {
 }
 
 ;// ./src/display/font_loader.js
-
-
-
-
-
-
-
-
-
 
 class FontLoader {
   #systemFonts = new Set();
@@ -10049,6 +5402,7 @@ class FontFaceObject {
           break;
       }
     }
+    commands.push(ctx => ctx.closePath());
     return this.compiledGlyphs[character] = function glyphDrawer(ctx, size) {
       commands[0](ctx);
       commands[1](ctx);
@@ -10125,12 +5479,6 @@ class DOMCanvasFactory extends BaseCanvasFactory {
 ;// ./src/display/cmap_reader_factory.js
 
 
-
-
-
-
-
-
 class BaseCMapReaderFactory {
   constructor({
     baseUrl = null,
@@ -10167,12 +5515,7 @@ class DOMCMapReaderFactory extends BaseCMapReaderFactory {
   }
 }
 
-// EXTERNAL MODULE: ./node_modules/core-js/modules/esnext.iterator.filter.js
-var esnext_iterator_filter = __webpack_require__(4520);
 ;// ./src/display/filter_factory.js
-
-
-
 
 
 class BaseFilterFactory {
@@ -10454,17 +5797,15 @@ class DOMFilterFactory extends BaseFilterFactory {
     return info.url;
   }
   destroy(keepHCM = false) {
-    if (keepHCM && this.#hcmCache.size !== 0) {
+    if (keepHCM && this.#_hcmCache?.size) {
       return;
     }
-    if (this.#_defs) {
-      this.#_defs.parentNode.parentNode.remove();
-      this.#_defs = null;
-    }
-    if (this.#_cache) {
-      this.#_cache.clear();
-      this.#_cache = null;
-    }
+    this.#_defs?.parentNode.parentNode.remove();
+    this.#_defs = null;
+    this.#_cache?.clear();
+    this.#_cache = null;
+    this.#_hcmCache?.clear();
+    this.#_hcmCache = null;
     this.#id = 0;
   }
   #addLuminosityConversion(filter) {
@@ -10513,12 +5854,6 @@ class DOMFilterFactory extends BaseFilterFactory {
 ;// ./src/display/standard_fontdata_factory.js
 
 
-
-
-
-
-
-
 class BaseStandardFontDataFactory {
   constructor({
     baseUrl = null
@@ -10556,86 +5891,16 @@ class DOMStandardFontDataFactory extends BaseStandardFontDataFactory {
 
 
 
-
-
-
-
-
-
-
-if (isNodeJS) {
-  var packageCapability = Promise.withResolvers();
-  var packageMap = null;
-  const loadPackages = async () => {
-    const fs = await import(/*webpackIgnore: true*/"fs"),
-      http = await import(/*webpackIgnore: true*/"http"),
-      https = await import(/*webpackIgnore: true*/"https"),
-      url = await import(/*webpackIgnore: true*/"url");
-    let canvas, path2d;
-    try {
-      canvas = await import(/*webpackIgnore: true*/"canvas");
-    } catch {}
-    try {
-      path2d = await import(/*webpackIgnore: true*/"path2d");
-    } catch {}
-    return new Map(Object.entries({
-      fs,
-      http,
-      https,
-      url,
-      canvas,
-      path2d
-    }));
-  };
-  loadPackages().then(map => {
-    packageMap = map;
-    packageCapability.resolve();
-    if (!globalThis.DOMMatrix) {
-      const DOMMatrix = map.get("canvas")?.DOMMatrix;
-      if (DOMMatrix) {
-        globalThis.DOMMatrix = DOMMatrix;
-      } else {
-        warn("Cannot polyfill `DOMMatrix`, rendering may be broken.");
-      }
-    }
-    if (!globalThis.Path2D) {
-      const CanvasRenderingContext2D = map.get("canvas")?.CanvasRenderingContext2D;
-      const applyPath2DToCanvasRenderingContext = map.get("path2d")?.applyPath2DToCanvasRenderingContext;
-      const Path2D = map.get("path2d")?.Path2D;
-      if (CanvasRenderingContext2D && applyPath2DToCanvasRenderingContext && Path2D) {
-        try {
-          applyPath2DToCanvasRenderingContext(CanvasRenderingContext2D);
-        } catch (ex) {
-          warn(`applyPath2DToCanvasRenderingContext: "${ex}".`);
-        }
-        globalThis.Path2D = Path2D;
-      } else {
-        warn("Cannot polyfill `Path2D`, rendering may be broken.");
-      }
-    }
-  }, reason => {
-    warn(`loadPackages: ${reason}`);
-    packageMap = new Map();
-    packageCapability.resolve();
-  });
-}
-class NodePackages {
-  static get promise() {
-    return packageCapability.promise;
-  }
-  static get(name) {
-    return packageMap?.get(name);
-  }
-}
 async function node_utils_fetchData(url) {
-  const fs = NodePackages.get("fs");
+  const fs = process.getBuiltinModule("fs");
   const data = await fs.promises.readFile(url);
   return new Uint8Array(data);
 }
 class NodeFilterFactory extends BaseFilterFactory {}
 class NodeCanvasFactory extends BaseCanvasFactory {
   _createCanvas(width, height) {
-    const canvas = NodePackages.get("canvas");
+    const require = process.getBuiltinModule("module").createRequire(import.meta.url);
+    const canvas = require("@napi-rs/canvas");
     return canvas.createCanvas(width, height);
   }
 }
@@ -11131,12 +6396,6 @@ class TilingPattern {
 
 ;// ./src/shared/image_utils.js
 
-
-
-
-
-
-
 function convertToRGBA(params) {
   switch (params.kind) {
     case ImageKind.GRAYSCALE_1BPP:
@@ -11196,7 +6455,8 @@ function convertRGBToRGBA({
   height
 }) {
   let i = 0;
-  const len32 = src.length >> 2;
+  const len = width * height * 3;
+  const len32 = len >> 2;
   const src32 = new Uint32Array(src.buffer, srcPos, len32);
   if (FeatureTest.isLittleEndian) {
     for (; i < len32 - 2; i += 3, destPos += 4) {
@@ -11208,7 +6468,7 @@ function convertRGBToRGBA({
       dest[destPos + 2] = s2 >>> 16 | s3 << 16 | 0xff000000;
       dest[destPos + 3] = s3 >>> 8 | 0xff000000;
     }
-    for (let j = i * 4, jj = src.length; j < jj; j += 3) {
+    for (let j = i * 4, jj = srcPos + len; j < jj; j += 3) {
       dest[destPos++] = src[j] | src[j + 1] << 8 | src[j + 2] << 16 | 0xff000000;
     }
   } else {
@@ -11221,12 +6481,12 @@ function convertRGBToRGBA({
       dest[destPos + 2] = s2 << 16 | s3 >>> 16 | 0xff;
       dest[destPos + 3] = s3 << 8 | 0xff;
     }
-    for (let j = i * 4, jj = src.length; j < jj; j += 3) {
+    for (let j = i * 4, jj = srcPos + len; j < jj; j += 3) {
       dest[destPos++] = src[j] << 24 | src[j + 1] << 16 | src[j + 2] << 8 | 0xff;
     }
   }
   return {
-    srcPos,
+    srcPos: srcPos + len,
     destPos
   };
 }
@@ -11243,16 +6503,6 @@ function grayToRGBA(src, dest) {
 }
 
 ;// ./src/display/canvas.js
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -11574,6 +6824,7 @@ class CanvasExtraState {
     this.fillColor = "#000000";
     this.strokeColor = "#000000";
     this.patternFill = false;
+    this.patternStroke = false;
     this.fillAlpha = 1;
     this.strokeAlpha = 1;
     this.lineWidth = 1;
@@ -11656,7 +6907,7 @@ class CanvasExtraState {
   }
 }
 function putBinaryImageData(ctx, imgData) {
-  if (typeof ImageData !== "undefined" && imgData instanceof ImageData) {
+  if (imgData instanceof ImageData) {
     ctx.putImageData(imgData, 0, 0);
     return;
   }
@@ -12579,7 +7830,7 @@ class CanvasGraphics {
   nextLine() {
     this.moveText(0, this.current.leading);
   }
-  paintChar(character, x, y, patternTransform) {
+  paintChar(character, x, y, patternFillTransform, patternStrokeTransform) {
     const ctx = this.ctx;
     const current = this.current;
     const font = current.font;
@@ -12588,22 +7839,26 @@ class CanvasGraphics {
     const fillStrokeMode = textRenderingMode & TextRenderingMode.FILL_STROKE_MASK;
     const isAddToPathSet = !!(textRenderingMode & TextRenderingMode.ADD_TO_PATH_FLAG);
     const patternFill = current.patternFill && !font.missingFile;
+    const patternStroke = current.patternStroke && !font.missingFile;
     let addToPath;
-    if (font.disableFontFace || isAddToPathSet || patternFill) {
+    if (font.disableFontFace || isAddToPathSet || patternFill || patternStroke) {
       addToPath = font.getPathGenerator(this.commonObjs, character);
     }
-    if (font.disableFontFace || patternFill) {
+    if (font.disableFontFace || patternFill || patternStroke) {
       ctx.save();
       ctx.translate(x, y);
       ctx.beginPath();
       addToPath(ctx, fontSize);
-      if (patternTransform) {
-        ctx.setTransform(...patternTransform);
-      }
       if (fillStrokeMode === TextRenderingMode.FILL || fillStrokeMode === TextRenderingMode.FILL_STROKE) {
+        if (patternFillTransform) {
+          ctx.setTransform(...patternFillTransform);
+        }
         ctx.fill();
       }
       if (fillStrokeMode === TextRenderingMode.STROKE || fillStrokeMode === TextRenderingMode.FILL_STROKE) {
+        if (patternStrokeTransform) {
+          ctx.setTransform(...patternStrokeTransform);
+        }
         ctx.stroke();
       }
       ctx.restore();
@@ -12672,13 +7927,20 @@ class CanvasGraphics {
     } else {
       ctx.scale(textHScale, 1);
     }
-    let patternTransform;
+    let patternFillTransform, patternStrokeTransform;
     if (current.patternFill) {
       ctx.save();
       const pattern = current.fillColor.getPattern(ctx, this, getCurrentTransformInverse(ctx), PathType.FILL);
-      patternTransform = getCurrentTransform(ctx);
+      patternFillTransform = getCurrentTransform(ctx);
       ctx.restore();
       ctx.fillStyle = pattern;
+    }
+    if (current.patternStroke) {
+      ctx.save();
+      const pattern = current.strokeColor.getPattern(ctx, this, getCurrentTransformInverse(ctx), PathType.STROKE);
+      patternStrokeTransform = getCurrentTransform(ctx);
+      ctx.restore();
+      ctx.strokeStyle = pattern;
     }
     let lineWidth = current.lineWidth;
     const scale = current.textMatrixScale;
@@ -12749,11 +8011,11 @@ class CanvasGraphics {
         if (simpleFillText && !accent) {
           ctx.fillText(character, scaledX, scaledY);
         } else {
-          this.paintChar(character, scaledX, scaledY, patternTransform);
+          this.paintChar(character, scaledX, scaledY, patternFillTransform, patternStrokeTransform);
           if (accent) {
             const scaledAccentX = scaledX + fontSize * accent.offset.x / fontSizeScale;
             const scaledAccentY = scaledY - fontSize * accent.offset.y / fontSizeScale;
-            this.paintChar(accent.fontChar, scaledAccentX, scaledAccentY, patternTransform);
+            this.paintChar(accent.fontChar, scaledAccentX, scaledAccentY, patternFillTransform, patternStrokeTransform);
           }
         }
       }
@@ -12850,6 +8112,7 @@ class CanvasGraphics {
   }
   setStrokeColorN() {
     this.current.strokeColor = this.getColorN_Pattern(arguments);
+    this.current.patternStroke = true;
   }
   setFillColorN() {
     this.current.fillColor = this.getColorN_Pattern(arguments);
@@ -12857,9 +8120,11 @@ class CanvasGraphics {
   }
   setStrokeRGBColor(r, g, b) {
     this.ctx.strokeStyle = this.current.strokeColor = Util.makeHexColor(r, g, b);
+    this.current.patternStroke = false;
   }
   setStrokeTransparent() {
     this.ctx.strokeStyle = this.current.strokeColor = "transparent";
+    this.current.patternStroke = false;
   }
   setFillRGBColor(r, g, b) {
     this.ctx.fillStyle = this.current.fillColor = Util.makeHexColor(r, g, b);
@@ -13457,7 +8722,6 @@ class GlobalWorkerOptions {
 
 ;// ./src/shared/message_handler.js
 
-
 const CallbackKind = {
   UNKNOWN: 0,
   DATA: 1,
@@ -13474,6 +8738,7 @@ const StreamKind = {
   PULL_COMPLETE: 7,
   START_COMPLETE: 8
 };
+function onFn() {}
 function wrapReason(reason) {
   if (!(reason instanceof Error || typeof reason === "object" && reason !== null)) {
     unreachable('wrapReason: Expected "reason" to be a (possibly cloned) Error.');
@@ -13543,9 +8808,7 @@ class MessageHandler {
       const sourceName = this.sourceName,
         targetName = data.sourceName,
         comObj = this.comObj;
-      new Promise(function (resolve) {
-        resolve(action(data.data));
-      }).then(function (result) {
+      Promise.try(action, data.data).then(function (result) {
         comObj.postMessage({
           sourceName,
           targetName,
@@ -13718,9 +8981,7 @@ class MessageHandler {
     streamSink.sinkCapability.resolve();
     streamSink.ready = streamSink.sinkCapability.promise;
     this.streamSinks[streamId] = streamSink;
-    new Promise(function (resolve) {
-      resolve(action(data.data, streamSink));
-    }).then(function () {
+    Promise.try(action, data.data, streamSink).then(function () {
       comObj.postMessage({
         sourceName,
         targetName,
@@ -13775,9 +9036,7 @@ class MessageHandler {
           streamSink.sinkCapability.resolve();
         }
         streamSink.desiredSize = data.desiredSize;
-        new Promise(function (resolve) {
-          resolve(streamSink.onPull?.());
-        }).then(function () {
+        Promise.try(streamSink.onPull || onFn).then(function () {
           comObj.postMessage({
             sourceName,
             targetName,
@@ -13828,9 +9087,8 @@ class MessageHandler {
         if (!streamSink) {
           break;
         }
-        new Promise(function (resolve) {
-          resolve(streamSink.onCancel?.(wrapReason(data.reason)));
-        }).then(function () {
+        const dataReason = wrapReason(data.reason);
+        Promise.try(streamSink.onCancel || onFn, dataReason).then(function () {
           comObj.postMessage({
             sourceName,
             targetName,
@@ -13847,7 +9105,7 @@ class MessageHandler {
             reason: wrapReason(reason)
           });
         });
-        streamSink.sinkCapability.reject(wrapReason(data.reason));
+        streamSink.sinkCapability.reject(dataReason);
         streamSink.isCancelled = true;
         delete this.streamSinks[streamId];
         break;
@@ -14157,16 +9415,6 @@ class OptionalContentConfig {
 ;// ./src/display/transport_stream.js
 
 
-
-
-
-
-
-
-
-
-
-
 class PDFDataTransportStream {
   constructor(pdfDataRangeTransport, {
     disableRange = false,
@@ -14434,8 +9682,6 @@ class PDFDataTransportStreamRangeReader {
 
 ;// ./src/display/content_disposition.js
 
-
-
 function getFilenameFromContentDispositionHeader(contentDisposition) {
   let needsEncodingFixup = true;
   let tmp = toParamRegExp("filename\\*", "i").exec(contentDisposition);
@@ -14582,6 +9828,12 @@ function createHeaders(isHttp, httpHeaders) {
   }
   return headers;
 }
+function getResponseOrigin(url) {
+  try {
+    return new URL(url).origin;
+  } catch {}
+  return null;
+}
 function validateRangeRequestCapabilities({
   responseHeaders,
   isHttp,
@@ -14641,14 +9893,6 @@ function validateResponseStatus(status) {
 ;// ./src/display/fetch_stream.js
 
 
-
-
-
-
-
-
-
-
 function createFetchOptions(headers, withCredentials, abortController) {
   return {
     method: "GET",
@@ -14670,6 +9914,7 @@ function getArrayBuffer(val) {
   return new Uint8Array(val).buffer;
 }
 class PDFFetchStream {
+  _responseOrigin = null;
   constructor(source) {
     this.source = source;
     this.isHttp = /^https?:/i.test(source.url);
@@ -14721,6 +9966,7 @@ class PDFFetchStreamReader {
     const headers = new Headers(stream.headers);
     const url = source.url;
     fetch(url, createFetchOptions(headers, this._withCredentials, this._abortController)).then(response => {
+      stream._responseOrigin = getResponseOrigin(response.url);
       if (!validateResponseStatus(response.status)) {
         throw createResponseStatusError(response.status, url);
       }
@@ -14801,6 +10047,10 @@ class PDFFetchStreamRangeReader {
     headers.append("Range", `bytes=${begin}-${end - 1}`);
     const url = source.url;
     fetch(url, createFetchOptions(headers, this._withCredentials, this._abortController)).then(response => {
+      const responseOrigin = getResponseOrigin(response.url);
+      if (responseOrigin !== stream._responseOrigin) {
+        throw new Error(`Expected range response-origin "${responseOrigin}" to match "${stream._responseOrigin}".`);
+      }
       if (!validateResponseStatus(response.status)) {
         throw createResponseStatusError(response.status, url);
       }
@@ -14842,9 +10092,6 @@ class PDFFetchStreamRangeReader {
 ;// ./src/display/network.js
 
 
-
-
-
 const OK_RESPONSE = 200;
 const PARTIAL_CONTENT_RESPONSE = 206;
 function network_getArrayBuffer(xhr) {
@@ -14855,6 +10102,7 @@ function network_getArrayBuffer(xhr) {
   return stringToBytes(data).buffer;
 }
 class NetworkManager {
+  _responseOrigin = null;
   constructor({
     url,
     httpHeaders,
@@ -15037,10 +10285,12 @@ class PDFNetworkStreamFullRequestReader {
   _onHeadersReceived() {
     const fullRequestXhrId = this._fullRequestId;
     const fullRequestXhr = this._manager.getRequestXhr(fullRequestXhrId);
-    const responseHeaders = new Headers(fullRequestXhr.getAllResponseHeaders().trim().split(/[\r\n]+/).map(x => {
+    this._manager._responseOrigin = getResponseOrigin(fullRequestXhr.responseURL);
+    const rawResponseHeaders = fullRequestXhr.getAllResponseHeaders();
+    const responseHeaders = new Headers(rawResponseHeaders ? rawResponseHeaders.trim().split(/[\r\n]+/).map(x => {
       const [key, ...val] = x.split(": ");
       return [key, val.join(": ")];
-    }));
+    }) : []);
     const {
       allowRangeRequests,
       suggestedLength
@@ -15115,6 +10365,7 @@ class PDFNetworkStreamFullRequestReader {
     return this._headersCapability.promise;
   }
   async read() {
+    await this._headersCapability.promise;
     if (this._storedError) {
       throw this._storedError;
     }
@@ -15155,6 +10406,7 @@ class PDFNetworkStreamRangeRequestReader {
   constructor(manager, begin, end) {
     this._manager = manager;
     const args = {
+      onHeadersReceived: this._onHeadersReceived.bind(this),
       onDone: this._onDone.bind(this),
       onError: this._onError.bind(this),
       onProgress: this._onProgress.bind(this)
@@ -15167,6 +10419,13 @@ class PDFNetworkStreamRangeRequestReader {
     this._storedError = undefined;
     this.onProgress = null;
     this.onClosed = null;
+  }
+  _onHeadersReceived() {
+    const responseOrigin = getResponseOrigin(this._manager.getRequestXhr(this._requestId)?.responseURL);
+    if (responseOrigin !== this._manager._responseOrigin) {
+      this._storedError = new Error(`Expected range response-origin "${responseOrigin}" to match "${this._manager._responseOrigin}".`);
+      this._onError(0);
+    }
   }
   _close() {
     this.onClosed?.(this);
@@ -15193,7 +10452,7 @@ class PDFNetworkStreamRangeRequestReader {
     this._close();
   }
   _onError(status) {
-    this._storedError = createResponseStatusError(status, this._url);
+    this._storedError ??= createResponseStatusError(status, this._url);
     for (const requestCapability of this._requests) {
       requestCapability.reject(this._storedError);
     }
@@ -15250,46 +10509,19 @@ class PDFNetworkStreamRangeRequestReader {
 
 ;// ./src/display/node_stream.js
 
-
-
-
-
-
-
-
-
-
-
-
-
-
 const urlRegex = /^[a-z][a-z0-9\-+.]+:/i;
 function parseUrlOrPath(sourceUrl) {
   if (urlRegex.test(sourceUrl)) {
     return new URL(sourceUrl);
   }
-  const url = NodePackages.get("url");
+  const url = process.getBuiltinModule("url");
   return new URL(url.pathToFileURL(sourceUrl));
-}
-function createRequest(url, headers, callback) {
-  if (url.protocol === "http:") {
-    const http = NodePackages.get("http");
-    return http.request(url, {
-      headers
-    }, callback);
-  }
-  const https = NodePackages.get("https");
-  return https.request(url, {
-    headers
-  }, callback);
 }
 class PDFNodeStream {
   constructor(source) {
     this.source = source;
     this.url = parseUrlOrPath(source.url);
-    this.isHttp = this.url.protocol === "http:" || this.url.protocol === "https:";
-    this.isFsUrl = this.url.protocol === "file:";
-    this.headers = createHeaders(this.isHttp, source.httpHeaders);
+    assert(this.url.protocol === "file:", "PDFNodeStream only supports file:// URLs.");
     this._fullRequestReader = null;
     this._rangeRequestReaders = [];
   }
@@ -15298,14 +10530,14 @@ class PDFNodeStream {
   }
   getFullReader() {
     assert(!this._fullRequestReader, "PDFNodeStream.getFullReader can only be called once.");
-    this._fullRequestReader = this.isFsUrl ? new PDFNodeStreamFsFullReader(this) : new PDFNodeStreamFullReader(this);
+    this._fullRequestReader = new PDFNodeStreamFsFullReader(this);
     return this._fullRequestReader;
   }
   getRangeReader(start, end) {
     if (end <= this._progressiveDataLength) {
       return null;
     }
-    const rangeReader = this.isFsUrl ? new PDFNodeStreamFsRangeReader(this, start, end) : new PDFNodeStreamRangeReader(this, start, end);
+    const rangeReader = new PDFNodeStreamFsRangeReader(this, start, end);
     this._rangeRequestReaders.push(rangeReader);
     return rangeReader;
   }
@@ -15316,7 +10548,7 @@ class PDFNodeStream {
     }
   }
 }
-class BaseFullReader {
+class PDFNodeStreamFsFullReader {
   constructor(stream) {
     this._url = stream.url;
     this._done = false;
@@ -15336,6 +10568,18 @@ class BaseFullReader {
     this._readableStream = null;
     this._readCapability = Promise.withResolvers();
     this._headersCapability = Promise.withResolvers();
+    const fs = process.getBuiltinModule("fs");
+    fs.promises.lstat(this._url).then(stat => {
+      this._contentLength = stat.size;
+      this._setReadableStream(fs.createReadStream(this._url));
+      this._headersCapability.resolve();
+    }, error => {
+      if (error.code === "ENOENT") {
+        error = new MissingPDFException(`Missing PDF "${this._url}".`);
+      }
+      this._storedError = error;
+      this._headersCapability.reject(error);
+    });
   }
   get headersReady() {
     return this._headersCapability.promise;
@@ -15411,8 +10655,8 @@ class BaseFullReader {
     }
   }
 }
-class BaseRangeReader {
-  constructor(stream) {
+class PDFNodeStreamFsRangeReader {
+  constructor(stream, start, end) {
     this._url = stream.url;
     this._done = false;
     this._storedError = null;
@@ -15422,6 +10666,11 @@ class BaseRangeReader {
     this._readCapability = Promise.withResolvers();
     const source = stream.source;
     this._isStreamingSupported = !source.disableStream;
+    const fs = process.getBuiltinModule("fs");
+    this._setReadableStream(fs.createReadStream(this._url, {
+      start,
+      end: end - 1
+    }));
   }
   get isStreamingSupported() {
     return this._isStreamingSupported;
@@ -15481,99 +10730,8 @@ class BaseRangeReader {
     }
   }
 }
-class PDFNodeStreamFullReader extends BaseFullReader {
-  constructor(stream) {
-    super(stream);
-    const headers = Object.fromEntries(stream.headers);
-    const handleResponse = response => {
-      if (response.statusCode === 404) {
-        const error = new MissingPDFException(`Missing PDF "${this._url}".`);
-        this._storedError = error;
-        this._headersCapability.reject(error);
-        return;
-      }
-      this._headersCapability.resolve();
-      this._setReadableStream(response);
-      const responseHeaders = new Headers(this._readableStream.headers);
-      const {
-        allowRangeRequests,
-        suggestedLength
-      } = validateRangeRequestCapabilities({
-        responseHeaders,
-        isHttp: stream.isHttp,
-        rangeChunkSize: this._rangeChunkSize,
-        disableRange: this._disableRange
-      });
-      this._isRangeSupported = allowRangeRequests;
-      this._contentLength = suggestedLength || this._contentLength;
-      this._filename = extractFilenameFromHeader(responseHeaders);
-    };
-    this._request = createRequest(this._url, headers, handleResponse);
-    this._request.on("error", reason => {
-      this._storedError = reason;
-      this._headersCapability.reject(reason);
-    });
-    this._request.end();
-  }
-}
-class PDFNodeStreamRangeReader extends BaseRangeReader {
-  constructor(stream, start, end) {
-    super(stream);
-    const headers = Object.fromEntries(stream.headers);
-    headers.Range = `bytes=${start}-${end - 1}`;
-    const handleResponse = response => {
-      if (response.statusCode === 404) {
-        const error = new MissingPDFException(`Missing PDF "${this._url}".`);
-        this._storedError = error;
-        return;
-      }
-      this._setReadableStream(response);
-    };
-    this._request = createRequest(this._url, headers, handleResponse);
-    this._request.on("error", reason => {
-      this._storedError = reason;
-    });
-    this._request.end();
-  }
-}
-class PDFNodeStreamFsFullReader extends BaseFullReader {
-  constructor(stream) {
-    super(stream);
-    const fs = NodePackages.get("fs");
-    fs.promises.lstat(this._url).then(stat => {
-      this._contentLength = stat.size;
-      this._setReadableStream(fs.createReadStream(this._url));
-      this._headersCapability.resolve();
-    }, error => {
-      if (error.code === "ENOENT") {
-        error = new MissingPDFException(`Missing PDF "${this._url}".`);
-      }
-      this._storedError = error;
-      this._headersCapability.reject(error);
-    });
-  }
-}
-class PDFNodeStreamFsRangeReader extends BaseRangeReader {
-  constructor(stream, start, end) {
-    super(stream);
-    const fs = NodePackages.get("fs");
-    this._setReadableStream(fs.createReadStream(this._url, {
-      start,
-      end: end - 1
-    }));
-  }
-}
 
 ;// ./src/display/text_layer.js
-
-
-
-
-
-
-
-
-
 
 
 const MAX_TEXT_DIVS_TO_RENDER = 100000;
@@ -15955,7 +11113,6 @@ class TextLayer {
 }
 
 ;// ./src/display/xfa_text.js
-
 class XfaText {
   static textContent(xfa) {
     const items = [];
@@ -16019,26 +11176,6 @@ class XfaText {
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 const DEFAULT_RANGE_CHUNK_SIZE = 65536;
 const RENDERING_CANCELLED_TIMEOUT = 100;
 const DELAYED_CLEANUP_TIMEOUT = 5000;
@@ -16079,7 +11216,7 @@ function getDocument(src = {}) {
   const maxImageSize = Number.isInteger(src.maxImageSize) && src.maxImageSize > -1 ? src.maxImageSize : -1;
   const isEvalSupported = src.isEvalSupported !== false;
   const isOffscreenCanvasSupported = typeof src.isOffscreenCanvasSupported === "boolean" ? src.isOffscreenCanvasSupported : !isNodeJS;
-  const isChrome = typeof src.isChrome === "boolean" ? src.isChrome : !util_FeatureTest.platform.isFirefox && typeof window !== "undefined" && !!window?.chrome;
+  const isImageDecoderSupported = typeof src.isImageDecoderSupported === "boolean" ? src.isImageDecoderSupported : !isNodeJS && (util_FeatureTest.platform.isFirefox || !globalThis.chrome);
   const canvasMaxAreaInBytes = Number.isInteger(src.canvasMaxAreaInBytes) ? src.canvasMaxAreaInBytes : -1;
   const disableFontFace = typeof src.disableFontFace === "boolean" ? src.disableFontFace : isNodeJS;
   const fontExtraProperties = src.fontExtraProperties === true;
@@ -16130,7 +11267,7 @@ function getDocument(src = {}) {
   }
   const docParams = {
     docId,
-    apiVersion: "4.8.69",
+    apiVersion: "4.9.155",
     data,
     password,
     disableAutoFetch,
@@ -16144,7 +11281,7 @@ function getDocument(src = {}) {
       ignoreErrors,
       isEvalSupported,
       isOffscreenCanvasSupported,
-      isChrome,
+      isImageDecoderSupported,
       canvasMaxAreaInBytes,
       fontExtraProperties,
       useSystemFonts,
@@ -16183,8 +11320,14 @@ function getDocument(src = {}) {
       }
       let NetworkStream;
       if (isNodeJS) {
-        const isFetchSupported = typeof fetch !== "undefined" && typeof Response !== "undefined" && "body" in Response.prototype;
-        NetworkStream = isFetchSupported && isValidFetchUrl(url) ? PDFFetchStream : PDFNodeStream;
+        if (isValidFetchUrl(url)) {
+          if (typeof fetch === "undefined" || typeof Response === "undefined" || !("body" in Response.prototype)) {
+            throw new Error("getDocument - the Fetch API was disabled in Node.js, see `--no-experimental-fetch`.");
+          }
+          NetworkStream = PDFFetchStream;
+        } else {
+          NetworkStream = PDFNodeStream;
+        }
       } else {
         NetworkStream = isValidFetchUrl(url) ? PDFFetchStream : PDFNetworkStream;
       }
@@ -16272,10 +11415,8 @@ class PDFDocumentLoadingTask {
       throw ex;
     }
     this._transport = null;
-    if (this._worker) {
-      this._worker.destroy();
-      this._worker = null;
-    }
+    this._worker?.destroy();
+    this._worker = null;
   }
 }
 class PDFDataRangeTransport {
@@ -16987,9 +12128,6 @@ class PDFWorker {
     this._initialize();
   }
   get promise() {
-    if (isNodeJS) {
-      return Promise.all([NodePackages.promise, this._readyCapability.promise]);
-    }
     return this._readyCapability.promise;
   }
   #resolve() {
@@ -17101,16 +12239,12 @@ class PDFWorker {
   }
   destroy() {
     this.destroyed = true;
-    if (this._webWorker) {
-      this._webWorker.terminate();
-      this._webWorker = null;
-    }
+    this._webWorker?.terminate();
+    this._webWorker = null;
     PDFWorker.#workerPorts?.delete(this._port);
     this._port = null;
-    if (this._messageHandler) {
-      this._messageHandler.destroy();
-      this._messageHandler = null;
-    }
+    this._messageHandler?.destroy();
+    this._messageHandler = null;
   }
   static fromPort(params) {
     if (!params?.port) {
@@ -17265,10 +12399,8 @@ class WorkerTransport {
       this.filterFactory.destroy();
       TextLayer.cleanup();
       this._networkStream?.cancelAllRequests(new AbortException("Worker was terminated."));
-      if (this.messageHandler) {
-        this.messageHandler.destroy();
-        this.messageHandler = null;
-      }
+      this.messageHandler?.destroy();
+      this.messageHandler = null;
       this.destroyCapability.resolve();
     }, this.destroyCapability.reject);
     return this.destroyCapability.promise;
@@ -17932,13 +13064,10 @@ class InternalRenderTask {
     }
   }
 }
-const version = "4.8.69";
-const build = "3634dab10";
+const version = "4.9.155";
+const build = "a4eb8407c";
 
-// EXTERNAL MODULE: ./node_modules/core-js/modules/esnext.iterator.flat-map.js
-var esnext_iterator_flat_map = __webpack_require__(670);
 ;// ./src/shared/scripting_utils.js
-
 function makeColorComp(n) {
   return Math.floor(Math.max(0, Math.min(1, n)) * 255).toString(16).padStart(2, "0");
 }
@@ -18032,7 +13161,6 @@ class DOMSVGFactory extends BaseSVGFactory {
 }
 
 ;// ./src/display/xfa_layer.js
-
 
 class XfaLayer {
   static setupStorage(html, id, element, storage, intent) {
@@ -18244,17 +13372,6 @@ class XfaLayer {
 }
 
 ;// ./src/display/annotation_layer.js
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -20476,6 +15593,7 @@ class CaretAnnotationElement extends AnnotationElement {
   }
 }
 class InkAnnotationElement extends AnnotationElement {
+  #polylinesGroupElement = null;
   #polylines = [];
   constructor(parameters) {
     super(parameters, {
@@ -20486,36 +15604,65 @@ class InkAnnotationElement extends AnnotationElement {
     this.svgElementName = "svg:polyline";
     this.annotationEditorType = this.data.it === "InkHighlight" ? AnnotationEditorType.HIGHLIGHT : AnnotationEditorType.INK;
   }
+  #getTransform(rotation, rect) {
+    switch (rotation) {
+      case 90:
+        return {
+          transform: `rotate(90) translate(${-rect[0]},${rect[1]}) scale(1,-1)`,
+          width: rect[3] - rect[1],
+          height: rect[2] - rect[0]
+        };
+      case 180:
+        return {
+          transform: `rotate(180) translate(${-rect[2]},${rect[1]}) scale(1,-1)`,
+          width: rect[2] - rect[0],
+          height: rect[3] - rect[1]
+        };
+      case 270:
+        return {
+          transform: `rotate(270) translate(${-rect[2]},${rect[3]}) scale(1,-1)`,
+          width: rect[3] - rect[1],
+          height: rect[2] - rect[0]
+        };
+      default:
+        return {
+          transform: `translate(${-rect[0]},${rect[3]}) scale(1,-1)`,
+          width: rect[2] - rect[0],
+          height: rect[3] - rect[1]
+        };
+    }
+  }
   render() {
     this.container.classList.add(this.containerClassName);
     const {
       data: {
         rect,
+        rotation,
         inkLists,
         borderStyle,
         popupRef
       }
     } = this;
     const {
+      transform,
       width,
       height
-    } = getRectDims(rect);
+    } = this.#getTransform(rotation, rect);
     const svg = this.svgFactory.create(width, height, true);
-    for (const inkList of inkLists) {
-      let points = [];
-      for (let i = 0, ii = inkList.length; i < ii; i += 2) {
-        const x = inkList[i] - rect[0];
-        const y = rect[3] - inkList[i + 1];
-        points.push(`${x},${y}`);
-      }
-      points = points.join(" ");
+    const g = this.#polylinesGroupElement = this.svgFactory.createElement("svg:g");
+    svg.append(g);
+    g.setAttribute("stroke-width", borderStyle.width || 1);
+    g.setAttribute("stroke-linecap", "round");
+    g.setAttribute("stroke-linejoin", "round");
+    g.setAttribute("stroke-miterlimit", 10);
+    g.setAttribute("stroke", "transparent");
+    g.setAttribute("fill", "transparent");
+    g.setAttribute("transform", transform);
+    for (let i = 0, ii = inkLists.length; i < ii; i++) {
       const polyline = this.svgFactory.createElement(this.svgElementName);
       this.#polylines.push(polyline);
-      polyline.setAttribute("points", points);
-      polyline.setAttribute("stroke-width", borderStyle.width || 1);
-      polyline.setAttribute("stroke", "transparent");
-      polyline.setAttribute("fill", "transparent");
-      svg.append(polyline);
+      polyline.setAttribute("points", inkLists[i].join(","));
+      g.append(polyline);
     }
     if (!popupRef && this.hasPopupData) {
       this._createPopup();
@@ -20523,6 +15670,33 @@ class InkAnnotationElement extends AnnotationElement {
     this.container.append(svg);
     this._editOnDoubleClick();
     return this.container;
+  }
+  updateEdited(params) {
+    super.updateEdited(params);
+    const {
+      thickness,
+      points,
+      rect
+    } = params;
+    const g = this.#polylinesGroupElement;
+    if (thickness >= 0) {
+      g.setAttribute("stroke-width", thickness || 1);
+    }
+    if (points) {
+      for (let i = 0, ii = this.#polylines.length; i < ii; i++) {
+        this.#polylines[i].setAttribute("points", points[i].join(","));
+      }
+    }
+    if (rect) {
+      const {
+        transform,
+        width,
+        height
+      } = this.#getTransform(this.data.rotation, rect);
+      const root = g.parentElement;
+      root.setAttribute("viewBox", `0 0 ${width} ${height}`);
+      g.setAttribute("transform", transform);
+    }
   }
   getElementsToTriggerPopup() {
     return this.#polylines;
@@ -20826,9 +16000,6 @@ class AnnotationLayer {
 }
 
 ;// ./src/display/editor/freetext.js
-
-
-
 
 
 
@@ -21446,6 +16617,7 @@ class FreeTextEditor extends AnnotationEditor {
 ;// ./src/display/editor/drawers/outline.js
 
 class Outline {
+  static PRECISION = 1e-4;
   toSVGPath() {
     unreachable("Abstract method `toSVGPath` must be implemented.");
   }
@@ -21455,25 +16627,63 @@ class Outline {
   serialize(_bbox, _rotation) {
     unreachable("Abstract method `serialize` must be implemented.");
   }
-  get classNamesForDrawing() {
-    unreachable("Abstract getter `classNamesForDrawing` must be implemented.");
+  static _rescale(src, tx, ty, sx, sy, dest) {
+    dest ||= new Float32Array(src.length);
+    for (let i = 0, ii = src.length; i < ii; i += 2) {
+      dest[i] = tx + src[i] * sx;
+      dest[i + 1] = ty + src[i + 1] * sy;
+    }
+    return dest;
   }
-  get classNamesForOutlining() {
-    unreachable("Abstract getter `classNamesForOutlining` must be implemented.");
+  static _rescaleAndSwap(src, tx, ty, sx, sy, dest) {
+    dest ||= new Float32Array(src.length);
+    for (let i = 0, ii = src.length; i < ii; i += 2) {
+      dest[i] = tx + src[i + 1] * sx;
+      dest[i + 1] = ty + src[i] * sy;
+    }
+    return dest;
   }
-  get mustRemoveSelfIntersections() {
-    return false;
+  static _translate(src, tx, ty, dest) {
+    dest ||= new Float32Array(src.length);
+    for (let i = 0, ii = src.length; i < ii; i += 2) {
+      dest[i] = tx + src[i];
+      dest[i + 1] = ty + src[i + 1];
+    }
+    return dest;
+  }
+  static svgRound(x) {
+    return Math.round(x * 10000);
+  }
+  static _normalizePoint(x, y, parentWidth, parentHeight, rotation) {
+    switch (rotation) {
+      case 90:
+        return [1 - y / parentWidth, x / parentHeight];
+      case 180:
+        return [1 - x / parentWidth, 1 - y / parentHeight];
+      case 270:
+        return [y / parentWidth, 1 - x / parentHeight];
+      default:
+        return [x / parentWidth, y / parentHeight];
+    }
+  }
+  static _normalizePagePoint(x, y, rotation) {
+    switch (rotation) {
+      case 90:
+        return [1 - y, x];
+      case 180:
+        return [1 - x, 1 - y];
+      case 270:
+        return [y, 1 - x];
+      default:
+        return [x, y];
+    }
+  }
+  static createBezierPoints(x1, y1, x2, y2, x3, y3) {
+    return [(x1 + 5 * x2) / 6, (y1 + 5 * y2) / 6, (5 * x2 + x3) / 6, (5 * y2 + y3) / 6, (x2 + x3) / 2, (y2 + y3) / 2];
   }
 }
 
 ;// ./src/display/editor/drawers/freedraw.js
-
-
-
-
-
-
-
 
 
 class FreeDrawOutliner {
@@ -21482,7 +16692,7 @@ class FreeDrawOutliner {
   #innerMargin;
   #isLTR;
   #top = [];
-  #last = new Float64Array(18);
+  #last = new Float32Array(18);
   #lastX;
   #lastY;
   #min;
@@ -21627,7 +16837,7 @@ class FreeDrawOutliner {
     const bottom = this.#bottom;
     const last = this.#last;
     const [layerX, layerY, layerWidth, layerHeight] = this.#box;
-    const points = new Float64Array((this.#points?.length ?? 0) + 2);
+    const points = new Float32Array((this.#points?.length ?? 0) + 2);
     for (let i = 0, ii = points.length - 2; i < ii; i += 2) {
       points[i] = (this.#points[i] - layerX) / layerWidth;
       points[i + 1] = (this.#points[i + 1] - layerY) / layerHeight;
@@ -21637,7 +16847,7 @@ class FreeDrawOutliner {
     if (isNaN(last[6]) && !this.isEmpty()) {
       return this.#getOutlineTwoPoints(points);
     }
-    const outline = new Float64Array(this.#top.length + 24 + this.#bottom.length);
+    const outline = new Float32Array(this.#top.length + 24 + this.#bottom.length);
     let N = top.length;
     for (let i = 0; i < N; i += 2) {
       if (isNaN(top[i])) {
@@ -21667,7 +16877,7 @@ class FreeDrawOutliner {
     const last = this.#last;
     const [layerX, layerY, layerWidth, layerHeight] = this.#box;
     const [lastTopX, lastTopY, lastBottomX, lastBottomY] = this.#getLastCoords();
-    const outline = new Float64Array(36);
+    const outline = new Float32Array(36);
     outline.set([NaN, NaN, NaN, NaN, (last[2] - layerX) / layerWidth, (last[3] - layerY) / layerHeight, NaN, NaN, NaN, NaN, (last[4] - layerX) / layerWidth, (last[5] - layerY) / layerHeight, NaN, NaN, NaN, NaN, lastTopX, lastTopY, NaN, NaN, NaN, NaN, lastBottomX, lastBottomY, NaN, NaN, NaN, NaN, (last[16] - layerX) / layerWidth, (last[17] - layerY) / layerHeight, NaN, NaN, NaN, NaN, (last[14] - layerX) / layerWidth, (last[15] - layerY) / layerHeight], 0);
     return this.newFreeDrawOutline(outline, points, this.#box, this.#scaleFactor, this.#innerMargin, this.#isLTR);
   }
@@ -21687,7 +16897,7 @@ class FreeDrawOutliner {
 }
 class FreeDrawOutline extends Outline {
   #box;
-  #bbox = null;
+  #bbox = new Float32Array(4);
   #innerMargin;
   #isLTR;
   #points;
@@ -21701,13 +16911,9 @@ class FreeDrawOutline extends Outline {
     this.#scaleFactor = scaleFactor;
     this.#innerMargin = innerMargin;
     this.#isLTR = isLTR;
+    this.lastPoint = [NaN, NaN];
     this.#computeMinMax(isLTR);
-    const {
-      x,
-      y,
-      width,
-      height
-    } = this.#bbox;
+    const [x, y, width, height] = this.#bbox;
     for (let i = 0, ii = outline.length; i < ii; i += 2) {
       outline[i] = (outline[i] - x) / width;
       outline[i + 1] = (outline[i + 1] - y) / height;
@@ -21736,42 +16942,26 @@ class FreeDrawOutline extends Outline {
     let points;
     switch (rotation) {
       case 0:
-        outline = this.#rescale(this.#outline, blX, trY, width, -height);
-        points = this.#rescale(this.#points, blX, trY, width, -height);
+        outline = Outline._rescale(this.#outline, blX, trY, width, -height);
+        points = Outline._rescale(this.#points, blX, trY, width, -height);
         break;
       case 90:
-        outline = this.#rescaleAndSwap(this.#outline, blX, blY, width, height);
-        points = this.#rescaleAndSwap(this.#points, blX, blY, width, height);
+        outline = Outline._rescaleAndSwap(this.#outline, blX, blY, width, height);
+        points = Outline._rescaleAndSwap(this.#points, blX, blY, width, height);
         break;
       case 180:
-        outline = this.#rescale(this.#outline, trX, blY, -width, height);
-        points = this.#rescale(this.#points, trX, blY, -width, height);
+        outline = Outline._rescale(this.#outline, trX, blY, -width, height);
+        points = Outline._rescale(this.#points, trX, blY, -width, height);
         break;
       case 270:
-        outline = this.#rescaleAndSwap(this.#outline, trX, trY, -width, -height);
-        points = this.#rescaleAndSwap(this.#points, trX, trY, -width, -height);
+        outline = Outline._rescaleAndSwap(this.#outline, trX, trY, -width, -height);
+        points = Outline._rescaleAndSwap(this.#points, trX, trY, -width, -height);
         break;
     }
     return {
       outline: Array.from(outline),
       points: [Array.from(points)]
     };
-  }
-  #rescale(src, tx, ty, sx, sy) {
-    const dest = new Float64Array(src.length);
-    for (let i = 0, ii = src.length; i < ii; i += 2) {
-      dest[i] = tx + src[i] * sx;
-      dest[i + 1] = ty + src[i + 1] * sy;
-    }
-    return dest;
-  }
-  #rescaleAndSwap(src, tx, ty, sx, sy) {
-    const dest = new Float64Array(src.length);
-    for (let i = 0, ii = src.length; i < ii; i += 2) {
-      dest[i] = tx + src[i + 1] * sx;
-      dest[i + 1] = ty + src[i] * sy;
-    }
-    return dest;
   }
   #computeMinMax(isLTR) {
     const outline = this.#outline;
@@ -21812,17 +17002,12 @@ class FreeDrawOutline extends Outline {
       lastX = outline[i + 4];
       lastY = outline[i + 5];
     }
-    const x = minX - this.#innerMargin,
-      y = minY - this.#innerMargin,
-      width = maxX - minX + 2 * this.#innerMargin,
-      height = maxY - minY + 2 * this.#innerMargin;
-    this.#bbox = {
-      x,
-      y,
-      width,
-      height,
-      lastPoint: [lastPointX, lastPointY]
-    };
+    const bbox = this.#bbox;
+    bbox[0] = minX - this.#innerMargin;
+    bbox[1] = minY - this.#innerMargin;
+    bbox[2] = maxX - minX + 2 * this.#innerMargin;
+    bbox[3] = maxY - minY + 2 * this.#innerMargin;
+    this.lastPoint = [lastPointX, lastPointY];
   }
   get box() {
     return this.#bbox;
@@ -21831,12 +17016,7 @@ class FreeDrawOutline extends Outline {
     return new FreeDrawOutliner(point, box, scaleFactor, thickness, isLTR, innerMargin);
   }
   getNewOutline(thickness, innerMargin) {
-    const {
-      x,
-      y,
-      width,
-      height
-    } = this.#bbox;
+    const [x, y, width, height] = this.#bbox;
     const [layerX, layerY, layerWidth, layerHeight] = this.#box;
     const sx = width * layerWidth;
     const sy = height * layerHeight;
@@ -21854,24 +17034,14 @@ class FreeDrawOutline extends Outline {
     }
     return outliner.getOutlines();
   }
-  get mustRemoveSelfIntersections() {
-    return true;
-  }
 }
 
 ;// ./src/display/editor/drawers/highlight.js
 
 
-
-
-
-
-
-
-
-
 class HighlightOutliner {
   #box;
+  #lastPoint;
   #verticalEdges = [];
   #intervals = [];
   constructor(boxes, borderWidth = 0, innerMargin = 0, isLTR = true) {
@@ -21911,13 +17081,8 @@ class HighlightOutliner {
       edge[1] = (y1 - shiftedMinY) / bboxHeight;
       edge[2] = (y2 - shiftedMinY) / bboxHeight;
     }
-    this.#box = {
-      x: shiftedMinX,
-      y: shiftedMinY,
-      width: bboxWidth,
-      height: bboxHeight,
-      lastPoint
-    };
+    this.#box = new Float32Array([shiftedMinX, shiftedMinY, bboxWidth, bboxHeight]);
+    this.#lastPoint = lastPoint;
   }
   getOutlines() {
     this.#verticalEdges.sort((a, b) => a[0] - b[0] || a[1] - b[1] || a[2] - b[2]);
@@ -21978,7 +17143,7 @@ class HighlightOutliner {
       }
       outline.push(lastPointX, lastPointY);
     }
-    return new HighlightOutline(outlines, this.#box);
+    return new HighlightOutline(outlines, this.#box, this.#lastPoint);
   }
   #binarySearch(y) {
     const array = this.#intervals;
@@ -22061,10 +17226,11 @@ class HighlightOutliner {
 class HighlightOutline extends Outline {
   #box;
   #outlines;
-  constructor(outlines, box) {
+  constructor(outlines, box, lastPoint) {
     super();
     this.#outlines = outlines;
     this.#box = box;
+    this.lastPoint = lastPoint;
   }
   toSVGPath() {
     const buffer = [];
@@ -22103,9 +17269,6 @@ class HighlightOutline extends Outline {
   get box() {
     return this.#box;
   }
-  get classNamesForDrawing() {
-    return ["highlight"];
-  }
   get classNamesForOutlining() {
     return ["highlightOutline"];
   }
@@ -22114,17 +17277,8 @@ class FreeHighlightOutliner extends FreeDrawOutliner {
   newFreeDrawOutline(outline, points, box, scaleFactor, innerMargin, isLTR) {
     return new FreeHighlightOutline(outline, points, box, scaleFactor, innerMargin, isLTR);
   }
-  get classNamesForDrawing() {
-    return ["highlight", "free"];
-  }
 }
 class FreeHighlightOutline extends FreeDrawOutline {
-  get classNamesForDrawing() {
-    return ["highlight", "free"];
-  }
-  get classNamesForOutlining() {
-    return ["highlightOutline", "free"];
-  }
   newOutliner(point, box, scaleFactor, thickness, isLTR, innerMargin = 0) {
     return new FreeHighlightOutliner(point, box, scaleFactor, thickness, isLTR, innerMargin);
   }
@@ -22367,15 +17521,6 @@ class ColorPicker {
 
 
 
-
-
-
-
-
-
-
-
-
 class HighlightEditor extends AnnotationEditor {
   #anchorNode = null;
   #anchorOffset = 0;
@@ -22464,17 +17609,12 @@ class HighlightEditor extends AnnotationEditor {
   #createOutlines() {
     const outliner = new HighlightOutliner(this.#boxes, 0.001);
     this.#highlightOutlines = outliner.getOutlines();
-    ({
-      x: this.x,
-      y: this.y,
-      width: this.width,
-      height: this.height
-    } = this.#highlightOutlines.box);
+    [this.x, this.y, this.width, this.height] = this.#highlightOutlines.box;
     const outlinerForOutline = new HighlightOutliner(this.#boxes, 0.0025, 0.001, this._uiManager.direction === "ltr");
     this.#focusOutlines = outlinerForOutline.getOutlines();
     const {
       lastPoint
-    } = this.#focusOutlines.box;
+    } = this.#focusOutlines;
     this.#lastPoint = [(lastPoint[0] - this.x) / this.width, (lastPoint[1] - this.y) / this.height];
   }
   #createFreeOutlines({
@@ -22488,21 +17628,38 @@ class HighlightEditor extends AnnotationEditor {
     if (highlightId >= 0) {
       this.#id = highlightId;
       this.#clipPathId = clipPathId;
-      this.parent.drawLayer.finalizeLine(highlightId, highlightOutlines);
-      this.#outlineId = this.parent.drawLayer.drawOutline(this.#focusOutlines);
+      this.parent.drawLayer.finalizeDraw(highlightId, {
+        bbox: highlightOutlines.box,
+        path: {
+          d: highlightOutlines.toSVGPath()
+        }
+      });
+      this.#outlineId = this.parent.drawLayer.drawOutline({
+        rootClass: {
+          highlightOutline: true,
+          free: true
+        },
+        bbox: this.#focusOutlines.box,
+        path: {
+          d: this.#focusOutlines.toSVGPath()
+        }
+      }, true);
     } else if (this.parent) {
       const angle = this.parent.viewport.rotation;
-      this.parent.drawLayer.updateLine(this.#id, highlightOutlines);
-      this.parent.drawLayer.updateBox(this.#id, HighlightEditor.#rotateBbox(this.#highlightOutlines.box, (angle - this.rotation + 360) % 360));
-      this.parent.drawLayer.updateLine(this.#outlineId, this.#focusOutlines);
-      this.parent.drawLayer.updateBox(this.#outlineId, HighlightEditor.#rotateBbox(this.#focusOutlines.box, angle));
+      this.parent.drawLayer.updateProperties(this.#id, {
+        bbox: HighlightEditor.#rotateBbox(this.#highlightOutlines.box, (angle - this.rotation + 360) % 360),
+        path: {
+          d: highlightOutlines.toSVGPath()
+        }
+      });
+      this.parent.drawLayer.updateProperties(this.#outlineId, {
+        bbox: HighlightEditor.#rotateBbox(this.#focusOutlines.box, angle),
+        path: {
+          d: this.#focusOutlines.toSVGPath()
+        }
+      });
     }
-    const {
-      x,
-      y,
-      width,
-      height
-    } = highlightOutlines.box;
+    const [x, y, width, height] = highlightOutlines.box;
     switch (this.rotation) {
       case 0:
         this.x = x;
@@ -22537,7 +17694,7 @@ class HighlightEditor extends AnnotationEditor {
     }
     const {
       lastPoint
-    } = this.#focusOutlines.box;
+    } = this.#focusOutlines;
     this.#lastPoint = [(lastPoint[0] - x) / width, (lastPoint[1] - y) / height];
   }
   static initialize(l10n, uiManager) {
@@ -22577,10 +17734,14 @@ class HighlightEditor extends AnnotationEditor {
   #updateColor(color) {
     const setColorAndOpacity = (col, opa) => {
       this.color = col;
-      this.parent?.drawLayer.changeColor(this.#id, col);
-      this.#colorPicker?.updateColor(col);
       this.#opacity = opa;
-      this.parent?.drawLayer.changeOpacity(this.#id, opa);
+      this.parent?.drawLayer.updateProperties(this.#id, {
+        root: {
+          fill: col,
+          "fill-opacity": opa
+        }
+      });
+      this.#colorPicker?.updateColor(col);
     };
     const savedColor = this.color;
     const savedOpacity = this.#opacity;
@@ -22715,47 +17876,45 @@ class HighlightEditor extends AnnotationEditor {
     ({
       id: this.#id,
       clipPathId: this.#clipPathId
-    } = parent.drawLayer.draw(this.#highlightOutlines, this.color, this.#opacity));
-    this.#outlineId = parent.drawLayer.drawOutline(this.#focusOutlines);
+    } = parent.drawLayer.draw({
+      bbox: this.#highlightOutlines.box,
+      root: {
+        viewBox: "0 0 1 1",
+        fill: this.color,
+        "fill-opacity": this.#opacity
+      },
+      rootClass: {
+        highlight: true,
+        free: this.#isFreeHighlight
+      },
+      path: {
+        d: this.#highlightOutlines.toSVGPath()
+      }
+    }, false, true));
+    this.#outlineId = parent.drawLayer.drawOutline({
+      rootClass: {
+        highlightOutline: true,
+        free: this.#isFreeHighlight
+      },
+      bbox: this.#focusOutlines.box,
+      path: {
+        d: this.#focusOutlines.toSVGPath()
+      }
+    }, this.#isFreeHighlight);
     if (this.#highlightDiv) {
       this.#highlightDiv.style.clipPath = this.#clipPathId;
     }
   }
-  static #rotateBbox({
-    x,
-    y,
-    width,
-    height
-  }, angle) {
+  static #rotateBbox([x, y, width, height], angle) {
     switch (angle) {
       case 90:
-        return {
-          x: 1 - y - height,
-          y: x,
-          width: height,
-          height: width
-        };
+        return [1 - y - height, x, height, width];
       case 180:
-        return {
-          x: 1 - x - width,
-          y: 1 - y - height,
-          width,
-          height
-        };
+        return [1 - x - width, 1 - y - height, width, height];
       case 270:
-        return {
-          x: y,
-          y: 1 - x - width,
-          width: height,
-          height: width
-        };
+        return [y, 1 - x - width, height, width];
     }
-    return {
-      x,
-      y,
-      width,
-      height
-    };
+    return [x, y, width, height];
   }
   rotate(angle) {
     const {
@@ -22766,12 +17925,20 @@ class HighlightEditor extends AnnotationEditor {
       angle = (angle - this.rotation + 360) % 360;
       box = HighlightEditor.#rotateBbox(this.#highlightOutlines.box, angle);
     } else {
-      box = HighlightEditor.#rotateBbox(this, angle);
+      box = HighlightEditor.#rotateBbox([this.x, this.y, this.width, this.height], angle);
     }
-    drawLayer.rotate(this.#id, angle);
-    drawLayer.rotate(this.#outlineId, angle);
-    drawLayer.updateBox(this.#id, box);
-    drawLayer.updateBox(this.#outlineId, HighlightEditor.#rotateBbox(this.#focusOutlines.box, angle));
+    drawLayer.updateProperties(this.#id, {
+      bbox: box,
+      root: {
+        "data-main-rotation": angle
+      }
+    });
+    drawLayer.updateProperties(this.#outlineId, {
+      bbox: HighlightEditor.#rotateBbox(this.#focusOutlines.box, angle),
+      root: {
+        "data-main-rotation": angle
+      }
+    });
   }
   render() {
     if (this.div) {
@@ -22802,12 +17969,20 @@ class HighlightEditor extends AnnotationEditor {
   }
   pointerover() {
     if (!this.isSelected) {
-      this.parent.drawLayer.addClass(this.#outlineId, "hovered");
+      this.parent?.drawLayer.updateProperties(this.#outlineId, {
+        rootClass: {
+          hovered: true
+        }
+      });
     }
   }
   pointerleave() {
     if (!this.isSelected) {
-      this.parent.drawLayer.removeClass(this.#outlineId, "hovered");
+      this.parent?.drawLayer.updateProperties(this.#outlineId, {
+        rootClass: {
+          hovered: false
+        }
+      });
     }
   }
   #keydown(event) {
@@ -22842,15 +18017,23 @@ class HighlightEditor extends AnnotationEditor {
     if (!this.#outlineId) {
       return;
     }
-    this.parent?.drawLayer.removeClass(this.#outlineId, "hovered");
-    this.parent?.drawLayer.addClass(this.#outlineId, "selected");
+    this.parent?.drawLayer.updateProperties(this.#outlineId, {
+      rootClass: {
+        hovered: false,
+        selected: true
+      }
+    });
   }
   unselect() {
     super.unselect();
     if (!this.#outlineId) {
       return;
     }
-    this.parent?.drawLayer.removeClass(this.#outlineId, "selected");
+    this.parent?.drawLayer.updateProperties(this.#outlineId, {
+      rootClass: {
+        selected: false
+      }
+    });
     if (!this.#isFreeHighlight) {
       this.#setCaret(false);
     }
@@ -22861,8 +18044,16 @@ class HighlightEditor extends AnnotationEditor {
   show(visible = this._isVisible) {
     super.show(visible);
     if (this.parent) {
-      this.parent.drawLayer.show(this.#id, visible);
-      this.parent.drawLayer.show(this.#outlineId, visible);
+      this.parent.drawLayer.updateProperties(this.#id, {
+        rootClass: {
+          hidden: !visible
+        }
+      });
+      this.parent.drawLayer.updateProperties(this.#outlineId, {
+        rootClass: {
+          hidden: !visible
+        }
+      });
     }
   }
   #getRotation() {
@@ -22884,11 +18075,11 @@ class HighlightEditor extends AnnotationEditor {
       height
     } of boxes) {
       const sx = x * pageWidth + pageX;
-      const sy = (1 - y - height) * pageHeight + pageY;
+      const sy = (1 - y) * pageHeight + pageY;
       quadPoints[i] = quadPoints[i + 4] = sx;
       quadPoints[i + 1] = quadPoints[i + 3] = sy;
       quadPoints[i + 2] = quadPoints[i + 6] = sx + width * pageWidth;
-      quadPoints[i + 5] = quadPoints[i + 7] = sy + height * pageHeight;
+      quadPoints[i + 5] = quadPoints[i + 7] = sy - height * pageHeight;
       i += 8;
     }
     return quadPoints;
@@ -22909,10 +18100,6 @@ class HighlightEditor extends AnnotationEditor {
     } = textLayer.getBoundingClientRect();
     const ac = new AbortController();
     const signal = parent.combinedSignal(ac);
-    const pointerDown = e => {
-      e.preventDefault();
-      e.stopPropagation();
-    };
     const pointerUpCallback = e => {
       ac.abort();
       this.#endHighlight(parent, e);
@@ -22923,7 +18110,7 @@ class HighlightEditor extends AnnotationEditor {
     window.addEventListener("pointerup", pointerUpCallback, {
       signal
     });
-    window.addEventListener("pointerdown", pointerDown, {
+    window.addEventListener("pointerdown", stopEvent, {
       capture: true,
       passive: false,
       signal
@@ -22941,11 +18128,29 @@ class HighlightEditor extends AnnotationEditor {
     ({
       id: this._freeHighlightId,
       clipPathId: this._freeHighlightClipId
-    } = parent.drawLayer.draw(this._freeHighlight, this._defaultColor, this._defaultOpacity, true));
+    } = parent.drawLayer.draw({
+      bbox: [0, 0, 1, 1],
+      root: {
+        viewBox: "0 0 1 1",
+        fill: this._defaultColor,
+        "fill-opacity": this._defaultOpacity
+      },
+      rootClass: {
+        highlight: true,
+        free: true
+      },
+      path: {
+        d: this._freeHighlight.toSVGPath()
+      }
+    }, true, true));
   }
   static #highlightMove(parent, event) {
     if (this._freeHighlight.add(event)) {
-      parent.drawLayer.updatePath(this._freeHighlightId, this._freeHighlight);
+      parent.drawLayer.updateProperties(this._freeHighlightId, {
+        path: {
+          d: this._freeHighlight.toSVGPath()
+        }
+      });
     }
   }
   static #endHighlight(parent, event) {
@@ -23073,7 +18278,21 @@ class HighlightEditor extends AnnotationEditor {
       const {
         id,
         clipPathId
-      } = parent.drawLayer.draw(outliner, editor.color, editor._defaultOpacity, true);
+      } = parent.drawLayer.draw({
+        bbox: [0, 0, 1, 1],
+        root: {
+          viewBox: "0 0 1 1",
+          fill: editor.color,
+          "fill-opacity": editor._defaultOpacity
+        },
+        rootClass: {
+          highlight: true,
+          free: true
+        },
+        path: {
+          d: outliner.toSVGPath()
+        }
+      }, true, true);
       editor.#createFreeOutlines({
         highlightOutlines: outliner.getOutlines(),
         highlightId: id,
@@ -23127,134 +18346,230 @@ class HighlightEditor extends AnnotationEditor {
   }
 }
 
-;// ./src/display/editor/ink.js
+;// ./src/display/editor/draw.js
 
 
 
-
-
-
-
-class InkEditor extends AnnotationEditor {
-  #baseHeight = 0;
-  #baseWidth = 0;
-  #canvasContextMenuTimeoutId = null;
-  #currentPath2D = new Path2D();
-  #disableEditing = false;
-  #drawingAC = null;
-  #hasSomethingToDraw = false;
-  #isCanvasInitialized = false;
-  #observer = null;
-  #pointerdownAC = null;
-  #realWidth = 0;
-  #realHeight = 0;
-  #requestFrameCallback = null;
-  static _defaultColor = null;
-  static _defaultOpacity = 1;
-  static _defaultThickness = 1;
-  static _type = "ink";
-  static _editorType = AnnotationEditorType.INK;
-  constructor(params) {
-    super({
-      ...params,
-      name: "inkEditor"
-    });
-    this.color = params.color || null;
-    this.thickness = params.thickness || null;
-    this.opacity = params.opacity || null;
-    this.paths = [];
-    this.bezierPath2D = [];
-    this.allRawPaths = [];
-    this.currentPath = [];
-    this.scaleFactor = 1;
-    this.translationX = this.translationY = 0;
-    this.x = 0;
-    this.y = 0;
-    this._willKeepAspectRatio = true;
+class DrawingOptions {
+  #svgProperties = Object.create(null);
+  updateProperty(name, value) {
+    this[name] = value;
+    this.updateSVGProperty(name, value);
   }
-  static initialize(l10n, uiManager) {
-    AnnotationEditor.initialize(l10n, uiManager);
+  updateProperties(properties) {
+    if (!properties) {
+      return;
+    }
+    for (const [name, value] of Object.entries(properties)) {
+      this.updateProperty(name, value);
+    }
+  }
+  updateSVGProperty(name, value) {
+    this.#svgProperties[name] = value;
+  }
+  toSVGProperties() {
+    const root = this.#svgProperties;
+    this.#svgProperties = Object.create(null);
+    return {
+      root
+    };
+  }
+  reset() {
+    this.#svgProperties = Object.create(null);
+  }
+  updateAll(options = this) {
+    this.updateProperties(options);
+  }
+  clone() {
+    unreachable("Not implemented");
+  }
+}
+class DrawingEditor extends AnnotationEditor {
+  #drawOutlines = null;
+  #mustBeCommitted;
+  _drawId = null;
+  static _currentDrawId = -1;
+  static _currentDraw = null;
+  static _currentDrawingOptions = null;
+  static _currentParent = null;
+  static _INNER_MARGIN = 3;
+  constructor(params) {
+    super(params);
+    this.#mustBeCommitted = params.mustBeCommitted || false;
+    if (params.drawOutlines) {
+      this.#createDrawOutlines(params);
+      this.#addToDrawLayer();
+    }
+  }
+  #createDrawOutlines({
+    drawOutlines,
+    drawId,
+    drawingOptions
+  }) {
+    this.#drawOutlines = drawOutlines;
+    this._drawingOptions ||= drawingOptions;
+    if (drawId >= 0) {
+      this._drawId = drawId;
+      this.parent.drawLayer.finalizeDraw(drawId, drawOutlines.defaultProperties);
+    } else {
+      this._drawId = this.#createDrawing(drawOutlines, this.parent);
+    }
+    this.#updateBbox(drawOutlines.box);
+  }
+  #createDrawing(drawOutlines, parent) {
+    const {
+      id
+    } = parent.drawLayer.draw(DrawingEditor._mergeSVGProperties(this._drawingOptions.toSVGProperties(), drawOutlines.defaultSVGProperties), false, false);
+    return id;
+  }
+  static _mergeSVGProperties(p1, p2) {
+    const p1Keys = new Set(Object.keys(p1));
+    for (const [key, value] of Object.entries(p2)) {
+      if (p1Keys.has(key)) {
+        Object.assign(p1[key], value);
+      } else {
+        p1[key] = value;
+      }
+    }
+    return p1;
+  }
+  static getDefaultDrawingOptions(_options) {
+    unreachable("Not implemented");
+  }
+  static get typesMap() {
+    unreachable("Not implemented");
+  }
+  static get isDrawer() {
+    return true;
+  }
+  static get supportMultipleDrawings() {
+    return false;
   }
   static updateDefaultParams(type, value) {
-    switch (type) {
-      case AnnotationEditorParamsType.INK_THICKNESS:
-        InkEditor._defaultThickness = value;
-        break;
-      case AnnotationEditorParamsType.INK_COLOR:
-        InkEditor._defaultColor = value;
-        break;
-      case AnnotationEditorParamsType.INK_OPACITY:
-        InkEditor._defaultOpacity = value / 100;
-        break;
+    const propertyName = this.typesMap.get(type);
+    if (propertyName) {
+      this._defaultDrawingOptions.updateProperty(propertyName, value);
+    }
+    if (this._currentParent) {
+      this._currentDraw.updateProperty(propertyName, value);
+      this._currentParent.drawLayer.updateProperties(this._currentDrawId, this._defaultDrawingOptions.toSVGProperties());
     }
   }
   updateParams(type, value) {
-    switch (type) {
-      case AnnotationEditorParamsType.INK_THICKNESS:
-        this.#updateThickness(value);
-        break;
-      case AnnotationEditorParamsType.INK_COLOR:
-        this.#updateColor(value);
-        break;
-      case AnnotationEditorParamsType.INK_OPACITY:
-        this.#updateOpacity(value);
-        break;
+    const propertyName = this.constructor.typesMap.get(type);
+    if (propertyName) {
+      this._updateProperty(type, propertyName, value);
     }
   }
   static get defaultPropertiesToUpdate() {
-    return [[AnnotationEditorParamsType.INK_THICKNESS, InkEditor._defaultThickness], [AnnotationEditorParamsType.INK_COLOR, InkEditor._defaultColor || AnnotationEditor._defaultLineColor], [AnnotationEditorParamsType.INK_OPACITY, Math.round(InkEditor._defaultOpacity * 100)]];
+    const properties = [];
+    const options = this._defaultDrawingOptions;
+    for (const [type, name] of this.typesMap) {
+      properties.push([type, options[name]]);
+    }
+    return properties;
   }
   get propertiesToUpdate() {
-    return [[AnnotationEditorParamsType.INK_THICKNESS, this.thickness || InkEditor._defaultThickness], [AnnotationEditorParamsType.INK_COLOR, this.color || InkEditor._defaultColor || AnnotationEditor._defaultLineColor], [AnnotationEditorParamsType.INK_OPACITY, Math.round(100 * (this.opacity ?? InkEditor._defaultOpacity))]];
+    const properties = [];
+    const {
+      _drawingOptions
+    } = this;
+    for (const [type, name] of this.constructor.typesMap) {
+      properties.push([type, _drawingOptions[name]]);
+    }
+    return properties;
   }
-  #updateThickness(thickness) {
-    const setThickness = th => {
-      this.thickness = th;
-      this.#fitToContent();
+  _updateProperty(type, name, value) {
+    const options = this._drawingOptions;
+    const savedValue = options[name];
+    const setter = val => {
+      options.updateProperty(name, val);
+      const bbox = this.#drawOutlines.updateProperty(name, val);
+      if (bbox) {
+        this.#updateBbox(bbox);
+      }
+      this.parent?.drawLayer.updateProperties(this._drawId, options.toSVGProperties());
     };
-    const savedThickness = this.thickness;
     this.addCommands({
-      cmd: setThickness.bind(this, thickness),
-      undo: setThickness.bind(this, savedThickness),
+      cmd: setter.bind(this, value),
+      undo: setter.bind(this, savedValue),
       post: this._uiManager.updateUI.bind(this._uiManager, this),
       mustExec: true,
-      type: AnnotationEditorParamsType.INK_THICKNESS,
+      type,
       overwriteIfSameType: true,
       keepUndo: true
     });
   }
-  #updateColor(color) {
-    const setColor = col => {
-      this.color = col;
-      this.#redraw();
-    };
-    const savedColor = this.color;
-    this.addCommands({
-      cmd: setColor.bind(this, color),
-      undo: setColor.bind(this, savedColor),
-      post: this._uiManager.updateUI.bind(this._uiManager, this),
-      mustExec: true,
-      type: AnnotationEditorParamsType.INK_COLOR,
-      overwriteIfSameType: true,
-      keepUndo: true
+  _onResizing() {
+    this.parent?.drawLayer.updateProperties(this._drawId, DrawingEditor._mergeSVGProperties(this.#drawOutlines.getPathResizingSVGProperties(this.#convertToDrawSpace()), {
+      bbox: this.#rotateBox()
+    }));
+  }
+  _onResized() {
+    this.parent?.drawLayer.updateProperties(this._drawId, DrawingEditor._mergeSVGProperties(this.#drawOutlines.getPathResizedSVGProperties(this.#convertToDrawSpace()), {
+      bbox: this.#rotateBox()
+    }));
+  }
+  _onTranslating(x, y) {
+    this.parent?.drawLayer.updateProperties(this._drawId, {
+      bbox: this.#rotateBox(x, y)
     });
   }
-  #updateOpacity(opacity) {
-    const setOpacity = op => {
-      this.opacity = op;
-      this.#redraw();
-    };
-    opacity /= 100;
-    const savedOpacity = this.opacity;
-    this.addCommands({
-      cmd: setOpacity.bind(this, opacity),
-      undo: setOpacity.bind(this, savedOpacity),
-      post: this._uiManager.updateUI.bind(this._uiManager, this),
-      mustExec: true,
-      type: AnnotationEditorParamsType.INK_OPACITY,
-      overwriteIfSameType: true,
-      keepUndo: true
+  _onTranslated() {
+    this.parent?.drawLayer.updateProperties(this._drawId, DrawingEditor._mergeSVGProperties(this.#drawOutlines.getPathTranslatedSVGProperties(this.#convertToDrawSpace(), this.parentDimensions), {
+      bbox: this.#rotateBox()
+    }));
+  }
+  _onStartDragging() {
+    this.parent?.drawLayer.updateProperties(this._drawId, {
+      rootClass: {
+        moving: true
+      }
     });
+  }
+  _onStopDragging() {
+    this.parent?.drawLayer.updateProperties(this._drawId, {
+      rootClass: {
+        moving: false
+      }
+    });
+  }
+  commit() {
+    super.commit();
+    this.disableEditMode();
+    this.disableEditing();
+  }
+  disableEditing() {
+    super.disableEditing();
+    this.div.classList.toggle("disabled", true);
+  }
+  enableEditing() {
+    super.enableEditing();
+    this.div.classList.toggle("disabled", false);
+  }
+  getBaseTranslation() {
+    return [0, 0];
+  }
+  get isResizable() {
+    return true;
+  }
+  onceAdded() {
+    if (!this.annotationElementId) {
+      this.parent.addUndoableEditor(this);
+    }
+    this._isDraggable = true;
+    if (this.#mustBeCommitted) {
+      this.#mustBeCommitted = false;
+      this.commit();
+      this.parent.setSelected(this);
+      if (this.isOnScreen) {
+        this.div.focus();
+      }
+    }
+  }
+  remove() {
+    this.#cleanDrawLayer();
+    super.remove();
   }
   rebuild() {
     if (!this.parent) {
@@ -23264,699 +18579,1190 @@ class InkEditor extends AnnotationEditor {
     if (this.div === null) {
       return;
     }
-    if (!this.canvas) {
-      this.#createCanvas();
-      this.#createObserver();
-    }
+    this.#addToDrawLayer();
+    this.#updateBbox(this.#drawOutlines.box);
     if (!this.isAttachedToDOM) {
       this.parent.add(this);
-      this.#setCanvasDims();
     }
-    this.#fitToContent();
-  }
-  remove() {
-    if (this.canvas === null) {
-      return;
-    }
-    if (!this.isEmpty()) {
-      this.commit();
-    }
-    this.canvas.width = this.canvas.height = 0;
-    this.canvas.remove();
-    this.canvas = null;
-    if (this.#canvasContextMenuTimeoutId) {
-      clearTimeout(this.#canvasContextMenuTimeoutId);
-      this.#canvasContextMenuTimeoutId = null;
-    }
-    this.#observer?.disconnect();
-    this.#observer = null;
-    super.remove();
   }
   setParent(parent) {
-    if (!this.parent && parent) {
+    let mustBeSelected = false;
+    if (this.parent && !parent) {
       this._uiManager.removeShouldRescale(this);
-    } else if (this.parent && parent === null) {
+      this.#cleanDrawLayer();
+    } else if (parent) {
       this._uiManager.addShouldRescale(this);
+      this.#addToDrawLayer(parent);
+      mustBeSelected = !this.parent && this.div?.classList.contains("selectedEditor");
     }
     super.setParent(parent);
+    if (mustBeSelected) {
+      this.select();
+    }
+  }
+  #cleanDrawLayer() {
+    if (this._drawId === null || !this.parent) {
+      return;
+    }
+    this.parent.drawLayer.remove(this._drawId);
+    this._drawId = null;
+    this._drawingOptions.reset();
+  }
+  #addToDrawLayer(parent = this.parent) {
+    if (this._drawId !== null && this.parent === parent) {
+      return;
+    }
+    if (this._drawId !== null) {
+      this.parent.drawLayer.updateParent(this._drawId, parent.drawLayer);
+      return;
+    }
+    this._drawingOptions.updateAll();
+    this._drawId = this.#createDrawing(this.#drawOutlines, parent);
+  }
+  #convertToParentSpace([x, y, width, height]) {
+    const {
+      parentDimensions: [pW, pH],
+      rotation
+    } = this;
+    switch (rotation) {
+      case 90:
+        return [y, 1 - x, width * (pH / pW), height * (pW / pH)];
+      case 180:
+        return [1 - x, 1 - y, width, height];
+      case 270:
+        return [1 - y, x, width * (pH / pW), height * (pW / pH)];
+      default:
+        return [x, y, width, height];
+    }
+  }
+  #convertToDrawSpace() {
+    const {
+      x,
+      y,
+      width,
+      height,
+      parentDimensions: [pW, pH],
+      rotation
+    } = this;
+    switch (rotation) {
+      case 90:
+        return [1 - y, x, width * (pW / pH), height * (pH / pW)];
+      case 180:
+        return [1 - x, 1 - y, width, height];
+      case 270:
+        return [y, 1 - x, width * (pW / pH), height * (pH / pW)];
+      default:
+        return [x, y, width, height];
+    }
+  }
+  #updateBbox(bbox) {
+    [this.x, this.y, this.width, this.height] = this.#convertToParentSpace(bbox);
+    if (this.div) {
+      this.fixAndSetPosition();
+      const [parentWidth, parentHeight] = this.parentDimensions;
+      this.setDims(this.width * parentWidth, this.height * parentHeight);
+    }
+    this._onResized();
+  }
+  #rotateBox() {
+    const {
+      x,
+      y,
+      width,
+      height,
+      rotation,
+      parentRotation,
+      parentDimensions: [pW, pH]
+    } = this;
+    switch ((rotation * 4 + parentRotation) / 90) {
+      case 1:
+        return [1 - y - height, x, height, width];
+      case 2:
+        return [1 - x - width, 1 - y - height, width, height];
+      case 3:
+        return [y, 1 - x - width, height, width];
+      case 4:
+        return [x, y - width * (pW / pH), height * (pH / pW), width * (pW / pH)];
+      case 5:
+        return [1 - y, x, width * (pW / pH), height * (pH / pW)];
+      case 6:
+        return [1 - x - height * (pH / pW), 1 - y, height * (pH / pW), width * (pW / pH)];
+      case 7:
+        return [y - width * (pW / pH), 1 - x - height * (pH / pW), width * (pW / pH), height * (pH / pW)];
+      case 8:
+        return [x - width, y - height, width, height];
+      case 9:
+        return [1 - y, x - width, height, width];
+      case 10:
+        return [1 - x, 1 - y, width, height];
+      case 11:
+        return [y - height, 1 - x, height, width];
+      case 12:
+        return [x - height * (pH / pW), y, height * (pH / pW), width * (pW / pH)];
+      case 13:
+        return [1 - y - width * (pW / pH), x - height * (pH / pW), width * (pW / pH), height * (pH / pW)];
+      case 14:
+        return [1 - x, 1 - y - width * (pW / pH), height * (pH / pW), width * (pW / pH)];
+      case 15:
+        return [y, 1 - x, width * (pW / pH), height * (pH / pW)];
+      default:
+        return [x, y, width, height];
+    }
+  }
+  rotate() {
+    if (!this.parent) {
+      return;
+    }
+    this.parent.drawLayer.updateProperties(this._drawId, DrawingEditor._mergeSVGProperties({
+      bbox: this.#rotateBox()
+    }, this.#drawOutlines.updateRotation((this.parentRotation - this.rotation + 360) % 360)));
   }
   onScaleChanging() {
-    const [parentWidth, parentHeight] = this.parentDimensions;
-    const width = this.width * parentWidth;
-    const height = this.height * parentHeight;
-    this.setDimensions(width, height);
-  }
-  enableEditMode() {
-    if (this.#disableEditing || this.canvas === null) {
+    if (!this.parent) {
       return;
     }
-    super.enableEditMode();
-    this._isDraggable = false;
-    this.#addPointerdownListener();
+    this.#updateBbox(this.#drawOutlines.updateParentDimensions(this.parentDimensions, this.parent.scale));
   }
-  disableEditMode() {
-    if (!this.isInEditMode() || this.canvas === null) {
-      return;
-    }
-    super.disableEditMode();
-    this._isDraggable = !this.isEmpty();
-    this.div.classList.remove("editing");
-    this.#removePointerdownListener();
-  }
-  onceAdded() {
-    this._isDraggable = !this.isEmpty();
-  }
-  isEmpty() {
-    return this.paths.length === 0 || this.paths.length === 1 && this.paths[0].length === 0;
-  }
-  #getInitialBBox() {
-    const {
-      parentRotation,
-      parentDimensions: [width, height]
-    } = this;
-    switch (parentRotation) {
-      case 90:
-        return [0, height, height, width];
-      case 180:
-        return [width, height, width, height];
-      case 270:
-        return [width, 0, height, width];
-      default:
-        return [0, 0, width, height];
-    }
-  }
-  #setStroke() {
-    const {
-      ctx,
-      color,
-      opacity,
-      thickness,
-      parentScale,
-      scaleFactor
-    } = this;
-    ctx.lineWidth = thickness * parentScale / scaleFactor;
-    ctx.lineCap = "round";
-    ctx.lineJoin = "round";
-    ctx.miterLimit = 10;
-    ctx.strokeStyle = `${color}${opacityToHex(opacity)}`;
-  }
-  #startDrawing(x, y) {
-    this.canvas.addEventListener("contextmenu", noContextMenu, {
-      signal: this._uiManager._signal
-    });
-    this.#removePointerdownListener();
-    this.#drawingAC = new AbortController();
-    const signal = this._uiManager.combinedSignal(this.#drawingAC);
-    this.canvas.addEventListener("pointerleave", this.canvasPointerleave.bind(this), {
-      signal
-    });
-    this.canvas.addEventListener("pointermove", this.canvasPointermove.bind(this), {
-      signal
-    });
-    this.canvas.addEventListener("pointerup", this.canvasPointerup.bind(this), {
-      signal
-    });
-    this.isEditing = true;
-    if (!this.#isCanvasInitialized) {
-      this.#isCanvasInitialized = true;
-      this.#setCanvasDims();
-      this.thickness ||= InkEditor._defaultThickness;
-      this.color ||= InkEditor._defaultColor || AnnotationEditor._defaultLineColor;
-      this.opacity ??= InkEditor._defaultOpacity;
-    }
-    this.currentPath.push([x, y]);
-    this.#hasSomethingToDraw = false;
-    this.#setStroke();
-    this.#requestFrameCallback = () => {
-      this.#drawPoints();
-      if (this.#requestFrameCallback) {
-        window.requestAnimationFrame(this.#requestFrameCallback);
-      }
-    };
-    window.requestAnimationFrame(this.#requestFrameCallback);
-  }
-  #draw(x, y) {
-    const [lastX, lastY] = this.currentPath.at(-1);
-    if (this.currentPath.length > 1 && x === lastX && y === lastY) {
-      return;
-    }
-    const currentPath = this.currentPath;
-    let path2D = this.#currentPath2D;
-    currentPath.push([x, y]);
-    this.#hasSomethingToDraw = true;
-    if (currentPath.length <= 2) {
-      path2D.moveTo(...currentPath[0]);
-      path2D.lineTo(x, y);
-      return;
-    }
-    if (currentPath.length === 3) {
-      this.#currentPath2D = path2D = new Path2D();
-      path2D.moveTo(...currentPath[0]);
-    }
-    this.#makeBezierCurve(path2D, ...currentPath.at(-3), ...currentPath.at(-2), x, y);
-  }
-  #endPath() {
-    if (this.currentPath.length === 0) {
-      return;
-    }
-    const lastPoint = this.currentPath.at(-1);
-    this.#currentPath2D.lineTo(...lastPoint);
-  }
-  #stopDrawing(x, y) {
-    this.#requestFrameCallback = null;
-    x = Math.min(Math.max(x, 0), this.canvas.width);
-    y = Math.min(Math.max(y, 0), this.canvas.height);
-    this.#draw(x, y);
-    this.#endPath();
-    let bezier;
-    if (this.currentPath.length !== 1) {
-      bezier = this.#generateBezierPoints();
-    } else {
-      const xy = [x, y];
-      bezier = [[xy, xy.slice(), xy.slice(), xy]];
-    }
-    const path2D = this.#currentPath2D;
-    const currentPath = this.currentPath;
-    this.currentPath = [];
-    this.#currentPath2D = new Path2D();
-    const cmd = () => {
-      this.allRawPaths.push(currentPath);
-      this.paths.push(bezier);
-      this.bezierPath2D.push(path2D);
-      this._uiManager.rebuild(this);
-    };
-    const undo = () => {
-      this.allRawPaths.pop();
-      this.paths.pop();
-      this.bezierPath2D.pop();
-      if (this.paths.length === 0) {
-        this.remove();
-      } else {
-        if (!this.canvas) {
-          this.#createCanvas();
-          this.#createObserver();
-        }
-        this.#fitToContent();
-      }
-    };
-    this.addCommands({
-      cmd,
-      undo,
-      mustExec: true
-    });
-  }
-  #drawPoints() {
-    if (!this.#hasSomethingToDraw) {
-      return;
-    }
-    this.#hasSomethingToDraw = false;
-    const thickness = Math.ceil(this.thickness * this.parentScale);
-    const lastPoints = this.currentPath.slice(-3);
-    const x = lastPoints.map(xy => xy[0]);
-    const y = lastPoints.map(xy => xy[1]);
-    const xMin = Math.min(...x) - thickness;
-    const xMax = Math.max(...x) + thickness;
-    const yMin = Math.min(...y) - thickness;
-    const yMax = Math.max(...y) + thickness;
-    const {
-      ctx
-    } = this;
-    ctx.save();
-    ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-    for (const path of this.bezierPath2D) {
-      ctx.stroke(path);
-    }
-    ctx.stroke(this.#currentPath2D);
-    ctx.restore();
-  }
-  #makeBezierCurve(path2D, x0, y0, x1, y1, x2, y2) {
-    const prevX = (x0 + x1) / 2;
-    const prevY = (y0 + y1) / 2;
-    const x3 = (x1 + x2) / 2;
-    const y3 = (y1 + y2) / 2;
-    path2D.bezierCurveTo(prevX + 2 * (x1 - prevX) / 3, prevY + 2 * (y1 - prevY) / 3, x3 + 2 * (x1 - x3) / 3, y3 + 2 * (y1 - y3) / 3, x3, y3);
-  }
-  #generateBezierPoints() {
-    const path = this.currentPath;
-    if (path.length <= 2) {
-      return [[path[0], path[0], path.at(-1), path.at(-1)]];
-    }
-    const bezierPoints = [];
-    let i;
-    let [x0, y0] = path[0];
-    for (i = 1; i < path.length - 2; i++) {
-      const [x1, y1] = path[i];
-      const [x2, y2] = path[i + 1];
-      const x3 = (x1 + x2) / 2;
-      const y3 = (y1 + y2) / 2;
-      const control1 = [x0 + 2 * (x1 - x0) / 3, y0 + 2 * (y1 - y0) / 3];
-      const control2 = [x3 + 2 * (x1 - x3) / 3, y3 + 2 * (y1 - y3) / 3];
-      bezierPoints.push([[x0, y0], control1, control2, [x3, y3]]);
-      [x0, y0] = [x3, y3];
-    }
-    const [x1, y1] = path[i];
-    const [x2, y2] = path[i + 1];
-    const control1 = [x0 + 2 * (x1 - x0) / 3, y0 + 2 * (y1 - y0) / 3];
-    const control2 = [x2 + 2 * (x1 - x2) / 3, y2 + 2 * (y1 - y2) / 3];
-    bezierPoints.push([[x0, y0], control1, control2, [x2, y2]]);
-    return bezierPoints;
-  }
-  #redraw() {
-    if (this.isEmpty()) {
-      this.#updateTransform();
-      return;
-    }
-    this.#setStroke();
-    const {
-      canvas,
-      ctx
-    } = this;
-    ctx.setTransform(1, 0, 0, 1, 0, 0);
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    this.#updateTransform();
-    for (const path of this.bezierPath2D) {
-      ctx.stroke(path);
-    }
-  }
-  commit() {
-    if (this.#disableEditing) {
-      return;
-    }
-    super.commit();
-    this.isEditing = false;
-    this.disableEditMode();
-    this.setInForeground();
-    this.#disableEditing = true;
-    this.div.classList.add("disabled");
-    this.#fitToContent(true);
-    this.select();
-    this.parent.addInkEditorIfNeeded(true);
-    this.moveInDOM();
-    this.div.focus({
-      preventScroll: true
-    });
-  }
-  focusin(event) {
-    if (!this._focusEventsAllowed) {
-      return;
-    }
-    super.focusin(event);
-    this.enableEditMode();
-  }
-  #addPointerdownListener() {
-    if (this.#pointerdownAC) {
-      return;
-    }
-    this.#pointerdownAC = new AbortController();
-    const signal = this._uiManager.combinedSignal(this.#pointerdownAC);
-    this.canvas.addEventListener("pointerdown", this.canvasPointerdown.bind(this), {
-      signal
-    });
-  }
-  #removePointerdownListener() {
-    this.pointerdownAC?.abort();
-    this.pointerdownAC = null;
-  }
-  canvasPointerdown(event) {
-    if (event.button !== 0 || !this.isInEditMode() || this.#disableEditing) {
-      return;
-    }
-    this.setInForeground();
-    event.preventDefault();
-    if (!this.div.contains(document.activeElement)) {
-      this.div.focus({
-        preventScroll: true
-      });
-    }
-    this.#startDrawing(event.offsetX, event.offsetY);
-  }
-  canvasPointermove(event) {
-    event.preventDefault();
-    this.#draw(event.offsetX, event.offsetY);
-  }
-  canvasPointerup(event) {
-    event.preventDefault();
-    this.#endDrawing(event);
-  }
-  canvasPointerleave(event) {
-    this.#endDrawing(event);
-  }
-  #endDrawing(event) {
-    this.#drawingAC?.abort();
-    this.#drawingAC = null;
-    this.#addPointerdownListener();
-    if (this.#canvasContextMenuTimeoutId) {
-      clearTimeout(this.#canvasContextMenuTimeoutId);
-    }
-    this.#canvasContextMenuTimeoutId = setTimeout(() => {
-      this.#canvasContextMenuTimeoutId = null;
-      this.canvas.removeEventListener("contextmenu", noContextMenu);
-    }, 10);
-    this.#stopDrawing(event.offsetX, event.offsetY);
-    this.addToAnnotationStorage();
-    this.setInBackground();
-  }
-  #createCanvas() {
-    this.canvas = document.createElement("canvas");
-    this.canvas.width = this.canvas.height = 0;
-    this.canvas.className = "inkEditorCanvas";
-    this.canvas.setAttribute("data-l10n-id", "pdfjs-ink-canvas");
-    this.div.append(this.canvas);
-    this.ctx = this.canvas.getContext("2d");
-  }
-  #createObserver() {
-    this.#observer = new ResizeObserver(entries => {
-      const rect = entries[0].contentRect;
-      if (rect.width && rect.height) {
-        this.setDimensions(rect.width, rect.height);
-      }
-    });
-    this.#observer.observe(this.div);
-    this._uiManager._signal.addEventListener("abort", () => {
-      this.#observer?.disconnect();
-      this.#observer = null;
-    }, {
-      once: true
-    });
-  }
-  get isResizable() {
-    return !this.isEmpty() && this.#disableEditing;
-  }
+  static onScaleChangingWhenDrawing() {}
   render() {
     if (this.div) {
       return this.div;
     }
-    let baseX, baseY;
-    if (this.width) {
-      baseX = this.x;
-      baseY = this.y;
-    }
-    super.render();
-    this.div.setAttribute("data-l10n-id", "pdfjs-ink");
-    const [x, y, w, h] = this.#getInitialBBox();
-    this.setAt(x, y, 0, 0);
-    this.setDims(w, h);
-    this.#createCanvas();
-    if (this.width) {
-      const [parentWidth, parentHeight] = this.parentDimensions;
-      this.setAspectRatio(this.width * parentWidth, this.height * parentHeight);
-      this.setAt(baseX * parentWidth, baseY * parentHeight, this.width * parentWidth, this.height * parentHeight);
-      this.#isCanvasInitialized = true;
-      this.#setCanvasDims();
-      this.setDims(this.width * parentWidth, this.height * parentHeight);
-      this.#redraw();
-      this.div.classList.add("disabled");
-    } else {
-      this.div.classList.add("editing");
-      this.enableEditMode();
-    }
-    this.#createObserver();
-    return this.div;
+    const div = super.render();
+    div.classList.add("draw");
+    const drawDiv = document.createElement("div");
+    div.append(drawDiv);
+    drawDiv.setAttribute("aria-hidden", "true");
+    drawDiv.className = "internal";
+    const [parentWidth, parentHeight] = this.parentDimensions;
+    this.setDims(this.width * parentWidth, this.height * parentHeight);
+    this._uiManager.addShouldRescale(this);
+    this.disableEditing();
+    return div;
   }
-  #setCanvasDims() {
-    if (!this.#isCanvasInitialized) {
+  static createDrawerInstance(_x, _y, _parentWidth, _parentHeight, _rotation) {
+    unreachable("Not implemented");
+  }
+  static startDrawing(parent, uiManager, _isLTR, {
+    target,
+    offsetX: x,
+    offsetY: y
+  }) {
+    const {
+      viewport: {
+        rotation
+      }
+    } = parent;
+    const {
+      width: parentWidth,
+      height: parentHeight
+    } = target.getBoundingClientRect();
+    const ac = new AbortController();
+    const signal = parent.combinedSignal(ac);
+    window.addEventListener("pointerup", e => {
+      ac.abort();
+      parent.toggleDrawing(true);
+      this._endDraw(e);
+    }, {
+      signal
+    });
+    window.addEventListener("pointerdown", stopEvent, {
+      capture: true,
+      passive: false,
+      signal
+    });
+    window.addEventListener("contextmenu", noContextMenu, {
+      signal
+    });
+    target.addEventListener("pointermove", this._drawMove.bind(this), {
+      signal
+    });
+    parent.toggleDrawing();
+    uiManager._editorUndoBar?.hide();
+    if (this._currentDraw) {
+      parent.drawLayer.updateProperties(this._currentDrawId, this._currentDraw.startNew(x, y, parentWidth, parentHeight, rotation));
       return;
     }
-    const [parentWidth, parentHeight] = this.parentDimensions;
-    this.canvas.width = Math.ceil(this.width * parentWidth);
-    this.canvas.height = Math.ceil(this.height * parentHeight);
-    this.#updateTransform();
+    uiManager.updateUIForDefaultProperties(this);
+    this._currentDraw = this.createDrawerInstance(x, y, parentWidth, parentHeight, rotation);
+    this._currentDrawingOptions = this.getDefaultDrawingOptions();
+    this._currentParent = parent;
+    ({
+      id: this._currentDrawId
+    } = parent.drawLayer.draw(this._mergeSVGProperties(this._currentDrawingOptions.toSVGProperties(), this._currentDraw.defaultSVGProperties), true, false));
   }
-  setDimensions(width, height) {
-    const roundedWidth = Math.round(width);
-    const roundedHeight = Math.round(height);
-    if (this.#realWidth === roundedWidth && this.#realHeight === roundedHeight) {
-      return;
-    }
-    this.#realWidth = roundedWidth;
-    this.#realHeight = roundedHeight;
-    this.canvas.style.visibility = "hidden";
-    const [parentWidth, parentHeight] = this.parentDimensions;
-    this.width = width / parentWidth;
-    this.height = height / parentHeight;
-    this.fixAndSetPosition();
-    if (this.#disableEditing) {
-      this.#setScaleFactor(width, height);
-    }
-    this.#setCanvasDims();
-    this.#redraw();
-    this.canvas.style.visibility = "visible";
-    this.fixDims();
+  static _drawMove({
+    offsetX,
+    offsetY
+  }) {
+    this._currentParent.drawLayer.updateProperties(this._currentDrawId, this._currentDraw.add(offsetX, offsetY));
   }
-  #setScaleFactor(width, height) {
-    const padding = this.#getPadding();
-    const scaleFactorW = (width - padding) / this.#baseWidth;
-    const scaleFactorH = (height - padding) / this.#baseHeight;
-    this.scaleFactor = Math.min(scaleFactorW, scaleFactorH);
-  }
-  #updateTransform() {
-    const padding = this.#getPadding() / 2;
-    this.ctx.setTransform(this.scaleFactor, 0, 0, this.scaleFactor, this.translationX * this.scaleFactor + padding, this.translationY * this.scaleFactor + padding);
-  }
-  static #buildPath2D(bezier) {
-    const path2D = new Path2D();
-    for (let i = 0, ii = bezier.length; i < ii; i++) {
-      const [first, control1, control2, second] = bezier[i];
-      if (i === 0) {
-        path2D.moveTo(...first);
-      }
-      path2D.bezierCurveTo(control1[0], control1[1], control2[0], control2[1], second[0], second[1]);
-    }
-    return path2D;
-  }
-  static #toPDFCoordinates(points, rect, rotation) {
-    const [blX, blY, trX, trY] = rect;
-    switch (rotation) {
-      case 0:
-        for (let i = 0, ii = points.length; i < ii; i += 2) {
-          points[i] += blX;
-          points[i + 1] = trY - points[i + 1];
-        }
-        break;
-      case 90:
-        for (let i = 0, ii = points.length; i < ii; i += 2) {
-          const x = points[i];
-          points[i] = points[i + 1] + blX;
-          points[i + 1] = x + blY;
-        }
-        break;
-      case 180:
-        for (let i = 0, ii = points.length; i < ii; i += 2) {
-          points[i] = trX - points[i];
-          points[i + 1] += blY;
-        }
-        break;
-      case 270:
-        for (let i = 0, ii = points.length; i < ii; i += 2) {
-          const x = points[i];
-          points[i] = trX - points[i + 1];
-          points[i + 1] = trY - x;
-        }
-        break;
-      default:
-        throw new Error("Invalid rotation");
-    }
-    return points;
-  }
-  static #fromPDFCoordinates(points, rect, rotation) {
-    const [blX, blY, trX, trY] = rect;
-    switch (rotation) {
-      case 0:
-        for (let i = 0, ii = points.length; i < ii; i += 2) {
-          points[i] -= blX;
-          points[i + 1] = trY - points[i + 1];
-        }
-        break;
-      case 90:
-        for (let i = 0, ii = points.length; i < ii; i += 2) {
-          const x = points[i];
-          points[i] = points[i + 1] - blY;
-          points[i + 1] = x - blX;
-        }
-        break;
-      case 180:
-        for (let i = 0, ii = points.length; i < ii; i += 2) {
-          points[i] = trX - points[i];
-          points[i + 1] -= blY;
-        }
-        break;
-      case 270:
-        for (let i = 0, ii = points.length; i < ii; i += 2) {
-          const x = points[i];
-          points[i] = trY - points[i + 1];
-          points[i + 1] = trX - x;
-        }
-        break;
-      default:
-        throw new Error("Invalid rotation");
-    }
-    return points;
-  }
-  #serializePaths(s, tx, ty, rect) {
-    const paths = [];
-    const padding = this.thickness / 2;
-    const shiftX = s * tx + padding;
-    const shiftY = s * ty + padding;
-    for (const bezier of this.paths) {
-      const buffer = [];
-      const points = [];
-      for (let j = 0, jj = bezier.length; j < jj; j++) {
-        const [first, control1, control2, second] = bezier[j];
-        if (first[0] === second[0] && first[1] === second[1] && jj === 1) {
-          const p0 = s * first[0] + shiftX;
-          const p1 = s * first[1] + shiftY;
-          buffer.push(p0, p1);
-          points.push(p0, p1);
-          break;
-        }
-        const p10 = s * first[0] + shiftX;
-        const p11 = s * first[1] + shiftY;
-        const p20 = s * control1[0] + shiftX;
-        const p21 = s * control1[1] + shiftY;
-        const p30 = s * control2[0] + shiftX;
-        const p31 = s * control2[1] + shiftY;
-        const p40 = s * second[0] + shiftX;
-        const p41 = s * second[1] + shiftY;
-        if (j === 0) {
-          buffer.push(p10, p11);
-          points.push(p10, p11);
-        }
-        buffer.push(p20, p21, p30, p31, p40, p41);
-        points.push(p20, p21);
-        if (j === jj - 1) {
-          points.push(p40, p41);
-        }
-      }
-      paths.push({
-        bezier: InkEditor.#toPDFCoordinates(buffer, rect, this.rotation),
-        points: InkEditor.#toPDFCoordinates(points, rect, this.rotation)
+  static _endDraw({
+    offsetX,
+    offsetY
+  }) {
+    const parent = this._currentParent;
+    parent.drawLayer.updateProperties(this._currentDrawId, this._currentDraw.end(offsetX, offsetY));
+    if (this.supportMultipleDrawings) {
+      const draw = this._currentDraw;
+      const drawId = this._currentDrawId;
+      const lastElement = draw.getLastElement();
+      parent.addCommands({
+        cmd: () => {
+          parent.drawLayer.updateProperties(drawId, draw.setLastElement(lastElement));
+        },
+        undo: () => {
+          parent.drawLayer.updateProperties(drawId, draw.removeLastElement());
+        },
+        mustExec: false,
+        type: AnnotationEditorParamsType.DRAW_STEP
       });
-    }
-    return paths;
-  }
-  #getBbox() {
-    let xMin = Infinity;
-    let xMax = -Infinity;
-    let yMin = Infinity;
-    let yMax = -Infinity;
-    for (const path of this.paths) {
-      for (const [first, control1, control2, second] of path) {
-        const bbox = Util.bezierBoundingBox(...first, ...control1, ...control2, ...second);
-        xMin = Math.min(xMin, bbox[0]);
-        yMin = Math.min(yMin, bbox[1]);
-        xMax = Math.max(xMax, bbox[2]);
-        yMax = Math.max(yMax, bbox[3]);
-      }
-    }
-    return [xMin, yMin, xMax, yMax];
-  }
-  #getPadding() {
-    return this.#disableEditing ? Math.ceil(this.thickness * this.parentScale) : 0;
-  }
-  #fitToContent(firstTime = false) {
-    if (this.isEmpty()) {
       return;
     }
-    if (!this.#disableEditing) {
-      this.#redraw();
-      return;
+    this.endDrawing(false);
+  }
+  static endDrawing(isAborted) {
+    const parent = this._currentParent;
+    if (!parent) {
+      return null;
     }
-    const bbox = this.#getBbox();
-    const padding = this.#getPadding();
-    this.#baseWidth = Math.max(AnnotationEditor.MIN_SIZE, bbox[2] - bbox[0]);
-    this.#baseHeight = Math.max(AnnotationEditor.MIN_SIZE, bbox[3] - bbox[1]);
-    const width = Math.ceil(padding + this.#baseWidth * this.scaleFactor);
-    const height = Math.ceil(padding + this.#baseHeight * this.scaleFactor);
-    const [parentWidth, parentHeight] = this.parentDimensions;
-    this.width = width / parentWidth;
-    this.height = height / parentHeight;
-    this.setAspectRatio(width, height);
-    const prevTranslationX = this.translationX;
-    const prevTranslationY = this.translationY;
-    this.translationX = -bbox[0];
-    this.translationY = -bbox[1];
-    this.#setCanvasDims();
-    this.#redraw();
-    this.#realWidth = width;
-    this.#realHeight = height;
-    this.setDims(width, height);
-    const unscaledPadding = firstTime ? padding / this.scaleFactor / 2 : 0;
-    this.translate(prevTranslationX - this.translationX - unscaledPadding, prevTranslationY - this.translationY - unscaledPadding);
+    parent.toggleDrawing(true);
+    parent.cleanUndoStack(AnnotationEditorParamsType.DRAW_STEP);
+    if (!this._currentDraw.isEmpty()) {
+      const {
+        pageDimensions: [pageWidth, pageHeight],
+        scale
+      } = parent;
+      const editor = parent.createAndAddNewEditor({
+        offsetX: 0,
+        offsetY: 0
+      }, false, {
+        drawId: this._currentDrawId,
+        drawOutlines: this._currentDraw.getOutlines(pageWidth * scale, pageHeight * scale, scale, this._INNER_MARGIN),
+        drawingOptions: this._currentDrawingOptions,
+        mustBeCommitted: !isAborted
+      });
+      this._cleanup();
+      return editor;
+    }
+    parent.drawLayer.remove(this._currentDrawId);
+    this._cleanup();
+    return null;
+  }
+  static _cleanup() {
+    this._currentDrawId = -1;
+    this._currentDraw = null;
+    this._currentDrawingOptions = null;
+    this._currentParent = null;
+  }
+  createDrawingOptions(_data) {}
+  static deserializeDraw(_pageX, _pageY, _pageWidth, _pageHeight, _innerWidth, _data) {
+    unreachable("Not implemented");
   }
   static async deserialize(data, parent, uiManager) {
-    if (data instanceof InkAnnotationElement) {
-      return null;
-    }
-    const editor = await super.deserialize(data, parent, uiManager);
-    editor.thickness = data.thickness;
-    editor.color = Util.makeHexColor(...data.color);
-    editor.opacity = data.opacity;
-    const [pageWidth, pageHeight] = editor.pageDimensions;
-    const width = editor.width * pageWidth;
-    const height = editor.height * pageHeight;
-    const scaleFactor = editor.parentScale;
-    const padding = data.thickness / 2;
-    editor.#disableEditing = true;
-    editor.#realWidth = Math.round(width);
-    editor.#realHeight = Math.round(height);
     const {
-      paths,
-      rect,
-      rotation
-    } = data;
-    for (let {
-      bezier
-    } of paths) {
-      bezier = InkEditor.#fromPDFCoordinates(bezier, rect, rotation);
-      const path = [];
-      editor.paths.push(path);
-      let p0 = scaleFactor * (bezier[0] - padding);
-      let p1 = scaleFactor * (bezier[1] - padding);
-      for (let i = 2, ii = bezier.length; i < ii; i += 6) {
-        const p10 = scaleFactor * (bezier[i] - padding);
-        const p11 = scaleFactor * (bezier[i + 1] - padding);
-        const p20 = scaleFactor * (bezier[i + 2] - padding);
-        const p21 = scaleFactor * (bezier[i + 3] - padding);
-        const p30 = scaleFactor * (bezier[i + 4] - padding);
-        const p31 = scaleFactor * (bezier[i + 5] - padding);
-        path.push([[p0, p1], [p10, p11], [p20, p21], [p30, p31]]);
-        p0 = p30;
-        p1 = p31;
+      rawDims: {
+        pageWidth,
+        pageHeight,
+        pageX,
+        pageY
       }
-      const path2D = this.#buildPath2D(path);
-      editor.bezierPath2D.push(path2D);
-    }
-    const bbox = editor.#getBbox();
-    editor.#baseWidth = Math.max(AnnotationEditor.MIN_SIZE, bbox[2] - bbox[0]);
-    editor.#baseHeight = Math.max(AnnotationEditor.MIN_SIZE, bbox[3] - bbox[1]);
-    editor.#setScaleFactor(width, height);
+    } = parent.viewport;
+    const drawOutlines = this.deserializeDraw(pageX, pageY, pageWidth, pageHeight, this._INNER_MARGIN, data);
+    const editor = await super.deserialize(data, parent, uiManager);
+    editor.createDrawingOptions(data);
+    editor.#createDrawOutlines({
+      drawOutlines
+    });
+    editor.#addToDrawLayer();
+    editor.onScaleChanging();
+    editor.rotate();
     return editor;
   }
-  serialize() {
+  serializeDraw(isForCopying) {
+    const [pageX, pageY] = this.pageTranslation;
+    const [pageWidth, pageHeight] = this.pageDimensions;
+    return this.#drawOutlines.serialize([pageX, pageY, pageWidth, pageHeight], isForCopying);
+  }
+  renderAnnotationElement(annotation) {
+    annotation.updateEdited({
+      rect: this.getRect(0, 0)
+    });
+    return null;
+  }
+  static canCreateNewEmptyEditor() {
+    return false;
+  }
+}
+
+;// ./src/display/editor/drawers/inkdraw.js
+
+
+class InkDrawOutliner {
+  #last = new Float64Array(6);
+  #line;
+  #lines;
+  #rotation;
+  #thickness;
+  #points;
+  #lastSVGPath = "";
+  #lastIndex = 0;
+  #outlines = new InkDrawOutline();
+  #parentWidth;
+  #parentHeight;
+  constructor(x, y, parentWidth, parentHeight, rotation, thickness) {
+    this.#parentWidth = parentWidth;
+    this.#parentHeight = parentHeight;
+    this.#rotation = rotation;
+    this.#thickness = thickness;
+    [x, y] = this.#normalizePoint(x, y);
+    const line = this.#line = [NaN, NaN, NaN, NaN, x, y];
+    this.#points = [x, y];
+    this.#lines = [{
+      line,
+      points: this.#points
+    }];
+    this.#last.set(line, 0);
+  }
+  updateProperty(name, value) {
+    if (name === "stroke-width") {
+      this.#thickness = value;
+    }
+  }
+  #normalizePoint(x, y) {
+    return Outline._normalizePoint(x, y, this.#parentWidth, this.#parentHeight, this.#rotation);
+  }
+  isEmpty() {
+    return !this.#lines || this.#lines.length === 0;
+  }
+  add(x, y) {
+    [x, y] = this.#normalizePoint(x, y);
+    const [x1, y1, x2, y2] = this.#last.subarray(2, 6);
+    const diffX = x - x2;
+    const diffY = y - y2;
+    const d = Math.hypot(this.#parentWidth * diffX, this.#parentHeight * diffY);
+    if (d <= 2) {
+      return null;
+    }
+    this.#points.push(x, y);
+    if (isNaN(x1)) {
+      this.#last.set([x2, y2, x, y], 2);
+      this.#line.push(NaN, NaN, NaN, NaN, x, y);
+      return {
+        path: {
+          d: this.toSVGPath()
+        }
+      };
+    }
+    if (isNaN(this.#last[0])) {
+      this.#line.splice(6, 6);
+    }
+    this.#last.set([x1, y1, x2, y2, x, y], 0);
+    this.#line.push(...Outline.createBezierPoints(x1, y1, x2, y2, x, y));
+    return {
+      path: {
+        d: this.toSVGPath()
+      }
+    };
+  }
+  end(x, y) {
+    const change = this.add(x, y);
+    if (change) {
+      return change;
+    }
+    if (this.#points.length === 2) {
+      return {
+        path: {
+          d: this.toSVGPath()
+        }
+      };
+    }
+    return null;
+  }
+  startNew(x, y, parentWidth, parentHeight, rotation) {
+    this.#parentWidth = parentWidth;
+    this.#parentHeight = parentHeight;
+    this.#rotation = rotation;
+    [x, y] = this.#normalizePoint(x, y);
+    const line = this.#line = [NaN, NaN, NaN, NaN, x, y];
+    this.#points = [x, y];
+    const last = this.#lines.at(-1);
+    if (last) {
+      last.line = new Float32Array(last.line);
+      last.points = new Float32Array(last.points);
+    }
+    this.#lines.push({
+      line,
+      points: this.#points
+    });
+    this.#last.set(line, 0);
+    this.#lastIndex = 0;
+    this.toSVGPath();
+    return null;
+  }
+  getLastElement() {
+    return this.#lines.at(-1);
+  }
+  setLastElement(element) {
+    if (!this.#lines) {
+      return this.#outlines.setLastElement(element);
+    }
+    this.#lines.push(element);
+    this.#line = element.line;
+    this.#points = element.points;
+    this.#lastIndex = 0;
+    return {
+      path: {
+        d: this.toSVGPath()
+      }
+    };
+  }
+  removeLastElement() {
+    if (!this.#lines) {
+      return this.#outlines.removeLastElement();
+    }
+    this.#lines.pop();
+    this.#lastSVGPath = "";
+    for (let i = 0, ii = this.#lines.length; i < ii; i++) {
+      const {
+        line,
+        points
+      } = this.#lines[i];
+      this.#line = line;
+      this.#points = points;
+      this.#lastIndex = 0;
+      this.toSVGPath();
+    }
+    return {
+      path: {
+        d: this.#lastSVGPath
+      }
+    };
+  }
+  toSVGPath() {
+    const firstX = Outline.svgRound(this.#line[4]);
+    const firstY = Outline.svgRound(this.#line[5]);
+    if (this.#points.length === 2) {
+      this.#lastSVGPath = `${this.#lastSVGPath} M ${firstX} ${firstY} Z`;
+      return this.#lastSVGPath;
+    }
+    if (this.#points.length <= 6) {
+      const i = this.#lastSVGPath.lastIndexOf("M");
+      this.#lastSVGPath = `${this.#lastSVGPath.slice(0, i)} M ${firstX} ${firstY}`;
+      this.#lastIndex = 6;
+    }
+    if (this.#points.length === 4) {
+      const secondX = Outline.svgRound(this.#line[10]);
+      const secondY = Outline.svgRound(this.#line[11]);
+      this.#lastSVGPath = `${this.#lastSVGPath} L ${secondX} ${secondY}`;
+      this.#lastIndex = 12;
+      return this.#lastSVGPath;
+    }
+    const buffer = [];
+    if (this.#lastIndex === 0) {
+      buffer.push(`M ${firstX} ${firstY}`);
+      this.#lastIndex = 6;
+    }
+    for (let i = this.#lastIndex, ii = this.#line.length; i < ii; i += 6) {
+      const [c1x, c1y, c2x, c2y, x, y] = this.#line.slice(i, i + 6).map(Outline.svgRound);
+      buffer.push(`C${c1x} ${c1y} ${c2x} ${c2y} ${x} ${y}`);
+    }
+    this.#lastSVGPath += buffer.join(" ");
+    this.#lastIndex = this.#line.length;
+    return this.#lastSVGPath;
+  }
+  getOutlines(parentWidth, parentHeight, scale, innerMargin) {
+    const last = this.#lines.at(-1);
+    last.line = new Float32Array(last.line);
+    last.points = new Float32Array(last.points);
+    this.#outlines.build(this.#lines, parentWidth, parentHeight, scale, this.#rotation, this.#thickness, innerMargin);
+    this.#last = null;
+    this.#line = null;
+    this.#lines = null;
+    this.#lastSVGPath = null;
+    return this.#outlines;
+  }
+  get defaultSVGProperties() {
+    return {
+      root: {
+        viewBox: "0 0 10000 10000"
+      },
+      rootClass: {
+        draw: true
+      },
+      bbox: [0, 0, 1, 1]
+    };
+  }
+}
+class InkDrawOutline extends Outline {
+  #bbox;
+  #currentRotation = 0;
+  #innerMargin;
+  #lines;
+  #parentWidth;
+  #parentHeight;
+  #parentScale;
+  #rotation;
+  #thickness;
+  build(lines, parentWidth, parentHeight, parentScale, rotation, thickness, innerMargin) {
+    this.#parentWidth = parentWidth;
+    this.#parentHeight = parentHeight;
+    this.#parentScale = parentScale;
+    this.#rotation = rotation;
+    this.#thickness = thickness;
+    this.#innerMargin = innerMargin ?? 0;
+    this.#lines = lines;
+    this.#computeBbox();
+  }
+  setLastElement(element) {
+    this.#lines.push(element);
+    return {
+      path: {
+        d: this.toSVGPath()
+      }
+    };
+  }
+  removeLastElement() {
+    this.#lines.pop();
+    return {
+      path: {
+        d: this.toSVGPath()
+      }
+    };
+  }
+  toSVGPath() {
+    const buffer = [];
+    for (const {
+      line
+    } of this.#lines) {
+      buffer.push(`M${Outline.svgRound(line[4])} ${Outline.svgRound(line[5])}`);
+      if (line.length === 6) {
+        buffer.push("Z");
+        continue;
+      }
+      if (line.length === 12) {
+        buffer.push(`L${Outline.svgRound(line[10])} ${Outline.svgRound(line[11])}`);
+        continue;
+      }
+      for (let i = 6, ii = line.length; i < ii; i += 6) {
+        const [c1x, c1y, c2x, c2y, x, y] = line.subarray(i, i + 6).map(Outline.svgRound);
+        buffer.push(`C${c1x} ${c1y} ${c2x} ${c2y} ${x} ${y}`);
+      }
+    }
+    return buffer.join("");
+  }
+  serialize([pageX, pageY, pageWidth, pageHeight], isForCopying) {
+    const serializedLines = [];
+    const serializedPoints = [];
+    const [x, y, width, height] = this.#getBBoxWithNoMargin();
+    let tx, ty, sx, sy, x1, y1, x2, y2, rescaleFn;
+    switch (this.#rotation) {
+      case 0:
+        rescaleFn = Outline._rescale;
+        tx = pageX;
+        ty = pageY + pageHeight;
+        sx = pageWidth;
+        sy = -pageHeight;
+        x1 = pageX + x * pageWidth;
+        y1 = pageY + (1 - y - height) * pageHeight;
+        x2 = pageX + (x + width) * pageWidth;
+        y2 = pageY + (1 - y) * pageHeight;
+        break;
+      case 90:
+        rescaleFn = Outline._rescaleAndSwap;
+        tx = pageX;
+        ty = pageY;
+        sx = pageWidth;
+        sy = pageHeight;
+        x1 = pageX + y * pageWidth;
+        y1 = pageY + x * pageHeight;
+        x2 = pageX + (y + height) * pageWidth;
+        y2 = pageY + (x + width) * pageHeight;
+        break;
+      case 180:
+        rescaleFn = Outline._rescale;
+        tx = pageX + pageWidth;
+        ty = pageY;
+        sx = -pageWidth;
+        sy = pageHeight;
+        x1 = pageX + (1 - x - width) * pageWidth;
+        y1 = pageY + y * pageHeight;
+        x2 = pageX + (1 - x) * pageWidth;
+        y2 = pageY + (y + height) * pageHeight;
+        break;
+      case 270:
+        rescaleFn = Outline._rescaleAndSwap;
+        tx = pageX + pageWidth;
+        ty = pageY + pageHeight;
+        sx = -pageWidth;
+        sy = -pageHeight;
+        x1 = pageX + (1 - y - height) * pageWidth;
+        y1 = pageY + (1 - x - width) * pageHeight;
+        x2 = pageX + (1 - y) * pageWidth;
+        y2 = pageY + (1 - x) * pageHeight;
+        break;
+    }
+    for (const {
+      line,
+      points
+    } of this.#lines) {
+      serializedLines.push(rescaleFn(line, tx, ty, sx, sy, isForCopying ? new Array(line.length) : null));
+      serializedPoints.push(rescaleFn(points, tx, ty, sx, sy, isForCopying ? new Array(points.length) : null));
+    }
+    return {
+      lines: serializedLines,
+      points: serializedPoints,
+      rect: [x1, y1, x2, y2]
+    };
+  }
+  static deserialize(pageX, pageY, pageWidth, pageHeight, innerMargin, {
+    paths: {
+      lines,
+      points
+    },
+    rotation,
+    thickness
+  }) {
+    const newLines = [];
+    let tx, ty, sx, sy, rescaleFn;
+    switch (rotation) {
+      case 0:
+        rescaleFn = Outline._rescale;
+        tx = -pageX / pageWidth;
+        ty = pageY / pageHeight + 1;
+        sx = 1 / pageWidth;
+        sy = -1 / pageHeight;
+        break;
+      case 90:
+        rescaleFn = Outline._rescaleAndSwap;
+        tx = -pageY / pageHeight;
+        ty = -pageX / pageWidth;
+        sx = 1 / pageHeight;
+        sy = 1 / pageWidth;
+        break;
+      case 180:
+        rescaleFn = Outline._rescale;
+        tx = pageX / pageWidth + 1;
+        ty = -pageY / pageHeight;
+        sx = -1 / pageWidth;
+        sy = 1 / pageHeight;
+        break;
+      case 270:
+        rescaleFn = Outline._rescaleAndSwap;
+        tx = pageY / pageHeight + 1;
+        ty = pageX / pageWidth + 1;
+        sx = -1 / pageHeight;
+        sy = -1 / pageWidth;
+        break;
+    }
+    if (!lines) {
+      lines = [];
+      for (const point of points) {
+        const len = point.length;
+        if (len === 2) {
+          lines.push(new Float32Array([NaN, NaN, NaN, NaN, point[0], point[1]]));
+          continue;
+        }
+        if (len === 4) {
+          lines.push(new Float32Array([NaN, NaN, NaN, NaN, point[0], point[1], NaN, NaN, NaN, NaN, point[2], point[3]]));
+          continue;
+        }
+        const line = new Float32Array(3 * (len - 2));
+        lines.push(line);
+        let [x1, y1, x2, y2] = point.subarray(0, 4);
+        line.set([NaN, NaN, NaN, NaN, x1, y1], 0);
+        for (let i = 4; i < len; i += 2) {
+          const x = point[i];
+          const y = point[i + 1];
+          line.set(Outline.createBezierPoints(x1, y1, x2, y2, x, y), (i - 2) * 3);
+          [x1, y1, x2, y2] = [x2, y2, x, y];
+        }
+      }
+    }
+    for (let i = 0, ii = lines.length; i < ii; i++) {
+      newLines.push({
+        line: rescaleFn(lines[i].map(x => x ?? NaN), tx, ty, sx, sy),
+        points: rescaleFn(points[i].map(x => x ?? NaN), tx, ty, sx, sy)
+      });
+    }
+    const outlines = new InkDrawOutline();
+    outlines.build(newLines, pageWidth, pageHeight, 1, rotation, thickness, innerMargin);
+    return outlines;
+  }
+  #getMarginComponents(thickness = this.#thickness) {
+    const margin = this.#innerMargin + thickness / 2 * this.#parentScale;
+    return this.#rotation % 180 === 0 ? [margin / this.#parentWidth, margin / this.#parentHeight] : [margin / this.#parentHeight, margin / this.#parentWidth];
+  }
+  #getBBoxWithNoMargin() {
+    const [x, y, width, height] = this.#bbox;
+    const [marginX, marginY] = this.#getMarginComponents(0);
+    return [x + marginX, y + marginY, width - 2 * marginX, height - 2 * marginY];
+  }
+  #computeBbox() {
+    const bbox = this.#bbox = new Float32Array([Infinity, Infinity, -Infinity, -Infinity]);
+    for (const {
+      line
+    } of this.#lines) {
+      if (line.length <= 12) {
+        for (let i = 4, ii = line.length; i < ii; i += 6) {
+          const [x, y] = line.subarray(i, i + 2);
+          bbox[0] = Math.min(bbox[0], x);
+          bbox[1] = Math.min(bbox[1], y);
+          bbox[2] = Math.max(bbox[2], x);
+          bbox[3] = Math.max(bbox[3], y);
+        }
+        continue;
+      }
+      let lastX = line[4],
+        lastY = line[5];
+      for (let i = 6, ii = line.length; i < ii; i += 6) {
+        const [c1x, c1y, c2x, c2y, x, y] = line.subarray(i, i + 6);
+        Util.bezierBoundingBox(lastX, lastY, c1x, c1y, c2x, c2y, x, y, bbox);
+        lastX = x;
+        lastY = y;
+      }
+    }
+    const [marginX, marginY] = this.#getMarginComponents();
+    bbox[0] = Math.min(1, Math.max(0, bbox[0] - marginX));
+    bbox[1] = Math.min(1, Math.max(0, bbox[1] - marginY));
+    bbox[2] = Math.min(1, Math.max(0, bbox[2] + marginX));
+    bbox[3] = Math.min(1, Math.max(0, bbox[3] + marginY));
+    bbox[2] -= bbox[0];
+    bbox[3] -= bbox[1];
+  }
+  get box() {
+    return this.#bbox;
+  }
+  updateProperty(name, value) {
+    if (name === "stroke-width") {
+      return this.#updateThickness(value);
+    }
+    return null;
+  }
+  #updateThickness(thickness) {
+    const [oldMarginX, oldMarginY] = this.#getMarginComponents();
+    this.#thickness = thickness;
+    const [newMarginX, newMarginY] = this.#getMarginComponents();
+    const [diffMarginX, diffMarginY] = [newMarginX - oldMarginX, newMarginY - oldMarginY];
+    const bbox = this.#bbox;
+    bbox[0] -= diffMarginX;
+    bbox[1] -= diffMarginY;
+    bbox[2] += 2 * diffMarginX;
+    bbox[3] += 2 * diffMarginY;
+    return bbox;
+  }
+  updateParentDimensions([width, height], scale) {
+    const [oldMarginX, oldMarginY] = this.#getMarginComponents();
+    this.#parentWidth = width;
+    this.#parentHeight = height;
+    this.#parentScale = scale;
+    const [newMarginX, newMarginY] = this.#getMarginComponents();
+    const diffMarginX = newMarginX - oldMarginX;
+    const diffMarginY = newMarginY - oldMarginY;
+    const bbox = this.#bbox;
+    bbox[0] -= diffMarginX;
+    bbox[1] -= diffMarginY;
+    bbox[2] += 2 * diffMarginX;
+    bbox[3] += 2 * diffMarginY;
+    return bbox;
+  }
+  updateRotation(rotation) {
+    this.#currentRotation = rotation;
+    return {
+      path: {
+        transform: this.rotationTransform
+      }
+    };
+  }
+  get viewBox() {
+    return this.#bbox.map(Outline.svgRound).join(" ");
+  }
+  get defaultProperties() {
+    const [x, y] = this.#bbox;
+    return {
+      root: {
+        viewBox: this.viewBox
+      },
+      path: {
+        "transform-origin": `${Outline.svgRound(x)} ${Outline.svgRound(y)}`
+      }
+    };
+  }
+  get rotationTransform() {
+    const [,, width, height] = this.#bbox;
+    let a = 0,
+      b = 0,
+      c = 0,
+      d = 0,
+      e = 0,
+      f = 0;
+    switch (this.#currentRotation) {
+      case 90:
+        b = height / width;
+        c = -width / height;
+        e = width;
+        break;
+      case 180:
+        a = -1;
+        d = -1;
+        e = width;
+        f = height;
+        break;
+      case 270:
+        b = -height / width;
+        c = width / height;
+        f = height;
+        break;
+      default:
+        return "";
+    }
+    return `matrix(${a} ${b} ${c} ${d} ${Outline.svgRound(e)} ${Outline.svgRound(f)})`;
+  }
+  getPathResizingSVGProperties([newX, newY, newWidth, newHeight]) {
+    const [marginX, marginY] = this.#getMarginComponents();
+    const [x, y, width, height] = this.#bbox;
+    if (Math.abs(width - marginX) <= Outline.PRECISION || Math.abs(height - marginY) <= Outline.PRECISION) {
+      const tx = newX + newWidth / 2 - (x + width / 2);
+      const ty = newY + newHeight / 2 - (y + height / 2);
+      return {
+        path: {
+          "transform-origin": `${Outline.svgRound(newX)} ${Outline.svgRound(newY)}`,
+          transform: `${this.rotationTransform} translate(${tx} ${ty})`
+        }
+      };
+    }
+    const s1x = (newWidth - 2 * marginX) / (width - 2 * marginX);
+    const s1y = (newHeight - 2 * marginY) / (height - 2 * marginY);
+    const s2x = width / newWidth;
+    const s2y = height / newHeight;
+    return {
+      path: {
+        "transform-origin": `${Outline.svgRound(x)} ${Outline.svgRound(y)}`,
+        transform: `${this.rotationTransform} scale(${s2x} ${s2y}) ` + `translate(${Outline.svgRound(marginX)} ${Outline.svgRound(marginY)}) scale(${s1x} ${s1y}) ` + `translate(${Outline.svgRound(-marginX)} ${Outline.svgRound(-marginY)})`
+      }
+    };
+  }
+  getPathResizedSVGProperties([newX, newY, newWidth, newHeight]) {
+    const [marginX, marginY] = this.#getMarginComponents();
+    const bbox = this.#bbox;
+    const [x, y, width, height] = bbox;
+    bbox[0] = newX;
+    bbox[1] = newY;
+    bbox[2] = newWidth;
+    bbox[3] = newHeight;
+    if (Math.abs(width - marginX) <= Outline.PRECISION || Math.abs(height - marginY) <= Outline.PRECISION) {
+      const tx = newX + newWidth / 2 - (x + width / 2);
+      const ty = newY + newHeight / 2 - (y + height / 2);
+      for (const {
+        line,
+        points
+      } of this.#lines) {
+        Outline._translate(line, tx, ty, line);
+        Outline._translate(points, tx, ty, points);
+      }
+      return {
+        root: {
+          viewBox: this.viewBox
+        },
+        path: {
+          "transform-origin": `${Outline.svgRound(newX)} ${Outline.svgRound(newY)}`,
+          transform: this.rotationTransform || null,
+          d: this.toSVGPath()
+        }
+      };
+    }
+    const s1x = (newWidth - 2 * marginX) / (width - 2 * marginX);
+    const s1y = (newHeight - 2 * marginY) / (height - 2 * marginY);
+    const tx = -s1x * (x + marginX) + newX + marginX;
+    const ty = -s1y * (y + marginY) + newY + marginY;
+    if (s1x !== 1 || s1y !== 1 || tx !== 0 || ty !== 0) {
+      for (const {
+        line,
+        points
+      } of this.#lines) {
+        Outline._rescale(line, tx, ty, s1x, s1y, line);
+        Outline._rescale(points, tx, ty, s1x, s1y, points);
+      }
+    }
+    return {
+      root: {
+        viewBox: this.viewBox
+      },
+      path: {
+        "transform-origin": `${Outline.svgRound(newX)} ${Outline.svgRound(newY)}`,
+        transform: this.rotationTransform || null,
+        d: this.toSVGPath()
+      }
+    };
+  }
+  getPathTranslatedSVGProperties([newX, newY], parentDimensions) {
+    const [newParentWidth, newParentHeight] = parentDimensions;
+    const bbox = this.#bbox;
+    const tx = newX - bbox[0];
+    const ty = newY - bbox[1];
+    if (this.#parentWidth === newParentWidth && this.#parentHeight === newParentHeight) {
+      for (const {
+        line,
+        points
+      } of this.#lines) {
+        Outline._translate(line, tx, ty, line);
+        Outline._translate(points, tx, ty, points);
+      }
+    } else {
+      const sx = this.#parentWidth / newParentWidth;
+      const sy = this.#parentHeight / newParentHeight;
+      this.#parentWidth = newParentWidth;
+      this.#parentHeight = newParentHeight;
+      for (const {
+        line,
+        points
+      } of this.#lines) {
+        Outline._rescale(line, tx, ty, sx, sy, line);
+        Outline._rescale(points, tx, ty, sx, sy, points);
+      }
+      bbox[2] *= sx;
+      bbox[3] *= sy;
+    }
+    bbox[0] = newX;
+    bbox[1] = newY;
+    return {
+      root: {
+        viewBox: this.viewBox
+      },
+      path: {
+        d: this.toSVGPath(),
+        "transform-origin": `${Outline.svgRound(newX)} ${Outline.svgRound(newY)}`
+      }
+    };
+  }
+  get defaultSVGProperties() {
+    const bbox = this.#bbox;
+    return {
+      root: {
+        viewBox: this.viewBox
+      },
+      rootClass: {
+        draw: true
+      },
+      path: {
+        d: this.toSVGPath(),
+        "transform-origin": `${Outline.svgRound(bbox[0])} ${Outline.svgRound(bbox[1])}`,
+        transform: this.rotationTransform || null
+      },
+      bbox
+    };
+  }
+}
+
+;// ./src/display/editor/ink.js
+
+
+
+
+
+class InkDrawingOptions extends DrawingOptions {
+  #viewParameters;
+  constructor(viewerParameters) {
+    super();
+    this.#viewParameters = viewerParameters;
+    super.updateProperties({
+      fill: "none",
+      stroke: AnnotationEditor._defaultLineColor,
+      "stroke-opacity": 1,
+      "stroke-width": 1,
+      "stroke-linecap": "round",
+      "stroke-linejoin": "round",
+      "stroke-miterlimit": 10
+    });
+  }
+  updateSVGProperty(name, value) {
+    if (name === "stroke-width") {
+      value ??= this["stroke-width"];
+      value *= this.#viewParameters.realScale;
+    }
+    super.updateSVGProperty(name, value);
+  }
+  clone() {
+    const clone = new InkDrawingOptions(this.#viewParameters);
+    clone.updateAll(this);
+    return clone;
+  }
+}
+class InkEditor extends DrawingEditor {
+  static _type = "ink";
+  static _editorType = AnnotationEditorType.INK;
+  static _defaultDrawingOptions = null;
+  constructor(params) {
+    super({
+      ...params,
+      name: "inkEditor"
+    });
+    this._willKeepAspectRatio = true;
+  }
+  static initialize(l10n, uiManager) {
+    AnnotationEditor.initialize(l10n, uiManager);
+    this._defaultDrawingOptions = new InkDrawingOptions(uiManager.viewParameters);
+  }
+  static getDefaultDrawingOptions(options) {
+    const clone = this._defaultDrawingOptions.clone();
+    clone.updateProperties(options);
+    return clone;
+  }
+  static get supportMultipleDrawings() {
+    return true;
+  }
+  static get typesMap() {
+    return shadow(this, "typesMap", new Map([[AnnotationEditorParamsType.INK_THICKNESS, "stroke-width"], [AnnotationEditorParamsType.INK_COLOR, "stroke"], [AnnotationEditorParamsType.INK_OPACITY, "stroke-opacity"]]));
+  }
+  static createDrawerInstance(x, y, parentWidth, parentHeight, rotation) {
+    return new InkDrawOutliner(x, y, parentWidth, parentHeight, rotation, this._defaultDrawingOptions["stroke-width"]);
+  }
+  static deserializeDraw(pageX, pageY, pageWidth, pageHeight, innerMargin, data) {
+    return InkDrawOutline.deserialize(pageX, pageY, pageWidth, pageHeight, innerMargin, data);
+  }
+  static async deserialize(data, parent, uiManager) {
+    let initialData = null;
+    if (data instanceof InkAnnotationElement) {
+      const {
+        data: {
+          inkLists,
+          rect,
+          rotation,
+          id,
+          color,
+          opacity,
+          borderStyle: {
+            rawWidth: thickness
+          },
+          popupRef
+        },
+        parent: {
+          page: {
+            pageNumber
+          }
+        }
+      } = data;
+      initialData = data = {
+        annotationType: AnnotationEditorType.INK,
+        color: Array.from(color),
+        thickness,
+        opacity,
+        paths: {
+          points: inkLists
+        },
+        boxes: null,
+        pageIndex: pageNumber - 1,
+        rect: rect.slice(0),
+        rotation,
+        id,
+        deleted: false,
+        popupRef
+      };
+    }
+    const editor = await super.deserialize(data, parent, uiManager);
+    editor.annotationElementId = data.id || null;
+    editor._initialData = initialData;
+    return editor;
+  }
+  onScaleChanging() {
+    if (!this.parent) {
+      return;
+    }
+    super.onScaleChanging();
+    const {
+      _drawId,
+      _drawingOptions,
+      parent
+    } = this;
+    _drawingOptions.updateSVGProperty("stroke-width");
+    parent.drawLayer.updateProperties(_drawId, _drawingOptions.toSVGProperties());
+  }
+  static onScaleChangingWhenDrawing() {
+    const parent = this._currentParent;
+    if (!parent) {
+      return;
+    }
+    super.onScaleChangingWhenDrawing();
+    this._defaultDrawingOptions.updateSVGProperty("stroke-width");
+    parent.drawLayer.updateProperties(this._currentDrawId, this._defaultDrawingOptions.toSVGProperties());
+  }
+  createDrawingOptions({
+    color,
+    thickness,
+    opacity
+  }) {
+    this._drawingOptions = InkEditor.getDefaultDrawingOptions({
+      stroke: Util.makeHexColor(...color),
+      "stroke-width": thickness,
+      "stroke-opacity": opacity
+    });
+  }
+  serialize(isForCopying = false) {
     if (this.isEmpty()) {
       return null;
     }
-    const rect = this.getRect(0, 0);
-    const color = AnnotationEditor._colorManager.convert(this.ctx.strokeStyle);
-    return {
+    if (this.deleted) {
+      return this.serializeDeleted();
+    }
+    const {
+      lines,
+      points,
+      rect
+    } = this.serializeDraw(isForCopying);
+    const {
+      _drawingOptions: {
+        stroke,
+        "stroke-opacity": opacity,
+        "stroke-width": thickness
+      }
+    } = this;
+    const serialized = {
       annotationType: AnnotationEditorType.INK,
-      color,
-      thickness: this.thickness,
-      opacity: this.opacity,
-      paths: this.#serializePaths(this.scaleFactor / this.parentScale, this.translationX, this.translationY, rect),
+      color: AnnotationEditor._colorManager.convert(stroke),
+      opacity,
+      thickness,
+      paths: {
+        lines,
+        points
+      },
       pageIndex: this.pageIndex,
       rect,
       rotation: this.rotation,
       structTreeParentId: this._structTreeParentId
     };
+    if (isForCopying) {
+      return serialized;
+    }
+    if (this.annotationElementId && !this.#hasElementChanged(serialized)) {
+      return null;
+    }
+    serialized.id = this.annotationElementId;
+    return serialized;
+  }
+  #hasElementChanged(serialized) {
+    const {
+      color,
+      thickness,
+      opacity,
+      pageIndex
+    } = this._initialData;
+    return this._hasBeenMoved || this._hasBeenResized || serialized.color.some((c, i) => c !== color[i]) || serialized.thickness !== thickness || serialized.opacity !== opacity || serialized.pageIndex !== pageIndex;
+  }
+  renderAnnotationElement(annotation) {
+    const {
+      points,
+      rect
+    } = this.serializeDraw(false);
+    annotation.updateEdited({
+      rect,
+      thickness: this._drawingOptions["stroke-width"],
+      points
+    });
+    return null;
   }
 }
 
 ;// ./src/display/editor/stamp.js
-
-
-
-
 
 
 
@@ -24594,17 +20400,15 @@ class StampEditor extends AnnotationEditor {
   }
   #hasElementChanged(serialized) {
     const {
-      rect,
       pageIndex,
       accessibilityData: {
         altText
       }
     } = this._initialData;
-    const isSameRect = serialized.rect.every((x, i) => Math.abs(x - rect[i]) < 1);
     const isSamePageIndex = serialized.pageIndex === pageIndex;
     const isSameAltText = (serialized.accessibilityData?.alt || "") === altText;
     return {
-      isSame: isSameRect && isSamePageIndex && isSameAltText,
+      isSame: !this._hasBeenMoved && !this._hasBeenResized && isSamePageIndex && isSameAltText,
       isSameAltText
     };
   }
@@ -24624,14 +20428,6 @@ class StampEditor extends AnnotationEditor {
 
 
 
-
-
-
-
-
-
-
-
 class AnnotationEditorLayer {
   #accessibilityManager;
   #allowClick = false;
@@ -24640,8 +20436,8 @@ class AnnotationEditorLayer {
   #editorFocusTimeoutId = null;
   #editors = new Map();
   #hadPointerDown = false;
-  #isCleaningUp = false;
   #isDisabling = false;
+  #drawingAC = null;
   #textLayer = null;
   #textSelectionAC = null;
   #uiManager;
@@ -24697,10 +20493,9 @@ class AnnotationEditorLayer {
         this.disableClick();
         return;
       case AnnotationEditorType.INK:
-        this.addInkEditorIfNeeded(false);
         this.disableTextSelection();
         this.togglePointerEvents(true);
-        this.disableClick();
+        this.enableClick();
         break;
       case AnnotationEditorType.HIGHLIGHT:
         this.enableTextSelection();
@@ -24724,29 +20519,14 @@ class AnnotationEditorLayer {
   hasTextLayer(textLayer) {
     return textLayer === this.#textLayer?.div;
   }
-  addInkEditorIfNeeded(isCommitting) {
-    if (this.#uiManager.getMode() !== AnnotationEditorType.INK) {
-      return;
-    }
-    if (!isCommitting) {
-      for (const editor of this.#editors.values()) {
-        if (editor.isEmpty()) {
-          editor.setInBackground();
-          return;
-        }
-      }
-    }
-    const editor = this.createAndAddNewEditor({
-      offsetX: 0,
-      offsetY: 0
-    }, false);
-    editor.setInBackground();
-  }
   setEditingState(isEditing) {
     this.#uiManager.setEditingState(isEditing);
   }
   addCommands(params) {
     this.#uiManager.addCommands(params);
+  }
+  cleanUndoStack(type) {
+    this.#uiManager.cleanUndoStack(type);
   }
   toggleDrawing(enabled = false) {
     this.div.classList.toggle("drawing", !enabled);
@@ -24946,9 +20726,6 @@ class AnnotationEditorLayer {
     this.#uiManager.removeEditor(editor);
     editor.div.remove();
     editor.isAttachedToDOM = false;
-    if (!this.#isCleaningUp) {
-      this.addInkEditorIfNeeded(false);
-    }
   }
   changeParent(editor) {
     if (editor.parent === this) {
@@ -25131,6 +20908,9 @@ class AnnotationEditorLayer {
       return;
     }
     this.#hadPointerDown = false;
+    if (this.#currentEditorType?.isDrawer && this.#currentEditorType.supportMultipleDrawings) {
+      return;
+    }
     if (!this.#allowClick) {
       this.#allowClick = true;
       return;
@@ -25159,8 +20939,41 @@ class AnnotationEditorLayer {
       return;
     }
     this.#hadPointerDown = true;
+    if (this.#currentEditorType?.isDrawer) {
+      this.startDrawingSession(event);
+      return;
+    }
     const editor = this.#uiManager.getActive();
     this.#allowClick = !editor || editor.isEmpty();
+  }
+  startDrawingSession(event) {
+    this.div.focus();
+    if (this.#drawingAC) {
+      this.#currentEditorType.startDrawing(this, this.#uiManager, false, event);
+      return;
+    }
+    this.#uiManager.setCurrentDrawingSession(this);
+    this.#drawingAC = new AbortController();
+    const signal = this.#uiManager.combinedSignal(this.#drawingAC);
+    this.div.addEventListener("blur", ({
+      relatedTarget
+    }) => {
+      if (relatedTarget && !this.div.contains(relatedTarget)) {
+        this.commitOrRemove();
+      }
+    }, {
+      signal
+    });
+    this.#currentEditorType.startDrawing(this, this.#uiManager, false, event);
+  }
+  endDrawingSession(isAborted = false) {
+    if (!this.#drawingAC) {
+      return null;
+    }
+    this.#uiManager.setCurrentDrawingSession(null);
+    this.#drawingAC.abort();
+    this.#drawingAC = null;
+    return this.#currentEditorType.endDrawing(isAborted);
   }
   findNewParent(editor, x, y) {
     const layer = this.#uiManager.findParent(x, y);
@@ -25170,7 +20983,21 @@ class AnnotationEditorLayer {
     layer.changeParent(editor);
     return true;
   }
+  commitOrRemove() {
+    if (this.#drawingAC) {
+      this.endDrawingSession();
+      return true;
+    }
+    return false;
+  }
+  onScaleChanging() {
+    if (!this.#drawingAC) {
+      return;
+    }
+    this.#currentEditorType.onScaleChangingWhenDrawing(this);
+  }
   destroy() {
+    this.commitOrRemove();
     if (this.#uiManager.getActive()?.parent === this) {
       this.#uiManager.commitOrRemove();
       this.#uiManager.setActiveEditor(null);
@@ -25190,13 +21017,11 @@ class AnnotationEditorLayer {
     this.#uiManager.removeLayer(this);
   }
   #cleanup() {
-    this.#isCleaningUp = true;
     for (const editor of this.#editors.values()) {
       if (editor.isEmpty()) {
         editor.remove();
       }
     }
-    this.#isCleaningUp = false;
   }
   render({
     viewport
@@ -25225,7 +21050,6 @@ class AnnotationEditorLayer {
         editor.rotate(rotation);
       }
     }
-    this.addInkEditorIfNeeded(false);
   }
   get pageDimensions() {
     const {
@@ -25270,12 +21094,7 @@ class DrawLayer {
   static get _svgFactory() {
     return shadow(this, "_svgFactory", new DOMSVGFactory());
   }
-  static #setBox(element, {
-    x = 0,
-    y = 0,
-    width = 1,
-    height = 1
-  } = {}) {
+  static #setBox(element, [x, y, width, height]) {
     const {
       style
     } = element;
@@ -25284,11 +21103,10 @@ class DrawLayer {
     style.width = `${100 * width}%`;
     style.height = `${100 * height}%`;
   }
-  #createSVG(box) {
+  #createSVG() {
     const svg = DrawLayer._svgFactory.create(1, 1, true);
     this.#parent.append(svg);
     svg.setAttribute("aria-hidden", true);
-    DrawLayer.#setBox(svg, box);
     return svg;
   }
   #createClipPath(defs, pathId) {
@@ -25303,46 +21121,51 @@ class DrawLayer {
     clipPathUse.classList.add("clip");
     return clipPathId;
   }
-  draw(outlines, color, opacity, isPathUpdatable = false) {
+  #updateProperties(element, properties) {
+    for (const [key, value] of Object.entries(properties)) {
+      if (value === null) {
+        element.removeAttribute(key);
+      } else {
+        element.setAttribute(key, value);
+      }
+    }
+  }
+  draw(properties, isPathUpdatable = false, hasClip = false) {
     const id = this.#id++;
-    const root = this.#createSVG(outlines.box);
-    root.classList.add(...outlines.classNamesForDrawing);
+    const root = this.#createSVG();
     const defs = DrawLayer._svgFactory.createElement("defs");
     root.append(defs);
     const path = DrawLayer._svgFactory.createElement("path");
     defs.append(path);
     const pathId = `path_p${this.pageIndex}_${id}`;
     path.setAttribute("id", pathId);
-    path.setAttribute("d", outlines.toSVGPath());
+    path.setAttribute("vector-effect", "non-scaling-stroke");
     if (isPathUpdatable) {
       this.#toUpdate.set(id, path);
     }
-    const clipPathId = this.#createClipPath(defs, pathId);
+    const clipPathId = hasClip ? this.#createClipPath(defs, pathId) : null;
     const use = DrawLayer._svgFactory.createElement("use");
     root.append(use);
-    root.setAttribute("fill", color);
-    root.setAttribute("fill-opacity", opacity);
     use.setAttribute("href", `#${pathId}`);
+    this.updateProperties(root, properties);
     this.#mapping.set(id, root);
     return {
       id,
       clipPathId: `url(#${clipPathId})`
     };
   }
-  drawOutline(outlines) {
+  drawOutline(properties, mustRemoveSelfIntersections) {
     const id = this.#id++;
-    const root = this.#createSVG(outlines.box);
-    root.classList.add(...outlines.classNamesForOutlining);
+    const root = this.#createSVG();
     const defs = DrawLayer._svgFactory.createElement("defs");
     root.append(defs);
     const path = DrawLayer._svgFactory.createElement("path");
     defs.append(path);
     const pathId = `path_p${this.pageIndex}_${id}`;
     path.setAttribute("id", pathId);
-    path.setAttribute("d", outlines.toSVGPath());
     path.setAttribute("vector-effect", "non-scaling-stroke");
     let maskId;
-    if (outlines.mustRemoveSelfIntersections) {
+    if (mustRemoveSelfIntersections) {
       const mask = DrawLayer._svgFactory.createElement("mask");
       defs.append(mask);
       maskId = `mask_p${this.pageIndex}_${id}`;
@@ -25371,47 +21194,59 @@ class DrawLayer {
     root.append(use2);
     use1.classList.add("mainOutline");
     use2.classList.add("secondaryOutline");
+    this.updateProperties(root, properties);
     this.#mapping.set(id, root);
     return id;
   }
-  finalizeLine(id, line) {
-    const path = this.#toUpdate.get(id);
+  finalizeDraw(id, properties) {
     this.#toUpdate.delete(id);
-    this.updateBox(id, line.box);
-    path.setAttribute("d", line.toSVGPath());
+    this.updateProperties(id, properties);
   }
-  updateLine(id, line) {
+  updateProperties(elementOrId, properties) {
+    if (!properties) {
+      return;
+    }
+    const {
+      root,
+      bbox,
+      rootClass,
+      path
+    } = properties;
+    const element = typeof elementOrId === "number" ? this.#mapping.get(elementOrId) : elementOrId;
+    if (!element) {
+      return;
+    }
+    if (root) {
+      this.#updateProperties(element, root);
+    }
+    if (bbox) {
+      DrawLayer.#setBox(element, bbox);
+    }
+    if (rootClass) {
+      const {
+        classList
+      } = element;
+      for (const [className, value] of Object.entries(rootClass)) {
+        classList.toggle(className, value);
+      }
+    }
+    if (path) {
+      const defs = element.firstChild;
+      const pathElement = defs.firstChild;
+      this.#updateProperties(pathElement, path);
+    }
+  }
+  updateParent(id, layer) {
+    if (layer === this) {
+      return;
+    }
     const root = this.#mapping.get(id);
-    const defs = root.firstChild;
-    const path = defs.firstChild;
-    path.setAttribute("d", line.toSVGPath());
-  }
-  updatePath(id, line) {
-    this.#toUpdate.get(id).setAttribute("d", line.toSVGPath());
-  }
-  updateBox(id, box) {
-    DrawLayer.#setBox(this.#mapping.get(id), box);
-  }
-  show(id, visible) {
-    this.#mapping.get(id).classList.toggle("hidden", !visible);
-  }
-  rotate(id, angle) {
-    this.#mapping.get(id).setAttribute("data-main-rotation", angle);
-  }
-  changeColor(id, color) {
-    this.#mapping.get(id).setAttribute("fill", color);
-  }
-  changeOpacity(id, opacity) {
-    this.#mapping.get(id).setAttribute("fill-opacity", opacity);
-  }
-  addClass(id, className) {
-    this.#mapping.get(id).classList.add(className);
-  }
-  removeClass(id, className) {
-    this.#mapping.get(id).classList.remove(className);
-  }
-  getSVGRoot(id) {
-    return this.#mapping.get(id);
+    if (!root) {
+      return;
+    }
+    layer.#parent.append(root);
+    this.#mapping.delete(id);
+    layer.#mapping.set(id, root);
   }
   remove(id) {
     this.#toUpdate.delete(id);
@@ -25445,8 +21280,13 @@ class DrawLayer {
 
 
 
-const pdfjsVersion = "4.8.69";
-const pdfjsBuild = "3634dab10";
+const pdfjsVersion = "4.9.155";
+const pdfjsBuild = "a4eb8407c";
+{
+  globalThis.pdfjsTestingUtils = {
+    HighlightOutliner: HighlightOutliner
+  };
+}
 
 var __webpack_exports__AbortException = __webpack_exports__.AbortException;
 var __webpack_exports__AnnotationEditorLayer = __webpack_exports__.AnnotationEditorLayer;
@@ -25490,7 +21330,8 @@ var __webpack_exports__noContextMenu = __webpack_exports__.noContextMenu;
 var __webpack_exports__normalizeUnicode = __webpack_exports__.normalizeUnicode;
 var __webpack_exports__setLayerDimensions = __webpack_exports__.setLayerDimensions;
 var __webpack_exports__shadow = __webpack_exports__.shadow;
+var __webpack_exports__stopEvent = __webpack_exports__.stopEvent;
 var __webpack_exports__version = __webpack_exports__.version;
-export { __webpack_exports__AbortException as AbortException, __webpack_exports__AnnotationEditorLayer as AnnotationEditorLayer, __webpack_exports__AnnotationEditorParamsType as AnnotationEditorParamsType, __webpack_exports__AnnotationEditorType as AnnotationEditorType, __webpack_exports__AnnotationEditorUIManager as AnnotationEditorUIManager, __webpack_exports__AnnotationLayer as AnnotationLayer, __webpack_exports__AnnotationMode as AnnotationMode, __webpack_exports__ColorPicker as ColorPicker, __webpack_exports__DOMSVGFactory as DOMSVGFactory, __webpack_exports__DrawLayer as DrawLayer, __webpack_exports__FeatureTest as FeatureTest, __webpack_exports__GlobalWorkerOptions as GlobalWorkerOptions, __webpack_exports__ImageKind as ImageKind, __webpack_exports__InvalidPDFException as InvalidPDFException, __webpack_exports__MissingPDFException as MissingPDFException, __webpack_exports__OPS as OPS, __webpack_exports__OutputScale as OutputScale, __webpack_exports__PDFDataRangeTransport as PDFDataRangeTransport, __webpack_exports__PDFDateString as PDFDateString, __webpack_exports__PDFWorker as PDFWorker, __webpack_exports__PasswordResponses as PasswordResponses, __webpack_exports__PermissionFlag as PermissionFlag, __webpack_exports__PixelsPerInch as PixelsPerInch, __webpack_exports__RenderingCancelledException as RenderingCancelledException, __webpack_exports__TextLayer as TextLayer, __webpack_exports__UnexpectedResponseException as UnexpectedResponseException, __webpack_exports__Util as Util, __webpack_exports__VerbosityLevel as VerbosityLevel, __webpack_exports__XfaLayer as XfaLayer, __webpack_exports__build as build, __webpack_exports__createValidAbsoluteUrl as createValidAbsoluteUrl, __webpack_exports__fetchData as fetchData, __webpack_exports__getDocument as getDocument, __webpack_exports__getFilenameFromUrl as getFilenameFromUrl, __webpack_exports__getPdfFilenameFromUrl as getPdfFilenameFromUrl, __webpack_exports__getXfaPageViewport as getXfaPageViewport, __webpack_exports__isDataScheme as isDataScheme, __webpack_exports__isPdfFile as isPdfFile, __webpack_exports__noContextMenu as noContextMenu, __webpack_exports__normalizeUnicode as normalizeUnicode, __webpack_exports__setLayerDimensions as setLayerDimensions, __webpack_exports__shadow as shadow, __webpack_exports__version as version };
+export { __webpack_exports__AbortException as AbortException, __webpack_exports__AnnotationEditorLayer as AnnotationEditorLayer, __webpack_exports__AnnotationEditorParamsType as AnnotationEditorParamsType, __webpack_exports__AnnotationEditorType as AnnotationEditorType, __webpack_exports__AnnotationEditorUIManager as AnnotationEditorUIManager, __webpack_exports__AnnotationLayer as AnnotationLayer, __webpack_exports__AnnotationMode as AnnotationMode, __webpack_exports__ColorPicker as ColorPicker, __webpack_exports__DOMSVGFactory as DOMSVGFactory, __webpack_exports__DrawLayer as DrawLayer, __webpack_exports__FeatureTest as FeatureTest, __webpack_exports__GlobalWorkerOptions as GlobalWorkerOptions, __webpack_exports__ImageKind as ImageKind, __webpack_exports__InvalidPDFException as InvalidPDFException, __webpack_exports__MissingPDFException as MissingPDFException, __webpack_exports__OPS as OPS, __webpack_exports__OutputScale as OutputScale, __webpack_exports__PDFDataRangeTransport as PDFDataRangeTransport, __webpack_exports__PDFDateString as PDFDateString, __webpack_exports__PDFWorker as PDFWorker, __webpack_exports__PasswordResponses as PasswordResponses, __webpack_exports__PermissionFlag as PermissionFlag, __webpack_exports__PixelsPerInch as PixelsPerInch, __webpack_exports__RenderingCancelledException as RenderingCancelledException, __webpack_exports__TextLayer as TextLayer, __webpack_exports__UnexpectedResponseException as UnexpectedResponseException, __webpack_exports__Util as Util, __webpack_exports__VerbosityLevel as VerbosityLevel, __webpack_exports__XfaLayer as XfaLayer, __webpack_exports__build as build, __webpack_exports__createValidAbsoluteUrl as createValidAbsoluteUrl, __webpack_exports__fetchData as fetchData, __webpack_exports__getDocument as getDocument, __webpack_exports__getFilenameFromUrl as getFilenameFromUrl, __webpack_exports__getPdfFilenameFromUrl as getPdfFilenameFromUrl, __webpack_exports__getXfaPageViewport as getXfaPageViewport, __webpack_exports__isDataScheme as isDataScheme, __webpack_exports__isPdfFile as isPdfFile, __webpack_exports__noContextMenu as noContextMenu, __webpack_exports__normalizeUnicode as normalizeUnicode, __webpack_exports__setLayerDimensions as setLayerDimensions, __webpack_exports__shadow as shadow, __webpack_exports__stopEvent as stopEvent, __webpack_exports__version as version };
 
 //# sourceMappingURL=pdf.mjs.map
