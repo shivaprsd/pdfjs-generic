@@ -20,3608 +20,8 @@
  * JavaScript code in this page
  */
 
-/******/ var __webpack_modules__ = ({
-
-/***/ 9306:
-/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
-
-
-var isCallable = __webpack_require__(4901);
-var tryToString = __webpack_require__(6823);
-
-var $TypeError = TypeError;
-
-// `Assert: IsCallable(argument) is true`
-module.exports = function (argument) {
-  if (isCallable(argument)) return argument;
-  throw new $TypeError(tryToString(argument) + ' is not a function');
-};
-
-
-/***/ }),
-
-/***/ 7080:
-/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
-
-
-var has = (__webpack_require__(4402).has);
-
-// Perform ? RequireInternalSlot(M, [[SetData]])
-module.exports = function (it) {
-  has(it);
-  return it;
-};
-
-
-/***/ }),
-
-/***/ 679:
-/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
-
-
-var isPrototypeOf = __webpack_require__(1625);
-
-var $TypeError = TypeError;
-
-module.exports = function (it, Prototype) {
-  if (isPrototypeOf(Prototype, it)) return it;
-  throw new $TypeError('Incorrect invocation');
-};
-
-
-/***/ }),
-
-/***/ 8551:
-/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
-
-
-var isObject = __webpack_require__(34);
-
-var $String = String;
-var $TypeError = TypeError;
-
-// `Assert: Type(argument) is Object`
-module.exports = function (argument) {
-  if (isObject(argument)) return argument;
-  throw new $TypeError($String(argument) + ' is not an object');
-};
-
-
-/***/ }),
-
-/***/ 9617:
-/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
-
-
-var toIndexedObject = __webpack_require__(5397);
-var toAbsoluteIndex = __webpack_require__(5610);
-var lengthOfArrayLike = __webpack_require__(6198);
-
-// `Array.prototype.{ indexOf, includes }` methods implementation
-var createMethod = function (IS_INCLUDES) {
-  return function ($this, el, fromIndex) {
-    var O = toIndexedObject($this);
-    var length = lengthOfArrayLike(O);
-    if (length === 0) return !IS_INCLUDES && -1;
-    var index = toAbsoluteIndex(fromIndex, length);
-    var value;
-    // Array#includes uses SameValueZero equality algorithm
-    // eslint-disable-next-line no-self-compare -- NaN check
-    if (IS_INCLUDES && el !== el) while (length > index) {
-      value = O[index++];
-      // eslint-disable-next-line no-self-compare -- NaN check
-      if (value !== value) return true;
-    // Array#indexOf ignores holes, Array#includes - not
-    } else for (;length > index; index++) {
-      if ((IS_INCLUDES || index in O) && O[index] === el) return IS_INCLUDES || index || 0;
-    } return !IS_INCLUDES && -1;
-  };
-};
-
-module.exports = {
-  // `Array.prototype.includes` method
-  // https://tc39.es/ecma262/#sec-array.prototype.includes
-  includes: createMethod(true),
-  // `Array.prototype.indexOf` method
-  // https://tc39.es/ecma262/#sec-array.prototype.indexof
-  indexOf: createMethod(false)
-};
-
-
-/***/ }),
-
-/***/ 4527:
-/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
-
-
-var DESCRIPTORS = __webpack_require__(3724);
-var isArray = __webpack_require__(4376);
-
-var $TypeError = TypeError;
-// eslint-disable-next-line es/no-object-getownpropertydescriptor -- safe
-var getOwnPropertyDescriptor = Object.getOwnPropertyDescriptor;
-
-// Safari < 13 does not throw an error in this case
-var SILENT_ON_NON_WRITABLE_LENGTH_SET = DESCRIPTORS && !function () {
-  // makes no sense without proper strict mode support
-  if (this !== undefined) return true;
-  try {
-    // eslint-disable-next-line es/no-object-defineproperty -- safe
-    Object.defineProperty([], 'length', { writable: false }).length = 1;
-  } catch (error) {
-    return error instanceof TypeError;
-  }
-}();
-
-module.exports = SILENT_ON_NON_WRITABLE_LENGTH_SET ? function (O, length) {
-  if (isArray(O) && !getOwnPropertyDescriptor(O, 'length').writable) {
-    throw new $TypeError('Cannot set read only .length');
-  } return O.length = length;
-} : function (O, length) {
-  return O.length = length;
-};
-
-
-/***/ }),
-
-/***/ 6319:
-/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
-
-
-var anObject = __webpack_require__(8551);
-var iteratorClose = __webpack_require__(9539);
-
-// call something on iterator step with safe closing on error
-module.exports = function (iterator, fn, value, ENTRIES) {
-  try {
-    return ENTRIES ? fn(anObject(value)[0], value[1]) : fn(value);
-  } catch (error) {
-    iteratorClose(iterator, 'throw', error);
-  }
-};
-
-
-/***/ }),
-
-/***/ 2195:
-/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
-
-
-var uncurryThis = __webpack_require__(9504);
-
-var toString = uncurryThis({}.toString);
-var stringSlice = uncurryThis(''.slice);
-
-module.exports = function (it) {
-  return stringSlice(toString(it), 8, -1);
-};
-
-
-/***/ }),
-
-/***/ 6955:
-/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
-
-
-var TO_STRING_TAG_SUPPORT = __webpack_require__(2140);
-var isCallable = __webpack_require__(4901);
-var classofRaw = __webpack_require__(2195);
-var wellKnownSymbol = __webpack_require__(8227);
-
-var TO_STRING_TAG = wellKnownSymbol('toStringTag');
-var $Object = Object;
-
-// ES3 wrong here
-var CORRECT_ARGUMENTS = classofRaw(function () { return arguments; }()) === 'Arguments';
-
-// fallback for IE11 Script Access Denied error
-var tryGet = function (it, key) {
-  try {
-    return it[key];
-  } catch (error) { /* empty */ }
-};
-
-// getting tag from ES6+ `Object.prototype.toString`
-module.exports = TO_STRING_TAG_SUPPORT ? classofRaw : function (it) {
-  var O, tag, result;
-  return it === undefined ? 'Undefined' : it === null ? 'Null'
-    // @@toStringTag case
-    : typeof (tag = tryGet(O = $Object(it), TO_STRING_TAG)) == 'string' ? tag
-    // builtinTag case
-    : CORRECT_ARGUMENTS ? classofRaw(O)
-    // ES3 arguments fallback
-    : (result = classofRaw(O)) === 'Object' && isCallable(O.callee) ? 'Arguments' : result;
-};
-
-
-/***/ }),
-
-/***/ 7740:
-/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
-
-
-var hasOwn = __webpack_require__(9297);
-var ownKeys = __webpack_require__(5031);
-var getOwnPropertyDescriptorModule = __webpack_require__(7347);
-var definePropertyModule = __webpack_require__(4913);
-
-module.exports = function (target, source, exceptions) {
-  var keys = ownKeys(source);
-  var defineProperty = definePropertyModule.f;
-  var getOwnPropertyDescriptor = getOwnPropertyDescriptorModule.f;
-  for (var i = 0; i < keys.length; i++) {
-    var key = keys[i];
-    if (!hasOwn(target, key) && !(exceptions && hasOwn(exceptions, key))) {
-      defineProperty(target, key, getOwnPropertyDescriptor(source, key));
-    }
-  }
-};
-
-
-/***/ }),
-
-/***/ 2211:
-/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
-
-
-var fails = __webpack_require__(9039);
-
-module.exports = !fails(function () {
-  function F() { /* empty */ }
-  F.prototype.constructor = null;
-  // eslint-disable-next-line es/no-object-getprototypeof -- required for testing
-  return Object.getPrototypeOf(new F()) !== F.prototype;
-});
-
-
-/***/ }),
-
-/***/ 2529:
-/***/ ((module) => {
-
-
-// `CreateIterResultObject` abstract operation
-// https://tc39.es/ecma262/#sec-createiterresultobject
-module.exports = function (value, done) {
-  return { value: value, done: done };
-};
-
-
-/***/ }),
-
-/***/ 6699:
-/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
-
-
-var DESCRIPTORS = __webpack_require__(3724);
-var definePropertyModule = __webpack_require__(4913);
-var createPropertyDescriptor = __webpack_require__(6980);
-
-module.exports = DESCRIPTORS ? function (object, key, value) {
-  return definePropertyModule.f(object, key, createPropertyDescriptor(1, value));
-} : function (object, key, value) {
-  object[key] = value;
-  return object;
-};
-
-
-/***/ }),
-
-/***/ 6980:
-/***/ ((module) => {
-
-
-module.exports = function (bitmap, value) {
-  return {
-    enumerable: !(bitmap & 1),
-    configurable: !(bitmap & 2),
-    writable: !(bitmap & 4),
-    value: value
-  };
-};
-
-
-/***/ }),
-
-/***/ 4659:
-/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
-
-
-var DESCRIPTORS = __webpack_require__(3724);
-var definePropertyModule = __webpack_require__(4913);
-var createPropertyDescriptor = __webpack_require__(6980);
-
-module.exports = function (object, key, value) {
-  if (DESCRIPTORS) definePropertyModule.f(object, key, createPropertyDescriptor(0, value));
-  else object[key] = value;
-};
-
-
-/***/ }),
-
-/***/ 2106:
-/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
-
-
-var makeBuiltIn = __webpack_require__(283);
-var defineProperty = __webpack_require__(4913);
-
-module.exports = function (target, name, descriptor) {
-  if (descriptor.get) makeBuiltIn(descriptor.get, name, { getter: true });
-  if (descriptor.set) makeBuiltIn(descriptor.set, name, { setter: true });
-  return defineProperty.f(target, name, descriptor);
-};
-
-
-/***/ }),
-
-/***/ 6840:
-/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
-
-
-var isCallable = __webpack_require__(4901);
-var definePropertyModule = __webpack_require__(4913);
-var makeBuiltIn = __webpack_require__(283);
-var defineGlobalProperty = __webpack_require__(9433);
-
-module.exports = function (O, key, value, options) {
-  if (!options) options = {};
-  var simple = options.enumerable;
-  var name = options.name !== undefined ? options.name : key;
-  if (isCallable(value)) makeBuiltIn(value, name, options);
-  if (options.global) {
-    if (simple) O[key] = value;
-    else defineGlobalProperty(key, value);
-  } else {
-    try {
-      if (!options.unsafe) delete O[key];
-      else if (O[key]) simple = true;
-    } catch (error) { /* empty */ }
-    if (simple) O[key] = value;
-    else definePropertyModule.f(O, key, {
-      value: value,
-      enumerable: false,
-      configurable: !options.nonConfigurable,
-      writable: !options.nonWritable
-    });
-  } return O;
-};
-
-
-/***/ }),
-
-/***/ 6279:
-/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
-
-
-var defineBuiltIn = __webpack_require__(6840);
-
-module.exports = function (target, src, options) {
-  for (var key in src) defineBuiltIn(target, key, src[key], options);
-  return target;
-};
-
-
-/***/ }),
-
-/***/ 9433:
-/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
-
-
-var globalThis = __webpack_require__(4576);
-
-// eslint-disable-next-line es/no-object-defineproperty -- safe
-var defineProperty = Object.defineProperty;
-
-module.exports = function (key, value) {
-  try {
-    defineProperty(globalThis, key, { value: value, configurable: true, writable: true });
-  } catch (error) {
-    globalThis[key] = value;
-  } return value;
-};
-
-
-/***/ }),
-
-/***/ 3724:
-/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
-
-
-var fails = __webpack_require__(9039);
-
-// Detect IE8's incomplete defineProperty implementation
-module.exports = !fails(function () {
-  // eslint-disable-next-line es/no-object-defineproperty -- required for testing
-  return Object.defineProperty({}, 1, { get: function () { return 7; } })[1] !== 7;
-});
-
-
-/***/ }),
-
-/***/ 4055:
-/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
-
-
-var globalThis = __webpack_require__(4576);
-var isObject = __webpack_require__(34);
-
-var document = globalThis.document;
-// typeof document.createElement is 'object' in old IE
-var EXISTS = isObject(document) && isObject(document.createElement);
-
-module.exports = function (it) {
-  return EXISTS ? document.createElement(it) : {};
-};
-
-
-/***/ }),
-
-/***/ 6837:
-/***/ ((module) => {
-
-
-var $TypeError = TypeError;
-var MAX_SAFE_INTEGER = 0x1FFFFFFFFFFFFF; // 2 ** 53 - 1 == 9007199254740991
-
-module.exports = function (it) {
-  if (it > MAX_SAFE_INTEGER) throw $TypeError('Maximum allowed index exceeded');
-  return it;
-};
-
-
-/***/ }),
-
-/***/ 8727:
-/***/ ((module) => {
-
-
-// IE8- don't enum bug keys
-module.exports = [
-  'constructor',
-  'hasOwnProperty',
-  'isPrototypeOf',
-  'propertyIsEnumerable',
-  'toLocaleString',
-  'toString',
-  'valueOf'
-];
-
-
-/***/ }),
-
-/***/ 2839:
-/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
-
-
-var globalThis = __webpack_require__(4576);
-
-var navigator = globalThis.navigator;
-var userAgent = navigator && navigator.userAgent;
-
-module.exports = userAgent ? String(userAgent) : '';
-
-
-/***/ }),
-
-/***/ 9519:
-/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
-
-
-var globalThis = __webpack_require__(4576);
-var userAgent = __webpack_require__(2839);
-
-var process = globalThis.process;
-var Deno = globalThis.Deno;
-var versions = process && process.versions || Deno && Deno.version;
-var v8 = versions && versions.v8;
-var match, version;
-
-if (v8) {
-  match = v8.split('.');
-  // in old Chrome, versions of V8 isn't V8 = Chrome / 10
-  // but their correct versions are not interesting for us
-  version = match[0] > 0 && match[0] < 4 ? 1 : +(match[0] + match[1]);
-}
-
-// BrowserFS NodeJS `process` polyfill incorrectly set `.v8` to `0.0`
-// so check `userAgent` even if `.v8` exists, but 0
-if (!version && userAgent) {
-  match = userAgent.match(/Edge\/(\d+)/);
-  if (!match || match[1] >= 74) {
-    match = userAgent.match(/Chrome\/(\d+)/);
-    if (match) version = +match[1];
-  }
-}
-
-module.exports = version;
-
-
-/***/ }),
-
-/***/ 6518:
-/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
-
-
-var globalThis = __webpack_require__(4576);
-var getOwnPropertyDescriptor = (__webpack_require__(7347).f);
-var createNonEnumerableProperty = __webpack_require__(6699);
-var defineBuiltIn = __webpack_require__(6840);
-var defineGlobalProperty = __webpack_require__(9433);
-var copyConstructorProperties = __webpack_require__(7740);
-var isForced = __webpack_require__(2796);
-
-/*
-  options.target         - name of the target object
-  options.global         - target is the global object
-  options.stat           - export as static methods of target
-  options.proto          - export as prototype methods of target
-  options.real           - real prototype method for the `pure` version
-  options.forced         - export even if the native feature is available
-  options.bind           - bind methods to the target, required for the `pure` version
-  options.wrap           - wrap constructors to preventing global pollution, required for the `pure` version
-  options.unsafe         - use the simple assignment of property instead of delete + defineProperty
-  options.sham           - add a flag to not completely full polyfills
-  options.enumerable     - export as enumerable property
-  options.dontCallGetSet - prevent calling a getter on target
-  options.name           - the .name of the function if it does not match the key
-*/
-module.exports = function (options, source) {
-  var TARGET = options.target;
-  var GLOBAL = options.global;
-  var STATIC = options.stat;
-  var FORCED, target, key, targetProperty, sourceProperty, descriptor;
-  if (GLOBAL) {
-    target = globalThis;
-  } else if (STATIC) {
-    target = globalThis[TARGET] || defineGlobalProperty(TARGET, {});
-  } else {
-    target = globalThis[TARGET] && globalThis[TARGET].prototype;
-  }
-  if (target) for (key in source) {
-    sourceProperty = source[key];
-    if (options.dontCallGetSet) {
-      descriptor = getOwnPropertyDescriptor(target, key);
-      targetProperty = descriptor && descriptor.value;
-    } else targetProperty = target[key];
-    FORCED = isForced(GLOBAL ? key : TARGET + (STATIC ? '.' : '#') + key, options.forced);
-    // contained in target
-    if (!FORCED && targetProperty !== undefined) {
-      if (typeof sourceProperty == typeof targetProperty) continue;
-      copyConstructorProperties(sourceProperty, targetProperty);
-    }
-    // add a flag to not completely full polyfills
-    if (options.sham || (targetProperty && targetProperty.sham)) {
-      createNonEnumerableProperty(sourceProperty, 'sham', true);
-    }
-    defineBuiltIn(target, key, sourceProperty, options);
-  }
-};
-
-
-/***/ }),
-
-/***/ 9039:
-/***/ ((module) => {
-
-
-module.exports = function (exec) {
-  try {
-    return !!exec();
-  } catch (error) {
-    return true;
-  }
-};
-
-
-/***/ }),
-
-/***/ 6080:
-/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
-
-
-var uncurryThis = __webpack_require__(7476);
-var aCallable = __webpack_require__(9306);
-var NATIVE_BIND = __webpack_require__(616);
-
-var bind = uncurryThis(uncurryThis.bind);
-
-// optional / simple context binding
-module.exports = function (fn, that) {
-  aCallable(fn);
-  return that === undefined ? fn : NATIVE_BIND ? bind(fn, that) : function (/* ...args */) {
-    return fn.apply(that, arguments);
-  };
-};
-
-
-/***/ }),
-
-/***/ 616:
-/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
-
-
-var fails = __webpack_require__(9039);
-
-module.exports = !fails(function () {
-  // eslint-disable-next-line es/no-function-prototype-bind -- safe
-  var test = (function () { /* empty */ }).bind();
-  // eslint-disable-next-line no-prototype-builtins -- safe
-  return typeof test != 'function' || test.hasOwnProperty('prototype');
-});
-
-
-/***/ }),
-
-/***/ 9565:
-/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
-
-
-var NATIVE_BIND = __webpack_require__(616);
-
-var call = Function.prototype.call;
-
-module.exports = NATIVE_BIND ? call.bind(call) : function () {
-  return call.apply(call, arguments);
-};
-
-
-/***/ }),
-
-/***/ 350:
-/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
-
-
-var DESCRIPTORS = __webpack_require__(3724);
-var hasOwn = __webpack_require__(9297);
-
-var FunctionPrototype = Function.prototype;
-// eslint-disable-next-line es/no-object-getownpropertydescriptor -- safe
-var getDescriptor = DESCRIPTORS && Object.getOwnPropertyDescriptor;
-
-var EXISTS = hasOwn(FunctionPrototype, 'name');
-// additional protection from minified / mangled / dropped function names
-var PROPER = EXISTS && (function something() { /* empty */ }).name === 'something';
-var CONFIGURABLE = EXISTS && (!DESCRIPTORS || (DESCRIPTORS && getDescriptor(FunctionPrototype, 'name').configurable));
-
-module.exports = {
-  EXISTS: EXISTS,
-  PROPER: PROPER,
-  CONFIGURABLE: CONFIGURABLE
-};
-
-
-/***/ }),
-
-/***/ 6706:
-/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
-
-
-var uncurryThis = __webpack_require__(9504);
-var aCallable = __webpack_require__(9306);
-
-module.exports = function (object, key, method) {
-  try {
-    // eslint-disable-next-line es/no-object-getownpropertydescriptor -- safe
-    return uncurryThis(aCallable(Object.getOwnPropertyDescriptor(object, key)[method]));
-  } catch (error) { /* empty */ }
-};
-
-
-/***/ }),
-
-/***/ 7476:
-/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
-
-
-var classofRaw = __webpack_require__(2195);
-var uncurryThis = __webpack_require__(9504);
-
-module.exports = function (fn) {
-  // Nashorn bug:
-  //   https://github.com/zloirock/core-js/issues/1128
-  //   https://github.com/zloirock/core-js/issues/1130
-  if (classofRaw(fn) === 'Function') return uncurryThis(fn);
-};
-
-
-/***/ }),
-
-/***/ 9504:
-/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
-
-
-var NATIVE_BIND = __webpack_require__(616);
-
-var FunctionPrototype = Function.prototype;
-var call = FunctionPrototype.call;
-var uncurryThisWithBind = NATIVE_BIND && FunctionPrototype.bind.bind(call, call);
-
-module.exports = NATIVE_BIND ? uncurryThisWithBind : function (fn) {
-  return function () {
-    return call.apply(fn, arguments);
-  };
-};
-
-
-/***/ }),
-
-/***/ 7751:
-/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
-
-
-var globalThis = __webpack_require__(4576);
-var isCallable = __webpack_require__(4901);
-
-var aFunction = function (argument) {
-  return isCallable(argument) ? argument : undefined;
-};
-
-module.exports = function (namespace, method) {
-  return arguments.length < 2 ? aFunction(globalThis[namespace]) : globalThis[namespace] && globalThis[namespace][method];
-};
-
-
-/***/ }),
-
-/***/ 1767:
-/***/ ((module) => {
-
-
-// `GetIteratorDirect(obj)` abstract operation
-// https://tc39.es/proposal-iterator-helpers/#sec-getiteratordirect
-module.exports = function (obj) {
-  return {
-    iterator: obj,
-    next: obj.next,
-    done: false
-  };
-};
-
-
-/***/ }),
-
-/***/ 851:
-/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
-
-
-var classof = __webpack_require__(6955);
-var getMethod = __webpack_require__(5966);
-var isNullOrUndefined = __webpack_require__(4117);
-var Iterators = __webpack_require__(6269);
-var wellKnownSymbol = __webpack_require__(8227);
-
-var ITERATOR = wellKnownSymbol('iterator');
-
-module.exports = function (it) {
-  if (!isNullOrUndefined(it)) return getMethod(it, ITERATOR)
-    || getMethod(it, '@@iterator')
-    || Iterators[classof(it)];
-};
-
-
-/***/ }),
-
-/***/ 81:
-/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
-
-
-var call = __webpack_require__(9565);
-var aCallable = __webpack_require__(9306);
-var anObject = __webpack_require__(8551);
-var tryToString = __webpack_require__(6823);
-var getIteratorMethod = __webpack_require__(851);
-
-var $TypeError = TypeError;
-
-module.exports = function (argument, usingIterator) {
-  var iteratorMethod = arguments.length < 2 ? getIteratorMethod(argument) : usingIterator;
-  if (aCallable(iteratorMethod)) return anObject(call(iteratorMethod, argument));
-  throw new $TypeError(tryToString(argument) + ' is not iterable');
-};
-
-
-/***/ }),
-
-/***/ 5966:
-/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
-
-
-var aCallable = __webpack_require__(9306);
-var isNullOrUndefined = __webpack_require__(4117);
-
-// `GetMethod` abstract operation
-// https://tc39.es/ecma262/#sec-getmethod
-module.exports = function (V, P) {
-  var func = V[P];
-  return isNullOrUndefined(func) ? undefined : aCallable(func);
-};
-
-
-/***/ }),
-
-/***/ 3789:
-/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
-
-
-var aCallable = __webpack_require__(9306);
-var anObject = __webpack_require__(8551);
-var call = __webpack_require__(9565);
-var toIntegerOrInfinity = __webpack_require__(1291);
-var getIteratorDirect = __webpack_require__(1767);
-
-var INVALID_SIZE = 'Invalid size';
-var $RangeError = RangeError;
-var $TypeError = TypeError;
-var max = Math.max;
-
-var SetRecord = function (set, intSize) {
-  this.set = set;
-  this.size = max(intSize, 0);
-  this.has = aCallable(set.has);
-  this.keys = aCallable(set.keys);
-};
-
-SetRecord.prototype = {
-  getIterator: function () {
-    return getIteratorDirect(anObject(call(this.keys, this.set)));
-  },
-  includes: function (it) {
-    return call(this.has, this.set, it);
-  }
-};
-
-// `GetSetRecord` abstract operation
-// https://tc39.es/proposal-set-methods/#sec-getsetrecord
-module.exports = function (obj) {
-  anObject(obj);
-  var numSize = +obj.size;
-  // NOTE: If size is undefined, then numSize will be NaN
-  // eslint-disable-next-line no-self-compare -- NaN check
-  if (numSize !== numSize) throw new $TypeError(INVALID_SIZE);
-  var intSize = toIntegerOrInfinity(numSize);
-  if (intSize < 0) throw new $RangeError(INVALID_SIZE);
-  return new SetRecord(obj, intSize);
-};
-
-
-/***/ }),
-
-/***/ 4576:
-/***/ (function(module) {
-
-
-var check = function (it) {
-  return it && it.Math === Math && it;
-};
-
-// https://github.com/zloirock/core-js/issues/86#issuecomment-115759028
-module.exports =
-  // eslint-disable-next-line es/no-global-this -- safe
-  check(typeof globalThis == 'object' && globalThis) ||
-  check(typeof window == 'object' && window) ||
-  // eslint-disable-next-line no-restricted-globals -- safe
-  check(typeof self == 'object' && self) ||
-  check(typeof global == 'object' && global) ||
-  check(typeof this == 'object' && this) ||
-  // eslint-disable-next-line no-new-func -- fallback
-  (function () { return this; })() || Function('return this')();
-
-
-/***/ }),
-
-/***/ 9297:
-/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
-
-
-var uncurryThis = __webpack_require__(9504);
-var toObject = __webpack_require__(8981);
-
-var hasOwnProperty = uncurryThis({}.hasOwnProperty);
-
-// `HasOwnProperty` abstract operation
-// https://tc39.es/ecma262/#sec-hasownproperty
-// eslint-disable-next-line es/no-object-hasown -- safe
-module.exports = Object.hasOwn || function hasOwn(it, key) {
-  return hasOwnProperty(toObject(it), key);
-};
-
-
-/***/ }),
-
-/***/ 421:
-/***/ ((module) => {
-
-
-module.exports = {};
-
-
-/***/ }),
-
-/***/ 397:
-/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
-
-
-var getBuiltIn = __webpack_require__(7751);
-
-module.exports = getBuiltIn('document', 'documentElement');
-
-
-/***/ }),
-
-/***/ 5917:
-/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
-
-
-var DESCRIPTORS = __webpack_require__(3724);
-var fails = __webpack_require__(9039);
-var createElement = __webpack_require__(4055);
-
-// Thanks to IE8 for its funny defineProperty
-module.exports = !DESCRIPTORS && !fails(function () {
-  // eslint-disable-next-line es/no-object-defineproperty -- required for testing
-  return Object.defineProperty(createElement('div'), 'a', {
-    get: function () { return 7; }
-  }).a !== 7;
-});
-
-
-/***/ }),
-
-/***/ 7055:
-/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
-
-
-var uncurryThis = __webpack_require__(9504);
-var fails = __webpack_require__(9039);
-var classof = __webpack_require__(2195);
-
-var $Object = Object;
-var split = uncurryThis(''.split);
-
-// fallback for non-array-like ES3 and non-enumerable old V8 strings
-module.exports = fails(function () {
-  // throws an error in rhino, see https://github.com/mozilla/rhino/issues/346
-  // eslint-disable-next-line no-prototype-builtins -- safe
-  return !$Object('z').propertyIsEnumerable(0);
-}) ? function (it) {
-  return classof(it) === 'String' ? split(it, '') : $Object(it);
-} : $Object;
-
-
-/***/ }),
-
-/***/ 3706:
-/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
-
-
-var uncurryThis = __webpack_require__(9504);
-var isCallable = __webpack_require__(4901);
-var store = __webpack_require__(7629);
-
-var functionToString = uncurryThis(Function.toString);
-
-// this helper broken in `core-js@3.4.1-3.4.4`, so we can't use `shared` helper
-if (!isCallable(store.inspectSource)) {
-  store.inspectSource = function (it) {
-    return functionToString(it);
-  };
-}
-
-module.exports = store.inspectSource;
-
-
-/***/ }),
-
-/***/ 1181:
-/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
-
-
-var NATIVE_WEAK_MAP = __webpack_require__(8622);
-var globalThis = __webpack_require__(4576);
-var isObject = __webpack_require__(34);
-var createNonEnumerableProperty = __webpack_require__(6699);
-var hasOwn = __webpack_require__(9297);
-var shared = __webpack_require__(7629);
-var sharedKey = __webpack_require__(6119);
-var hiddenKeys = __webpack_require__(421);
-
-var OBJECT_ALREADY_INITIALIZED = 'Object already initialized';
-var TypeError = globalThis.TypeError;
-var WeakMap = globalThis.WeakMap;
-var set, get, has;
-
-var enforce = function (it) {
-  return has(it) ? get(it) : set(it, {});
-};
-
-var getterFor = function (TYPE) {
-  return function (it) {
-    var state;
-    if (!isObject(it) || (state = get(it)).type !== TYPE) {
-      throw new TypeError('Incompatible receiver, ' + TYPE + ' required');
-    } return state;
-  };
-};
-
-if (NATIVE_WEAK_MAP || shared.state) {
-  var store = shared.state || (shared.state = new WeakMap());
-  /* eslint-disable no-self-assign -- prototype methods protection */
-  store.get = store.get;
-  store.has = store.has;
-  store.set = store.set;
-  /* eslint-enable no-self-assign -- prototype methods protection */
-  set = function (it, metadata) {
-    if (store.has(it)) throw new TypeError(OBJECT_ALREADY_INITIALIZED);
-    metadata.facade = it;
-    store.set(it, metadata);
-    return metadata;
-  };
-  get = function (it) {
-    return store.get(it) || {};
-  };
-  has = function (it) {
-    return store.has(it);
-  };
-} else {
-  var STATE = sharedKey('state');
-  hiddenKeys[STATE] = true;
-  set = function (it, metadata) {
-    if (hasOwn(it, STATE)) throw new TypeError(OBJECT_ALREADY_INITIALIZED);
-    metadata.facade = it;
-    createNonEnumerableProperty(it, STATE, metadata);
-    return metadata;
-  };
-  get = function (it) {
-    return hasOwn(it, STATE) ? it[STATE] : {};
-  };
-  has = function (it) {
-    return hasOwn(it, STATE);
-  };
-}
-
-module.exports = {
-  set: set,
-  get: get,
-  has: has,
-  enforce: enforce,
-  getterFor: getterFor
-};
-
-
-/***/ }),
-
-/***/ 4209:
-/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
-
-
-var wellKnownSymbol = __webpack_require__(8227);
-var Iterators = __webpack_require__(6269);
-
-var ITERATOR = wellKnownSymbol('iterator');
-var ArrayPrototype = Array.prototype;
-
-// check on default Array iterator
-module.exports = function (it) {
-  return it !== undefined && (Iterators.Array === it || ArrayPrototype[ITERATOR] === it);
-};
-
-
-/***/ }),
-
-/***/ 4376:
-/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
-
-
-var classof = __webpack_require__(2195);
-
-// `IsArray` abstract operation
-// https://tc39.es/ecma262/#sec-isarray
-// eslint-disable-next-line es/no-array-isarray -- safe
-module.exports = Array.isArray || function isArray(argument) {
-  return classof(argument) === 'Array';
-};
-
-
-/***/ }),
-
-/***/ 4901:
-/***/ ((module) => {
-
-
-// https://tc39.es/ecma262/#sec-IsHTMLDDA-internal-slot
-var documentAll = typeof document == 'object' && document.all;
-
-// `IsCallable` abstract operation
-// https://tc39.es/ecma262/#sec-iscallable
-// eslint-disable-next-line unicorn/no-typeof-undefined -- required for testing
-module.exports = typeof documentAll == 'undefined' && documentAll !== undefined ? function (argument) {
-  return typeof argument == 'function' || argument === documentAll;
-} : function (argument) {
-  return typeof argument == 'function';
-};
-
-
-/***/ }),
-
-/***/ 2796:
-/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
-
-
-var fails = __webpack_require__(9039);
-var isCallable = __webpack_require__(4901);
-
-var replacement = /#|\.prototype\./;
-
-var isForced = function (feature, detection) {
-  var value = data[normalize(feature)];
-  return value === POLYFILL ? true
-    : value === NATIVE ? false
-    : isCallable(detection) ? fails(detection)
-    : !!detection;
-};
-
-var normalize = isForced.normalize = function (string) {
-  return String(string).replace(replacement, '.').toLowerCase();
-};
-
-var data = isForced.data = {};
-var NATIVE = isForced.NATIVE = 'N';
-var POLYFILL = isForced.POLYFILL = 'P';
-
-module.exports = isForced;
-
-
-/***/ }),
-
-/***/ 4117:
-/***/ ((module) => {
-
-
-// we can't use just `it == null` since of `document.all` special case
-// https://tc39.es/ecma262/#sec-IsHTMLDDA-internal-slot-aec
-module.exports = function (it) {
-  return it === null || it === undefined;
-};
-
-
-/***/ }),
-
-/***/ 34:
-/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
-
-
-var isCallable = __webpack_require__(4901);
-
-module.exports = function (it) {
-  return typeof it == 'object' ? it !== null : isCallable(it);
-};
-
-
-/***/ }),
-
-/***/ 6395:
-/***/ ((module) => {
-
-
-module.exports = false;
-
-
-/***/ }),
-
-/***/ 757:
-/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
-
-
-var getBuiltIn = __webpack_require__(7751);
-var isCallable = __webpack_require__(4901);
-var isPrototypeOf = __webpack_require__(1625);
-var USE_SYMBOL_AS_UID = __webpack_require__(7040);
-
-var $Object = Object;
-
-module.exports = USE_SYMBOL_AS_UID ? function (it) {
-  return typeof it == 'symbol';
-} : function (it) {
-  var $Symbol = getBuiltIn('Symbol');
-  return isCallable($Symbol) && isPrototypeOf($Symbol.prototype, $Object(it));
-};
-
-
-/***/ }),
-
-/***/ 507:
-/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
-
-
-var call = __webpack_require__(9565);
-
-module.exports = function (record, fn, ITERATOR_INSTEAD_OF_RECORD) {
-  var iterator = ITERATOR_INSTEAD_OF_RECORD ? record : record.iterator;
-  var next = record.next;
-  var step, result;
-  while (!(step = call(next, iterator)).done) {
-    result = fn(step.value);
-    if (result !== undefined) return result;
-  }
-};
-
-
-/***/ }),
-
-/***/ 2652:
-/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
-
-
-var bind = __webpack_require__(6080);
-var call = __webpack_require__(9565);
-var anObject = __webpack_require__(8551);
-var tryToString = __webpack_require__(6823);
-var isArrayIteratorMethod = __webpack_require__(4209);
-var lengthOfArrayLike = __webpack_require__(6198);
-var isPrototypeOf = __webpack_require__(1625);
-var getIterator = __webpack_require__(81);
-var getIteratorMethod = __webpack_require__(851);
-var iteratorClose = __webpack_require__(9539);
-
-var $TypeError = TypeError;
-
-var Result = function (stopped, result) {
-  this.stopped = stopped;
-  this.result = result;
-};
-
-var ResultPrototype = Result.prototype;
-
-module.exports = function (iterable, unboundFunction, options) {
-  var that = options && options.that;
-  var AS_ENTRIES = !!(options && options.AS_ENTRIES);
-  var IS_RECORD = !!(options && options.IS_RECORD);
-  var IS_ITERATOR = !!(options && options.IS_ITERATOR);
-  var INTERRUPTED = !!(options && options.INTERRUPTED);
-  var fn = bind(unboundFunction, that);
-  var iterator, iterFn, index, length, result, next, step;
-
-  var stop = function (condition) {
-    if (iterator) iteratorClose(iterator, 'normal', condition);
-    return new Result(true, condition);
-  };
-
-  var callFn = function (value) {
-    if (AS_ENTRIES) {
-      anObject(value);
-      return INTERRUPTED ? fn(value[0], value[1], stop) : fn(value[0], value[1]);
-    } return INTERRUPTED ? fn(value, stop) : fn(value);
-  };
-
-  if (IS_RECORD) {
-    iterator = iterable.iterator;
-  } else if (IS_ITERATOR) {
-    iterator = iterable;
-  } else {
-    iterFn = getIteratorMethod(iterable);
-    if (!iterFn) throw new $TypeError(tryToString(iterable) + ' is not iterable');
-    // optimisation for array iterators
-    if (isArrayIteratorMethod(iterFn)) {
-      for (index = 0, length = lengthOfArrayLike(iterable); length > index; index++) {
-        result = callFn(iterable[index]);
-        if (result && isPrototypeOf(ResultPrototype, result)) return result;
-      } return new Result(false);
-    }
-    iterator = getIterator(iterable, iterFn);
-  }
-
-  next = IS_RECORD ? iterable.next : iterator.next;
-  while (!(step = call(next, iterator)).done) {
-    try {
-      result = callFn(step.value);
-    } catch (error) {
-      iteratorClose(iterator, 'throw', error);
-    }
-    if (typeof result == 'object' && result && isPrototypeOf(ResultPrototype, result)) return result;
-  } return new Result(false);
-};
-
-
-/***/ }),
-
-/***/ 9539:
-/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
-
-
-var call = __webpack_require__(9565);
-var anObject = __webpack_require__(8551);
-var getMethod = __webpack_require__(5966);
-
-module.exports = function (iterator, kind, value) {
-  var innerResult, innerError;
-  anObject(iterator);
-  try {
-    innerResult = getMethod(iterator, 'return');
-    if (!innerResult) {
-      if (kind === 'throw') throw value;
-      return value;
-    }
-    innerResult = call(innerResult, iterator);
-  } catch (error) {
-    innerError = true;
-    innerResult = error;
-  }
-  if (kind === 'throw') throw value;
-  if (innerError) throw innerResult;
-  anObject(innerResult);
-  return value;
-};
-
-
-/***/ }),
-
-/***/ 9462:
-/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
-
-
-var call = __webpack_require__(9565);
-var create = __webpack_require__(2360);
-var createNonEnumerableProperty = __webpack_require__(6699);
-var defineBuiltIns = __webpack_require__(6279);
-var wellKnownSymbol = __webpack_require__(8227);
-var InternalStateModule = __webpack_require__(1181);
-var getMethod = __webpack_require__(5966);
-var IteratorPrototype = (__webpack_require__(7657).IteratorPrototype);
-var createIterResultObject = __webpack_require__(2529);
-var iteratorClose = __webpack_require__(9539);
-
-var TO_STRING_TAG = wellKnownSymbol('toStringTag');
-var ITERATOR_HELPER = 'IteratorHelper';
-var WRAP_FOR_VALID_ITERATOR = 'WrapForValidIterator';
-var setInternalState = InternalStateModule.set;
-
-var createIteratorProxyPrototype = function (IS_ITERATOR) {
-  var getInternalState = InternalStateModule.getterFor(IS_ITERATOR ? WRAP_FOR_VALID_ITERATOR : ITERATOR_HELPER);
-
-  return defineBuiltIns(create(IteratorPrototype), {
-    next: function next() {
-      var state = getInternalState(this);
-      // for simplification:
-      //   for `%WrapForValidIteratorPrototype%.next` our `nextHandler` returns `IterResultObject`
-      //   for `%IteratorHelperPrototype%.next` - just a value
-      if (IS_ITERATOR) return state.nextHandler();
-      try {
-        var result = state.done ? undefined : state.nextHandler();
-        return createIterResultObject(result, state.done);
-      } catch (error) {
-        state.done = true;
-        throw error;
-      }
-    },
-    'return': function () {
-      var state = getInternalState(this);
-      var iterator = state.iterator;
-      state.done = true;
-      if (IS_ITERATOR) {
-        var returnMethod = getMethod(iterator, 'return');
-        return returnMethod ? call(returnMethod, iterator) : createIterResultObject(undefined, true);
-      }
-      if (state.inner) try {
-        iteratorClose(state.inner.iterator, 'normal');
-      } catch (error) {
-        return iteratorClose(iterator, 'throw', error);
-      }
-      iteratorClose(iterator, 'normal');
-      return createIterResultObject(undefined, true);
-    }
-  });
-};
-
-var WrapForValidIteratorPrototype = createIteratorProxyPrototype(true);
-var IteratorHelperPrototype = createIteratorProxyPrototype(false);
-
-createNonEnumerableProperty(IteratorHelperPrototype, TO_STRING_TAG, 'Iterator Helper');
-
-module.exports = function (nextHandler, IS_ITERATOR) {
-  var IteratorProxy = function Iterator(record, state) {
-    if (state) {
-      state.iterator = record.iterator;
-      state.next = record.next;
-    } else state = record;
-    state.type = IS_ITERATOR ? WRAP_FOR_VALID_ITERATOR : ITERATOR_HELPER;
-    state.nextHandler = nextHandler;
-    state.counter = 0;
-    state.done = false;
-    setInternalState(this, state);
-  };
-
-  IteratorProxy.prototype = IS_ITERATOR ? WrapForValidIteratorPrototype : IteratorHelperPrototype;
-
-  return IteratorProxy;
-};
-
-
-/***/ }),
-
-/***/ 713:
-/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
-
-
-var call = __webpack_require__(9565);
-var aCallable = __webpack_require__(9306);
-var anObject = __webpack_require__(8551);
-var getIteratorDirect = __webpack_require__(1767);
-var createIteratorProxy = __webpack_require__(9462);
-var callWithSafeIterationClosing = __webpack_require__(6319);
-
-var IteratorProxy = createIteratorProxy(function () {
-  var iterator = this.iterator;
-  var result = anObject(call(this.next, iterator));
-  var done = this.done = !!result.done;
-  if (!done) return callWithSafeIterationClosing(iterator, this.mapper, [result.value, this.counter++], true);
-});
-
-// `Iterator.prototype.map` method
-// https://github.com/tc39/proposal-iterator-helpers
-module.exports = function map(mapper) {
-  anObject(this);
-  aCallable(mapper);
-  return new IteratorProxy(getIteratorDirect(this), {
-    mapper: mapper
-  });
-};
-
-
-/***/ }),
-
-/***/ 7657:
-/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
-
-
-var fails = __webpack_require__(9039);
-var isCallable = __webpack_require__(4901);
-var isObject = __webpack_require__(34);
-var create = __webpack_require__(2360);
-var getPrototypeOf = __webpack_require__(2787);
-var defineBuiltIn = __webpack_require__(6840);
-var wellKnownSymbol = __webpack_require__(8227);
-var IS_PURE = __webpack_require__(6395);
-
-var ITERATOR = wellKnownSymbol('iterator');
-var BUGGY_SAFARI_ITERATORS = false;
-
-// `%IteratorPrototype%` object
-// https://tc39.es/ecma262/#sec-%iteratorprototype%-object
-var IteratorPrototype, PrototypeOfArrayIteratorPrototype, arrayIterator;
-
-/* eslint-disable es/no-array-prototype-keys -- safe */
-if ([].keys) {
-  arrayIterator = [].keys();
-  // Safari 8 has buggy iterators w/o `next`
-  if (!('next' in arrayIterator)) BUGGY_SAFARI_ITERATORS = true;
-  else {
-    PrototypeOfArrayIteratorPrototype = getPrototypeOf(getPrototypeOf(arrayIterator));
-    if (PrototypeOfArrayIteratorPrototype !== Object.prototype) IteratorPrototype = PrototypeOfArrayIteratorPrototype;
-  }
-}
-
-var NEW_ITERATOR_PROTOTYPE = !isObject(IteratorPrototype) || fails(function () {
-  var test = {};
-  // FF44- legacy iterators case
-  return IteratorPrototype[ITERATOR].call(test) !== test;
-});
-
-if (NEW_ITERATOR_PROTOTYPE) IteratorPrototype = {};
-else if (IS_PURE) IteratorPrototype = create(IteratorPrototype);
-
-// `%IteratorPrototype%[@@iterator]()` method
-// https://tc39.es/ecma262/#sec-%iteratorprototype%-@@iterator
-if (!isCallable(IteratorPrototype[ITERATOR])) {
-  defineBuiltIn(IteratorPrototype, ITERATOR, function () {
-    return this;
-  });
-}
-
-module.exports = {
-  IteratorPrototype: IteratorPrototype,
-  BUGGY_SAFARI_ITERATORS: BUGGY_SAFARI_ITERATORS
-};
-
-
-/***/ }),
-
-/***/ 6269:
-/***/ ((module) => {
-
-
-module.exports = {};
-
-
-/***/ }),
-
-/***/ 6198:
-/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
-
-
-var toLength = __webpack_require__(8014);
-
-// `LengthOfArrayLike` abstract operation
-// https://tc39.es/ecma262/#sec-lengthofarraylike
-module.exports = function (obj) {
-  return toLength(obj.length);
-};
-
-
-/***/ }),
-
-/***/ 283:
-/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
-
-
-var uncurryThis = __webpack_require__(9504);
-var fails = __webpack_require__(9039);
-var isCallable = __webpack_require__(4901);
-var hasOwn = __webpack_require__(9297);
-var DESCRIPTORS = __webpack_require__(3724);
-var CONFIGURABLE_FUNCTION_NAME = (__webpack_require__(350).CONFIGURABLE);
-var inspectSource = __webpack_require__(3706);
-var InternalStateModule = __webpack_require__(1181);
-
-var enforceInternalState = InternalStateModule.enforce;
-var getInternalState = InternalStateModule.get;
-var $String = String;
-// eslint-disable-next-line es/no-object-defineproperty -- safe
-var defineProperty = Object.defineProperty;
-var stringSlice = uncurryThis(''.slice);
-var replace = uncurryThis(''.replace);
-var join = uncurryThis([].join);
-
-var CONFIGURABLE_LENGTH = DESCRIPTORS && !fails(function () {
-  return defineProperty(function () { /* empty */ }, 'length', { value: 8 }).length !== 8;
-});
-
-var TEMPLATE = String(String).split('String');
-
-var makeBuiltIn = module.exports = function (value, name, options) {
-  if (stringSlice($String(name), 0, 7) === 'Symbol(') {
-    name = '[' + replace($String(name), /^Symbol\(([^)]*)\).*$/, '$1') + ']';
-  }
-  if (options && options.getter) name = 'get ' + name;
-  if (options && options.setter) name = 'set ' + name;
-  if (!hasOwn(value, 'name') || (CONFIGURABLE_FUNCTION_NAME && value.name !== name)) {
-    if (DESCRIPTORS) defineProperty(value, 'name', { value: name, configurable: true });
-    else value.name = name;
-  }
-  if (CONFIGURABLE_LENGTH && options && hasOwn(options, 'arity') && value.length !== options.arity) {
-    defineProperty(value, 'length', { value: options.arity });
-  }
-  try {
-    if (options && hasOwn(options, 'constructor') && options.constructor) {
-      if (DESCRIPTORS) defineProperty(value, 'prototype', { writable: false });
-    // in V8 ~ Chrome 53, prototypes of some methods, like `Array.prototype.values`, are non-writable
-    } else if (value.prototype) value.prototype = undefined;
-  } catch (error) { /* empty */ }
-  var state = enforceInternalState(value);
-  if (!hasOwn(state, 'source')) {
-    state.source = join(TEMPLATE, typeof name == 'string' ? name : '');
-  } return value;
-};
-
-// add fake Function#toString for correct work wrapped methods / constructors with methods like LoDash isNative
-// eslint-disable-next-line no-extend-native -- required
-Function.prototype.toString = makeBuiltIn(function toString() {
-  return isCallable(this) && getInternalState(this).source || inspectSource(this);
-}, 'toString');
-
-
-/***/ }),
-
-/***/ 741:
-/***/ ((module) => {
-
-
-var ceil = Math.ceil;
-var floor = Math.floor;
-
-// `Math.trunc` method
-// https://tc39.es/ecma262/#sec-math.trunc
-// eslint-disable-next-line es/no-math-trunc -- safe
-module.exports = Math.trunc || function trunc(x) {
-  var n = +x;
-  return (n > 0 ? floor : ceil)(n);
-};
-
-
-/***/ }),
-
-/***/ 6043:
-/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
-
-
-var aCallable = __webpack_require__(9306);
-
-var $TypeError = TypeError;
-
-var PromiseCapability = function (C) {
-  var resolve, reject;
-  this.promise = new C(function ($$resolve, $$reject) {
-    if (resolve !== undefined || reject !== undefined) throw new $TypeError('Bad Promise constructor');
-    resolve = $$resolve;
-    reject = $$reject;
-  });
-  this.resolve = aCallable(resolve);
-  this.reject = aCallable(reject);
-};
-
-// `NewPromiseCapability` abstract operation
-// https://tc39.es/ecma262/#sec-newpromisecapability
-module.exports.f = function (C) {
-  return new PromiseCapability(C);
-};
-
-
-/***/ }),
-
-/***/ 2360:
-/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
-
-
-/* global ActiveXObject -- old IE, WSH */
-var anObject = __webpack_require__(8551);
-var definePropertiesModule = __webpack_require__(6801);
-var enumBugKeys = __webpack_require__(8727);
-var hiddenKeys = __webpack_require__(421);
-var html = __webpack_require__(397);
-var documentCreateElement = __webpack_require__(4055);
-var sharedKey = __webpack_require__(6119);
-
-var GT = '>';
-var LT = '<';
-var PROTOTYPE = 'prototype';
-var SCRIPT = 'script';
-var IE_PROTO = sharedKey('IE_PROTO');
-
-var EmptyConstructor = function () { /* empty */ };
-
-var scriptTag = function (content) {
-  return LT + SCRIPT + GT + content + LT + '/' + SCRIPT + GT;
-};
-
-// Create object with fake `null` prototype: use ActiveX Object with cleared prototype
-var NullProtoObjectViaActiveX = function (activeXDocument) {
-  activeXDocument.write(scriptTag(''));
-  activeXDocument.close();
-  var temp = activeXDocument.parentWindow.Object;
-  // eslint-disable-next-line no-useless-assignment -- avoid memory leak
-  activeXDocument = null;
-  return temp;
-};
-
-// Create object with fake `null` prototype: use iframe Object with cleared prototype
-var NullProtoObjectViaIFrame = function () {
-  // Thrash, waste and sodomy: IE GC bug
-  var iframe = documentCreateElement('iframe');
-  var JS = 'java' + SCRIPT + ':';
-  var iframeDocument;
-  iframe.style.display = 'none';
-  html.appendChild(iframe);
-  // https://github.com/zloirock/core-js/issues/475
-  iframe.src = String(JS);
-  iframeDocument = iframe.contentWindow.document;
-  iframeDocument.open();
-  iframeDocument.write(scriptTag('document.F=Object'));
-  iframeDocument.close();
-  return iframeDocument.F;
-};
-
-// Check for document.domain and active x support
-// No need to use active x approach when document.domain is not set
-// see https://github.com/es-shims/es5-shim/issues/150
-// variation of https://github.com/kitcambridge/es5-shim/commit/4f738ac066346
-// avoid IE GC bug
-var activeXDocument;
-var NullProtoObject = function () {
-  try {
-    activeXDocument = new ActiveXObject('htmlfile');
-  } catch (error) { /* ignore */ }
-  NullProtoObject = typeof document != 'undefined'
-    ? document.domain && activeXDocument
-      ? NullProtoObjectViaActiveX(activeXDocument) // old IE
-      : NullProtoObjectViaIFrame()
-    : NullProtoObjectViaActiveX(activeXDocument); // WSH
-  var length = enumBugKeys.length;
-  while (length--) delete NullProtoObject[PROTOTYPE][enumBugKeys[length]];
-  return NullProtoObject();
-};
-
-hiddenKeys[IE_PROTO] = true;
-
-// `Object.create` method
-// https://tc39.es/ecma262/#sec-object.create
-// eslint-disable-next-line es/no-object-create -- safe
-module.exports = Object.create || function create(O, Properties) {
-  var result;
-  if (O !== null) {
-    EmptyConstructor[PROTOTYPE] = anObject(O);
-    result = new EmptyConstructor();
-    EmptyConstructor[PROTOTYPE] = null;
-    // add "__proto__" for Object.getPrototypeOf polyfill
-    result[IE_PROTO] = O;
-  } else result = NullProtoObject();
-  return Properties === undefined ? result : definePropertiesModule.f(result, Properties);
-};
-
-
-/***/ }),
-
-/***/ 6801:
-/***/ ((__unused_webpack_module, exports, __webpack_require__) => {
-
-
-var DESCRIPTORS = __webpack_require__(3724);
-var V8_PROTOTYPE_DEFINE_BUG = __webpack_require__(8686);
-var definePropertyModule = __webpack_require__(4913);
-var anObject = __webpack_require__(8551);
-var toIndexedObject = __webpack_require__(5397);
-var objectKeys = __webpack_require__(1072);
-
-// `Object.defineProperties` method
-// https://tc39.es/ecma262/#sec-object.defineproperties
-// eslint-disable-next-line es/no-object-defineproperties -- safe
-exports.f = DESCRIPTORS && !V8_PROTOTYPE_DEFINE_BUG ? Object.defineProperties : function defineProperties(O, Properties) {
-  anObject(O);
-  var props = toIndexedObject(Properties);
-  var keys = objectKeys(Properties);
-  var length = keys.length;
-  var index = 0;
-  var key;
-  while (length > index) definePropertyModule.f(O, key = keys[index++], props[key]);
-  return O;
-};
-
-
-/***/ }),
-
-/***/ 4913:
-/***/ ((__unused_webpack_module, exports, __webpack_require__) => {
-
-
-var DESCRIPTORS = __webpack_require__(3724);
-var IE8_DOM_DEFINE = __webpack_require__(5917);
-var V8_PROTOTYPE_DEFINE_BUG = __webpack_require__(8686);
-var anObject = __webpack_require__(8551);
-var toPropertyKey = __webpack_require__(6969);
-
-var $TypeError = TypeError;
-// eslint-disable-next-line es/no-object-defineproperty -- safe
-var $defineProperty = Object.defineProperty;
-// eslint-disable-next-line es/no-object-getownpropertydescriptor -- safe
-var $getOwnPropertyDescriptor = Object.getOwnPropertyDescriptor;
-var ENUMERABLE = 'enumerable';
-var CONFIGURABLE = 'configurable';
-var WRITABLE = 'writable';
-
-// `Object.defineProperty` method
-// https://tc39.es/ecma262/#sec-object.defineproperty
-exports.f = DESCRIPTORS ? V8_PROTOTYPE_DEFINE_BUG ? function defineProperty(O, P, Attributes) {
-  anObject(O);
-  P = toPropertyKey(P);
-  anObject(Attributes);
-  if (typeof O === 'function' && P === 'prototype' && 'value' in Attributes && WRITABLE in Attributes && !Attributes[WRITABLE]) {
-    var current = $getOwnPropertyDescriptor(O, P);
-    if (current && current[WRITABLE]) {
-      O[P] = Attributes.value;
-      Attributes = {
-        configurable: CONFIGURABLE in Attributes ? Attributes[CONFIGURABLE] : current[CONFIGURABLE],
-        enumerable: ENUMERABLE in Attributes ? Attributes[ENUMERABLE] : current[ENUMERABLE],
-        writable: false
-      };
-    }
-  } return $defineProperty(O, P, Attributes);
-} : $defineProperty : function defineProperty(O, P, Attributes) {
-  anObject(O);
-  P = toPropertyKey(P);
-  anObject(Attributes);
-  if (IE8_DOM_DEFINE) try {
-    return $defineProperty(O, P, Attributes);
-  } catch (error) { /* empty */ }
-  if ('get' in Attributes || 'set' in Attributes) throw new $TypeError('Accessors not supported');
-  if ('value' in Attributes) O[P] = Attributes.value;
-  return O;
-};
-
-
-/***/ }),
-
-/***/ 7347:
-/***/ ((__unused_webpack_module, exports, __webpack_require__) => {
-
-
-var DESCRIPTORS = __webpack_require__(3724);
-var call = __webpack_require__(9565);
-var propertyIsEnumerableModule = __webpack_require__(8773);
-var createPropertyDescriptor = __webpack_require__(6980);
-var toIndexedObject = __webpack_require__(5397);
-var toPropertyKey = __webpack_require__(6969);
-var hasOwn = __webpack_require__(9297);
-var IE8_DOM_DEFINE = __webpack_require__(5917);
-
-// eslint-disable-next-line es/no-object-getownpropertydescriptor -- safe
-var $getOwnPropertyDescriptor = Object.getOwnPropertyDescriptor;
-
-// `Object.getOwnPropertyDescriptor` method
-// https://tc39.es/ecma262/#sec-object.getownpropertydescriptor
-exports.f = DESCRIPTORS ? $getOwnPropertyDescriptor : function getOwnPropertyDescriptor(O, P) {
-  O = toIndexedObject(O);
-  P = toPropertyKey(P);
-  if (IE8_DOM_DEFINE) try {
-    return $getOwnPropertyDescriptor(O, P);
-  } catch (error) { /* empty */ }
-  if (hasOwn(O, P)) return createPropertyDescriptor(!call(propertyIsEnumerableModule.f, O, P), O[P]);
-};
-
-
-/***/ }),
-
-/***/ 8480:
-/***/ ((__unused_webpack_module, exports, __webpack_require__) => {
-
-
-var internalObjectKeys = __webpack_require__(1828);
-var enumBugKeys = __webpack_require__(8727);
-
-var hiddenKeys = enumBugKeys.concat('length', 'prototype');
-
-// `Object.getOwnPropertyNames` method
-// https://tc39.es/ecma262/#sec-object.getownpropertynames
-// eslint-disable-next-line es/no-object-getownpropertynames -- safe
-exports.f = Object.getOwnPropertyNames || function getOwnPropertyNames(O) {
-  return internalObjectKeys(O, hiddenKeys);
-};
-
-
-/***/ }),
-
-/***/ 3717:
-/***/ ((__unused_webpack_module, exports) => {
-
-
-// eslint-disable-next-line es/no-object-getownpropertysymbols -- safe
-exports.f = Object.getOwnPropertySymbols;
-
-
-/***/ }),
-
-/***/ 2787:
-/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
-
-
-var hasOwn = __webpack_require__(9297);
-var isCallable = __webpack_require__(4901);
-var toObject = __webpack_require__(8981);
-var sharedKey = __webpack_require__(6119);
-var CORRECT_PROTOTYPE_GETTER = __webpack_require__(2211);
-
-var IE_PROTO = sharedKey('IE_PROTO');
-var $Object = Object;
-var ObjectPrototype = $Object.prototype;
-
-// `Object.getPrototypeOf` method
-// https://tc39.es/ecma262/#sec-object.getprototypeof
-// eslint-disable-next-line es/no-object-getprototypeof -- safe
-module.exports = CORRECT_PROTOTYPE_GETTER ? $Object.getPrototypeOf : function (O) {
-  var object = toObject(O);
-  if (hasOwn(object, IE_PROTO)) return object[IE_PROTO];
-  var constructor = object.constructor;
-  if (isCallable(constructor) && object instanceof constructor) {
-    return constructor.prototype;
-  } return object instanceof $Object ? ObjectPrototype : null;
-};
-
-
-/***/ }),
-
-/***/ 1625:
-/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
-
-
-var uncurryThis = __webpack_require__(9504);
-
-module.exports = uncurryThis({}.isPrototypeOf);
-
-
-/***/ }),
-
-/***/ 1828:
-/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
-
-
-var uncurryThis = __webpack_require__(9504);
-var hasOwn = __webpack_require__(9297);
-var toIndexedObject = __webpack_require__(5397);
-var indexOf = (__webpack_require__(9617).indexOf);
-var hiddenKeys = __webpack_require__(421);
-
-var push = uncurryThis([].push);
-
-module.exports = function (object, names) {
-  var O = toIndexedObject(object);
-  var i = 0;
-  var result = [];
-  var key;
-  for (key in O) !hasOwn(hiddenKeys, key) && hasOwn(O, key) && push(result, key);
-  // Don't enum bug & hidden keys
-  while (names.length > i) if (hasOwn(O, key = names[i++])) {
-    ~indexOf(result, key) || push(result, key);
-  }
-  return result;
-};
-
-
-/***/ }),
-
-/***/ 1072:
-/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
-
-
-var internalObjectKeys = __webpack_require__(1828);
-var enumBugKeys = __webpack_require__(8727);
-
-// `Object.keys` method
-// https://tc39.es/ecma262/#sec-object.keys
-// eslint-disable-next-line es/no-object-keys -- safe
-module.exports = Object.keys || function keys(O) {
-  return internalObjectKeys(O, enumBugKeys);
-};
-
-
-/***/ }),
-
-/***/ 8773:
-/***/ ((__unused_webpack_module, exports) => {
-
-
-var $propertyIsEnumerable = {}.propertyIsEnumerable;
-// eslint-disable-next-line es/no-object-getownpropertydescriptor -- safe
-var getOwnPropertyDescriptor = Object.getOwnPropertyDescriptor;
-
-// Nashorn ~ JDK8 bug
-var NASHORN_BUG = getOwnPropertyDescriptor && !$propertyIsEnumerable.call({ 1: 2 }, 1);
-
-// `Object.prototype.propertyIsEnumerable` method implementation
-// https://tc39.es/ecma262/#sec-object.prototype.propertyisenumerable
-exports.f = NASHORN_BUG ? function propertyIsEnumerable(V) {
-  var descriptor = getOwnPropertyDescriptor(this, V);
-  return !!descriptor && descriptor.enumerable;
-} : $propertyIsEnumerable;
-
-
-/***/ }),
-
-/***/ 4270:
-/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
-
-
-var call = __webpack_require__(9565);
-var isCallable = __webpack_require__(4901);
-var isObject = __webpack_require__(34);
-
-var $TypeError = TypeError;
-
-// `OrdinaryToPrimitive` abstract operation
-// https://tc39.es/ecma262/#sec-ordinarytoprimitive
-module.exports = function (input, pref) {
-  var fn, val;
-  if (pref === 'string' && isCallable(fn = input.toString) && !isObject(val = call(fn, input))) return val;
-  if (isCallable(fn = input.valueOf) && !isObject(val = call(fn, input))) return val;
-  if (pref !== 'string' && isCallable(fn = input.toString) && !isObject(val = call(fn, input))) return val;
-  throw new $TypeError("Can't convert object to primitive value");
-};
-
-
-/***/ }),
-
-/***/ 5031:
-/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
-
-
-var getBuiltIn = __webpack_require__(7751);
-var uncurryThis = __webpack_require__(9504);
-var getOwnPropertyNamesModule = __webpack_require__(8480);
-var getOwnPropertySymbolsModule = __webpack_require__(3717);
-var anObject = __webpack_require__(8551);
-
-var concat = uncurryThis([].concat);
-
-// all object keys, includes non-enumerable and symbols
-module.exports = getBuiltIn('Reflect', 'ownKeys') || function ownKeys(it) {
-  var keys = getOwnPropertyNamesModule.f(anObject(it));
-  var getOwnPropertySymbols = getOwnPropertySymbolsModule.f;
-  return getOwnPropertySymbols ? concat(keys, getOwnPropertySymbols(it)) : keys;
-};
-
-
-/***/ }),
-
-/***/ 8235:
-/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
-
-
-var uncurryThis = __webpack_require__(9504);
-var hasOwn = __webpack_require__(9297);
-
-var $SyntaxError = SyntaxError;
-var $parseInt = parseInt;
-var fromCharCode = String.fromCharCode;
-var at = uncurryThis(''.charAt);
-var slice = uncurryThis(''.slice);
-var exec = uncurryThis(/./.exec);
-
-var codePoints = {
-  '\\"': '"',
-  '\\\\': '\\',
-  '\\/': '/',
-  '\\b': '\b',
-  '\\f': '\f',
-  '\\n': '\n',
-  '\\r': '\r',
-  '\\t': '\t'
-};
-
-var IS_4_HEX_DIGITS = /^[\da-f]{4}$/i;
-// eslint-disable-next-line regexp/no-control-character -- safe
-var IS_C0_CONTROL_CODE = /^[\u0000-\u001F]$/;
-
-module.exports = function (source, i) {
-  var unterminated = true;
-  var value = '';
-  while (i < source.length) {
-    var chr = at(source, i);
-    if (chr === '\\') {
-      var twoChars = slice(source, i, i + 2);
-      if (hasOwn(codePoints, twoChars)) {
-        value += codePoints[twoChars];
-        i += 2;
-      } else if (twoChars === '\\u') {
-        i += 2;
-        var fourHexDigits = slice(source, i, i + 4);
-        if (!exec(IS_4_HEX_DIGITS, fourHexDigits)) throw new $SyntaxError('Bad Unicode escape at: ' + i);
-        value += fromCharCode($parseInt(fourHexDigits, 16));
-        i += 4;
-      } else throw new $SyntaxError('Unknown escape sequence: "' + twoChars + '"');
-    } else if (chr === '"') {
-      unterminated = false;
-      i++;
-      break;
-    } else {
-      if (exec(IS_C0_CONTROL_CODE, chr)) throw new $SyntaxError('Bad control character in string literal at: ' + i);
-      value += chr;
-      i++;
-    }
-  }
-  if (unterminated) throw new $SyntaxError('Unterminated string at: ' + i);
-  return { value: value, end: i };
-};
-
-
-/***/ }),
-
-/***/ 7750:
-/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
-
-
-var isNullOrUndefined = __webpack_require__(4117);
-
-var $TypeError = TypeError;
-
-// `RequireObjectCoercible` abstract operation
-// https://tc39.es/ecma262/#sec-requireobjectcoercible
-module.exports = function (it) {
-  if (isNullOrUndefined(it)) throw new $TypeError("Can't call method on " + it);
-  return it;
-};
-
-
-/***/ }),
-
-/***/ 9286:
-/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
-
-
-var SetHelpers = __webpack_require__(4402);
-var iterate = __webpack_require__(8469);
-
-var Set = SetHelpers.Set;
-var add = SetHelpers.add;
-
-module.exports = function (set) {
-  var result = new Set();
-  iterate(set, function (it) {
-    add(result, it);
-  });
-  return result;
-};
-
-
-/***/ }),
-
-/***/ 3440:
-/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
-
-
-var aSet = __webpack_require__(7080);
-var SetHelpers = __webpack_require__(4402);
-var clone = __webpack_require__(9286);
-var size = __webpack_require__(5170);
-var getSetRecord = __webpack_require__(3789);
-var iterateSet = __webpack_require__(8469);
-var iterateSimple = __webpack_require__(507);
-
-var has = SetHelpers.has;
-var remove = SetHelpers.remove;
-
-// `Set.prototype.difference` method
-// https://github.com/tc39/proposal-set-methods
-module.exports = function difference(other) {
-  var O = aSet(this);
-  var otherRec = getSetRecord(other);
-  var result = clone(O);
-  if (size(O) <= otherRec.size) iterateSet(O, function (e) {
-    if (otherRec.includes(e)) remove(result, e);
-  });
-  else iterateSimple(otherRec.getIterator(), function (e) {
-    if (has(O, e)) remove(result, e);
-  });
-  return result;
-};
-
-
-/***/ }),
-
-/***/ 4402:
-/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
-
-
-var uncurryThis = __webpack_require__(9504);
-
-// eslint-disable-next-line es/no-set -- safe
-var SetPrototype = Set.prototype;
-
-module.exports = {
-  // eslint-disable-next-line es/no-set -- safe
-  Set: Set,
-  add: uncurryThis(SetPrototype.add),
-  has: uncurryThis(SetPrototype.has),
-  remove: uncurryThis(SetPrototype['delete']),
-  proto: SetPrototype
-};
-
-
-/***/ }),
-
-/***/ 8750:
-/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
-
-
-var aSet = __webpack_require__(7080);
-var SetHelpers = __webpack_require__(4402);
-var size = __webpack_require__(5170);
-var getSetRecord = __webpack_require__(3789);
-var iterateSet = __webpack_require__(8469);
-var iterateSimple = __webpack_require__(507);
-
-var Set = SetHelpers.Set;
-var add = SetHelpers.add;
-var has = SetHelpers.has;
-
-// `Set.prototype.intersection` method
-// https://github.com/tc39/proposal-set-methods
-module.exports = function intersection(other) {
-  var O = aSet(this);
-  var otherRec = getSetRecord(other);
-  var result = new Set();
-
-  if (size(O) > otherRec.size) {
-    iterateSimple(otherRec.getIterator(), function (e) {
-      if (has(O, e)) add(result, e);
-    });
-  } else {
-    iterateSet(O, function (e) {
-      if (otherRec.includes(e)) add(result, e);
-    });
-  }
-
-  return result;
-};
-
-
-/***/ }),
-
-/***/ 4449:
-/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
-
-
-var aSet = __webpack_require__(7080);
-var has = (__webpack_require__(4402).has);
-var size = __webpack_require__(5170);
-var getSetRecord = __webpack_require__(3789);
-var iterateSet = __webpack_require__(8469);
-var iterateSimple = __webpack_require__(507);
-var iteratorClose = __webpack_require__(9539);
-
-// `Set.prototype.isDisjointFrom` method
-// https://tc39.github.io/proposal-set-methods/#Set.prototype.isDisjointFrom
-module.exports = function isDisjointFrom(other) {
-  var O = aSet(this);
-  var otherRec = getSetRecord(other);
-  if (size(O) <= otherRec.size) return iterateSet(O, function (e) {
-    if (otherRec.includes(e)) return false;
-  }, true) !== false;
-  var iterator = otherRec.getIterator();
-  return iterateSimple(iterator, function (e) {
-    if (has(O, e)) return iteratorClose(iterator, 'normal', false);
-  }) !== false;
-};
-
-
-/***/ }),
-
-/***/ 3838:
-/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
-
-
-var aSet = __webpack_require__(7080);
-var size = __webpack_require__(5170);
-var iterate = __webpack_require__(8469);
-var getSetRecord = __webpack_require__(3789);
-
-// `Set.prototype.isSubsetOf` method
-// https://tc39.github.io/proposal-set-methods/#Set.prototype.isSubsetOf
-module.exports = function isSubsetOf(other) {
-  var O = aSet(this);
-  var otherRec = getSetRecord(other);
-  if (size(O) > otherRec.size) return false;
-  return iterate(O, function (e) {
-    if (!otherRec.includes(e)) return false;
-  }, true) !== false;
-};
-
-
-/***/ }),
-
-/***/ 8527:
-/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
-
-
-var aSet = __webpack_require__(7080);
-var has = (__webpack_require__(4402).has);
-var size = __webpack_require__(5170);
-var getSetRecord = __webpack_require__(3789);
-var iterateSimple = __webpack_require__(507);
-var iteratorClose = __webpack_require__(9539);
-
-// `Set.prototype.isSupersetOf` method
-// https://tc39.github.io/proposal-set-methods/#Set.prototype.isSupersetOf
-module.exports = function isSupersetOf(other) {
-  var O = aSet(this);
-  var otherRec = getSetRecord(other);
-  if (size(O) < otherRec.size) return false;
-  var iterator = otherRec.getIterator();
-  return iterateSimple(iterator, function (e) {
-    if (!has(O, e)) return iteratorClose(iterator, 'normal', false);
-  }) !== false;
-};
-
-
-/***/ }),
-
-/***/ 8469:
-/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
-
-
-var uncurryThis = __webpack_require__(9504);
-var iterateSimple = __webpack_require__(507);
-var SetHelpers = __webpack_require__(4402);
-
-var Set = SetHelpers.Set;
-var SetPrototype = SetHelpers.proto;
-var forEach = uncurryThis(SetPrototype.forEach);
-var keys = uncurryThis(SetPrototype.keys);
-var next = keys(new Set()).next;
-
-module.exports = function (set, fn, interruptible) {
-  return interruptible ? iterateSimple({ iterator: keys(set), next: next }, fn) : forEach(set, fn);
-};
-
-
-/***/ }),
-
-/***/ 4916:
-/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
-
-
-var getBuiltIn = __webpack_require__(7751);
-
-var createSetLike = function (size) {
-  return {
-    size: size,
-    has: function () {
-      return false;
-    },
-    keys: function () {
-      return {
-        next: function () {
-          return { done: true };
-        }
-      };
-    }
-  };
-};
-
-module.exports = function (name) {
-  var Set = getBuiltIn('Set');
-  try {
-    new Set()[name](createSetLike(0));
-    try {
-      // late spec change, early WebKit ~ Safari 17.0 beta implementation does not pass it
-      // https://github.com/tc39/proposal-set-methods/pull/88
-      new Set()[name](createSetLike(-1));
-      return false;
-    } catch (error2) {
-      return true;
-    }
-  } catch (error) {
-    return false;
-  }
-};
-
-
-/***/ }),
-
-/***/ 5170:
-/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
-
-
-var uncurryThisAccessor = __webpack_require__(6706);
-var SetHelpers = __webpack_require__(4402);
-
-module.exports = uncurryThisAccessor(SetHelpers.proto, 'size', 'get') || function (set) {
-  return set.size;
-};
-
-
-/***/ }),
-
-/***/ 3650:
-/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
-
-
-var aSet = __webpack_require__(7080);
-var SetHelpers = __webpack_require__(4402);
-var clone = __webpack_require__(9286);
-var getSetRecord = __webpack_require__(3789);
-var iterateSimple = __webpack_require__(507);
-
-var add = SetHelpers.add;
-var has = SetHelpers.has;
-var remove = SetHelpers.remove;
-
-// `Set.prototype.symmetricDifference` method
-// https://github.com/tc39/proposal-set-methods
-module.exports = function symmetricDifference(other) {
-  var O = aSet(this);
-  var keysIter = getSetRecord(other).getIterator();
-  var result = clone(O);
-  iterateSimple(keysIter, function (e) {
-    if (has(O, e)) remove(result, e);
-    else add(result, e);
-  });
-  return result;
-};
-
-
-/***/ }),
-
-/***/ 4204:
-/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
-
-
-var aSet = __webpack_require__(7080);
-var add = (__webpack_require__(4402).add);
-var clone = __webpack_require__(9286);
-var getSetRecord = __webpack_require__(3789);
-var iterateSimple = __webpack_require__(507);
-
-// `Set.prototype.union` method
-// https://github.com/tc39/proposal-set-methods
-module.exports = function union(other) {
-  var O = aSet(this);
-  var keysIter = getSetRecord(other).getIterator();
-  var result = clone(O);
-  iterateSimple(keysIter, function (it) {
-    add(result, it);
-  });
-  return result;
-};
-
-
-/***/ }),
-
-/***/ 6119:
-/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
-
-
-var shared = __webpack_require__(5745);
-var uid = __webpack_require__(3392);
-
-var keys = shared('keys');
-
-module.exports = function (key) {
-  return keys[key] || (keys[key] = uid(key));
-};
-
-
-/***/ }),
-
-/***/ 7629:
-/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
-
-
-var IS_PURE = __webpack_require__(6395);
-var globalThis = __webpack_require__(4576);
-var defineGlobalProperty = __webpack_require__(9433);
-
-var SHARED = '__core-js_shared__';
-var store = module.exports = globalThis[SHARED] || defineGlobalProperty(SHARED, {});
-
-(store.versions || (store.versions = [])).push({
-  version: '3.38.1',
-  mode: IS_PURE ? 'pure' : 'global',
-  copyright: '© 2014-2024 Denis Pushkarev (zloirock.ru)',
-  license: 'https://github.com/zloirock/core-js/blob/v3.38.1/LICENSE',
-  source: 'https://github.com/zloirock/core-js'
-});
-
-
-/***/ }),
-
-/***/ 5745:
-/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
-
-
-var store = __webpack_require__(7629);
-
-module.exports = function (key, value) {
-  return store[key] || (store[key] = value || {});
-};
-
-
-/***/ }),
-
-/***/ 4495:
-/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
-
-
-/* eslint-disable es/no-symbol -- required for testing */
-var V8_VERSION = __webpack_require__(9519);
-var fails = __webpack_require__(9039);
-var globalThis = __webpack_require__(4576);
-
-var $String = globalThis.String;
-
-// eslint-disable-next-line es/no-object-getownpropertysymbols -- required for testing
-module.exports = !!Object.getOwnPropertySymbols && !fails(function () {
-  var symbol = Symbol('symbol detection');
-  // Chrome 38 Symbol has incorrect toString conversion
-  // `get-own-property-symbols` polyfill symbols converted to object are not Symbol instances
-  // nb: Do not call `String` directly to avoid this being optimized out to `symbol+''` which will,
-  // of course, fail.
-  return !$String(symbol) || !(Object(symbol) instanceof Symbol) ||
-    // Chrome 38-40 symbols are not inherited from DOM collections prototypes to instances
-    !Symbol.sham && V8_VERSION && V8_VERSION < 41;
-});
-
-
-/***/ }),
-
-/***/ 5610:
-/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
-
-
-var toIntegerOrInfinity = __webpack_require__(1291);
-
-var max = Math.max;
-var min = Math.min;
-
-// Helper for a popular repeating case of the spec:
-// Let integer be ? ToInteger(index).
-// If integer < 0, let result be max((length + integer), 0); else let result be min(integer, length).
-module.exports = function (index, length) {
-  var integer = toIntegerOrInfinity(index);
-  return integer < 0 ? max(integer + length, 0) : min(integer, length);
-};
-
-
-/***/ }),
-
-/***/ 5397:
-/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
-
-
-// toObject with fallback for non-array-like ES3 strings
-var IndexedObject = __webpack_require__(7055);
-var requireObjectCoercible = __webpack_require__(7750);
-
-module.exports = function (it) {
-  return IndexedObject(requireObjectCoercible(it));
-};
-
-
-/***/ }),
-
-/***/ 1291:
-/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
-
-
-var trunc = __webpack_require__(741);
-
-// `ToIntegerOrInfinity` abstract operation
-// https://tc39.es/ecma262/#sec-tointegerorinfinity
-module.exports = function (argument) {
-  var number = +argument;
-  // eslint-disable-next-line no-self-compare -- NaN check
-  return number !== number || number === 0 ? 0 : trunc(number);
-};
-
-
-/***/ }),
-
-/***/ 8014:
-/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
-
-
-var toIntegerOrInfinity = __webpack_require__(1291);
-
-var min = Math.min;
-
-// `ToLength` abstract operation
-// https://tc39.es/ecma262/#sec-tolength
-module.exports = function (argument) {
-  var len = toIntegerOrInfinity(argument);
-  return len > 0 ? min(len, 0x1FFFFFFFFFFFFF) : 0; // 2 ** 53 - 1 == 9007199254740991
-};
-
-
-/***/ }),
-
-/***/ 8981:
-/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
-
-
-var requireObjectCoercible = __webpack_require__(7750);
-
-var $Object = Object;
-
-// `ToObject` abstract operation
-// https://tc39.es/ecma262/#sec-toobject
-module.exports = function (argument) {
-  return $Object(requireObjectCoercible(argument));
-};
-
-
-/***/ }),
-
-/***/ 2777:
-/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
-
-
-var call = __webpack_require__(9565);
-var isObject = __webpack_require__(34);
-var isSymbol = __webpack_require__(757);
-var getMethod = __webpack_require__(5966);
-var ordinaryToPrimitive = __webpack_require__(4270);
-var wellKnownSymbol = __webpack_require__(8227);
-
-var $TypeError = TypeError;
-var TO_PRIMITIVE = wellKnownSymbol('toPrimitive');
-
-// `ToPrimitive` abstract operation
-// https://tc39.es/ecma262/#sec-toprimitive
-module.exports = function (input, pref) {
-  if (!isObject(input) || isSymbol(input)) return input;
-  var exoticToPrim = getMethod(input, TO_PRIMITIVE);
-  var result;
-  if (exoticToPrim) {
-    if (pref === undefined) pref = 'default';
-    result = call(exoticToPrim, input, pref);
-    if (!isObject(result) || isSymbol(result)) return result;
-    throw new $TypeError("Can't convert object to primitive value");
-  }
-  if (pref === undefined) pref = 'number';
-  return ordinaryToPrimitive(input, pref);
-};
-
-
-/***/ }),
-
-/***/ 6969:
-/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
-
-
-var toPrimitive = __webpack_require__(2777);
-var isSymbol = __webpack_require__(757);
-
-// `ToPropertyKey` abstract operation
-// https://tc39.es/ecma262/#sec-topropertykey
-module.exports = function (argument) {
-  var key = toPrimitive(argument, 'string');
-  return isSymbol(key) ? key : key + '';
-};
-
-
-/***/ }),
-
-/***/ 2140:
-/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
-
-
-var wellKnownSymbol = __webpack_require__(8227);
-
-var TO_STRING_TAG = wellKnownSymbol('toStringTag');
-var test = {};
-
-test[TO_STRING_TAG] = 'z';
-
-module.exports = String(test) === '[object z]';
-
-
-/***/ }),
-
-/***/ 655:
-/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
-
-
-var classof = __webpack_require__(6955);
-
-var $String = String;
-
-module.exports = function (argument) {
-  if (classof(argument) === 'Symbol') throw new TypeError('Cannot convert a Symbol value to a string');
-  return $String(argument);
-};
-
-
-/***/ }),
-
-/***/ 6823:
-/***/ ((module) => {
-
-
-var $String = String;
-
-module.exports = function (argument) {
-  try {
-    return $String(argument);
-  } catch (error) {
-    return 'Object';
-  }
-};
-
-
-/***/ }),
-
-/***/ 3392:
-/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
-
-
-var uncurryThis = __webpack_require__(9504);
-
-var id = 0;
-var postfix = Math.random();
-var toString = uncurryThis(1.0.toString);
-
-module.exports = function (key) {
-  return 'Symbol(' + (key === undefined ? '' : key) + ')_' + toString(++id + postfix, 36);
-};
-
-
-/***/ }),
-
-/***/ 7040:
-/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
-
-
-/* eslint-disable es/no-symbol -- required for testing */
-var NATIVE_SYMBOL = __webpack_require__(4495);
-
-module.exports = NATIVE_SYMBOL
-  && !Symbol.sham
-  && typeof Symbol.iterator == 'symbol';
-
-
-/***/ }),
-
-/***/ 8686:
-/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
-
-
-var DESCRIPTORS = __webpack_require__(3724);
-var fails = __webpack_require__(9039);
-
-// V8 ~ Chrome 36-
-// https://bugs.chromium.org/p/v8/issues/detail?id=3334
-module.exports = DESCRIPTORS && fails(function () {
-  // eslint-disable-next-line es/no-object-defineproperty -- required for testing
-  return Object.defineProperty(function () { /* empty */ }, 'prototype', {
-    value: 42,
-    writable: false
-  }).prototype !== 42;
-});
-
-
-/***/ }),
-
-/***/ 2812:
-/***/ ((module) => {
-
-
-var $TypeError = TypeError;
-
-module.exports = function (passed, required) {
-  if (passed < required) throw new $TypeError('Not enough arguments');
-  return passed;
-};
-
-
-/***/ }),
-
-/***/ 8622:
-/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
-
-
-var globalThis = __webpack_require__(4576);
-var isCallable = __webpack_require__(4901);
-
-var WeakMap = globalThis.WeakMap;
-
-module.exports = isCallable(WeakMap) && /native code/.test(String(WeakMap));
-
-
-/***/ }),
-
-/***/ 8227:
-/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
-
-
-var globalThis = __webpack_require__(4576);
-var shared = __webpack_require__(5745);
-var hasOwn = __webpack_require__(9297);
-var uid = __webpack_require__(3392);
-var NATIVE_SYMBOL = __webpack_require__(4495);
-var USE_SYMBOL_AS_UID = __webpack_require__(7040);
-
-var Symbol = globalThis.Symbol;
-var WellKnownSymbolsStore = shared('wks');
-var createWellKnownSymbol = USE_SYMBOL_AS_UID ? Symbol['for'] || Symbol : Symbol && Symbol.withoutSetter || uid;
-
-module.exports = function (name) {
-  if (!hasOwn(WellKnownSymbolsStore, name)) {
-    WellKnownSymbolsStore[name] = NATIVE_SYMBOL && hasOwn(Symbol, name)
-      ? Symbol[name]
-      : createWellKnownSymbol('Symbol.' + name);
-  } return WellKnownSymbolsStore[name];
-};
-
-
-/***/ }),
-
-/***/ 4114:
-/***/ ((__unused_webpack_module, __unused_webpack_exports, __webpack_require__) => {
-
-
-var $ = __webpack_require__(6518);
-var toObject = __webpack_require__(8981);
-var lengthOfArrayLike = __webpack_require__(6198);
-var setArrayLength = __webpack_require__(4527);
-var doesNotExceedSafeInteger = __webpack_require__(6837);
-var fails = __webpack_require__(9039);
-
-var INCORRECT_TO_LENGTH = fails(function () {
-  return [].push.call({ length: 0x100000000 }, 1) !== 4294967297;
-});
-
-// V8 <= 121 and Safari <= 15.4; FF < 23 throws InternalError
-// https://bugs.chromium.org/p/v8/issues/detail?id=12681
-var properErrorOnNonWritableLength = function () {
-  try {
-    // eslint-disable-next-line es/no-object-defineproperty -- safe
-    Object.defineProperty([], 'length', { writable: false }).push();
-  } catch (error) {
-    return error instanceof TypeError;
-  }
-};
-
-var FORCED = INCORRECT_TO_LENGTH || !properErrorOnNonWritableLength();
-
-// `Array.prototype.push` method
-// https://tc39.es/ecma262/#sec-array.prototype.push
-$({ target: 'Array', proto: true, arity: 1, forced: FORCED }, {
-  // eslint-disable-next-line no-unused-vars -- required for `.length`
-  push: function push(item) {
-    var O = toObject(this);
-    var len = lengthOfArrayLike(O);
-    var argCount = arguments.length;
-    doesNotExceedSafeInteger(len + argCount);
-    for (var i = 0; i < argCount; i++) {
-      O[len] = arguments[i];
-      len++;
-    }
-    setArrayLength(O, len);
-    return len;
-  }
-});
-
-
-/***/ }),
-
-/***/ 4628:
-/***/ ((__unused_webpack_module, __unused_webpack_exports, __webpack_require__) => {
-
-
-var $ = __webpack_require__(6518);
-var newPromiseCapabilityModule = __webpack_require__(6043);
-
-// `Promise.withResolvers` method
-// https://github.com/tc39/proposal-promise-with-resolvers
-$({ target: 'Promise', stat: true }, {
-  withResolvers: function withResolvers() {
-    var promiseCapability = newPromiseCapabilityModule.f(this);
-    return {
-      promise: promiseCapability.promise,
-      resolve: promiseCapability.resolve,
-      reject: promiseCapability.reject
-    };
-  }
-});
-
-
-/***/ }),
-
-/***/ 7642:
-/***/ ((__unused_webpack_module, __unused_webpack_exports, __webpack_require__) => {
-
-
-var $ = __webpack_require__(6518);
-var difference = __webpack_require__(3440);
-var setMethodAcceptSetLike = __webpack_require__(4916);
-
-// `Set.prototype.difference` method
-// https://github.com/tc39/proposal-set-methods
-$({ target: 'Set', proto: true, real: true, forced: !setMethodAcceptSetLike('difference') }, {
-  difference: difference
-});
-
-
-/***/ }),
-
-/***/ 8004:
-/***/ ((__unused_webpack_module, __unused_webpack_exports, __webpack_require__) => {
-
-
-var $ = __webpack_require__(6518);
-var fails = __webpack_require__(9039);
-var intersection = __webpack_require__(8750);
-var setMethodAcceptSetLike = __webpack_require__(4916);
-
-var INCORRECT = !setMethodAcceptSetLike('intersection') || fails(function () {
-  // eslint-disable-next-line es/no-array-from, es/no-set -- testing
-  return String(Array.from(new Set([1, 2, 3]).intersection(new Set([3, 2])))) !== '3,2';
-});
-
-// `Set.prototype.intersection` method
-// https://github.com/tc39/proposal-set-methods
-$({ target: 'Set', proto: true, real: true, forced: INCORRECT }, {
-  intersection: intersection
-});
-
-
-/***/ }),
-
-/***/ 3853:
-/***/ ((__unused_webpack_module, __unused_webpack_exports, __webpack_require__) => {
-
-
-var $ = __webpack_require__(6518);
-var isDisjointFrom = __webpack_require__(4449);
-var setMethodAcceptSetLike = __webpack_require__(4916);
-
-// `Set.prototype.isDisjointFrom` method
-// https://github.com/tc39/proposal-set-methods
-$({ target: 'Set', proto: true, real: true, forced: !setMethodAcceptSetLike('isDisjointFrom') }, {
-  isDisjointFrom: isDisjointFrom
-});
-
-
-/***/ }),
-
-/***/ 5876:
-/***/ ((__unused_webpack_module, __unused_webpack_exports, __webpack_require__) => {
-
-
-var $ = __webpack_require__(6518);
-var isSubsetOf = __webpack_require__(3838);
-var setMethodAcceptSetLike = __webpack_require__(4916);
-
-// `Set.prototype.isSubsetOf` method
-// https://github.com/tc39/proposal-set-methods
-$({ target: 'Set', proto: true, real: true, forced: !setMethodAcceptSetLike('isSubsetOf') }, {
-  isSubsetOf: isSubsetOf
-});
-
-
-/***/ }),
-
-/***/ 2475:
-/***/ ((__unused_webpack_module, __unused_webpack_exports, __webpack_require__) => {
-
-
-var $ = __webpack_require__(6518);
-var isSupersetOf = __webpack_require__(8527);
-var setMethodAcceptSetLike = __webpack_require__(4916);
-
-// `Set.prototype.isSupersetOf` method
-// https://github.com/tc39/proposal-set-methods
-$({ target: 'Set', proto: true, real: true, forced: !setMethodAcceptSetLike('isSupersetOf') }, {
-  isSupersetOf: isSupersetOf
-});
-
-
-/***/ }),
-
-/***/ 5024:
-/***/ ((__unused_webpack_module, __unused_webpack_exports, __webpack_require__) => {
-
-
-var $ = __webpack_require__(6518);
-var symmetricDifference = __webpack_require__(3650);
-var setMethodAcceptSetLike = __webpack_require__(4916);
-
-// `Set.prototype.symmetricDifference` method
-// https://github.com/tc39/proposal-set-methods
-$({ target: 'Set', proto: true, real: true, forced: !setMethodAcceptSetLike('symmetricDifference') }, {
-  symmetricDifference: symmetricDifference
-});
-
-
-/***/ }),
-
-/***/ 1698:
-/***/ ((__unused_webpack_module, __unused_webpack_exports, __webpack_require__) => {
-
-
-var $ = __webpack_require__(6518);
-var union = __webpack_require__(4204);
-var setMethodAcceptSetLike = __webpack_require__(4916);
-
-// `Set.prototype.union` method
-// https://github.com/tc39/proposal-set-methods
-$({ target: 'Set', proto: true, real: true, forced: !setMethodAcceptSetLike('union') }, {
-  union: union
-});
-
-
-/***/ }),
-
-/***/ 8992:
-/***/ ((__unused_webpack_module, __unused_webpack_exports, __webpack_require__) => {
-
-
-var $ = __webpack_require__(6518);
-var globalThis = __webpack_require__(4576);
-var anInstance = __webpack_require__(679);
-var anObject = __webpack_require__(8551);
-var isCallable = __webpack_require__(4901);
-var getPrototypeOf = __webpack_require__(2787);
-var defineBuiltInAccessor = __webpack_require__(2106);
-var createProperty = __webpack_require__(4659);
-var fails = __webpack_require__(9039);
-var hasOwn = __webpack_require__(9297);
-var wellKnownSymbol = __webpack_require__(8227);
-var IteratorPrototype = (__webpack_require__(7657).IteratorPrototype);
-var DESCRIPTORS = __webpack_require__(3724);
-var IS_PURE = __webpack_require__(6395);
-
-var CONSTRUCTOR = 'constructor';
-var ITERATOR = 'Iterator';
-var TO_STRING_TAG = wellKnownSymbol('toStringTag');
-
-var $TypeError = TypeError;
-var NativeIterator = globalThis[ITERATOR];
-
-// FF56- have non-standard global helper `Iterator`
-var FORCED = IS_PURE
-  || !isCallable(NativeIterator)
-  || NativeIterator.prototype !== IteratorPrototype
-  // FF44- non-standard `Iterator` passes previous tests
-  || !fails(function () { NativeIterator({}); });
-
-var IteratorConstructor = function Iterator() {
-  anInstance(this, IteratorPrototype);
-  if (getPrototypeOf(this) === IteratorPrototype) throw new $TypeError('Abstract class Iterator not directly constructable');
-};
-
-var defineIteratorPrototypeAccessor = function (key, value) {
-  if (DESCRIPTORS) {
-    defineBuiltInAccessor(IteratorPrototype, key, {
-      configurable: true,
-      get: function () {
-        return value;
-      },
-      set: function (replacement) {
-        anObject(this);
-        if (this === IteratorPrototype) throw new $TypeError("You can't redefine this property");
-        if (hasOwn(this, key)) this[key] = replacement;
-        else createProperty(this, key, replacement);
-      }
-    });
-  } else IteratorPrototype[key] = value;
-};
-
-if (!hasOwn(IteratorPrototype, TO_STRING_TAG)) defineIteratorPrototypeAccessor(TO_STRING_TAG, ITERATOR);
-
-if (FORCED || !hasOwn(IteratorPrototype, CONSTRUCTOR) || IteratorPrototype[CONSTRUCTOR] === Object) {
-  defineIteratorPrototypeAccessor(CONSTRUCTOR, IteratorConstructor);
-}
-
-IteratorConstructor.prototype = IteratorPrototype;
-
-// `Iterator` constructor
-// https://github.com/tc39/proposal-iterator-helpers
-$({ global: true, constructor: true, forced: FORCED }, {
-  Iterator: IteratorConstructor
-});
-
-
-/***/ }),
-
-/***/ 3215:
-/***/ ((__unused_webpack_module, __unused_webpack_exports, __webpack_require__) => {
-
-
-var $ = __webpack_require__(6518);
-var iterate = __webpack_require__(2652);
-var aCallable = __webpack_require__(9306);
-var anObject = __webpack_require__(8551);
-var getIteratorDirect = __webpack_require__(1767);
-
-// `Iterator.prototype.every` method
-// https://github.com/tc39/proposal-iterator-helpers
-$({ target: 'Iterator', proto: true, real: true }, {
-  every: function every(predicate) {
-    anObject(this);
-    aCallable(predicate);
-    var record = getIteratorDirect(this);
-    var counter = 0;
-    return !iterate(record, function (value, stop) {
-      if (!predicate(value, counter++)) return stop();
-    }, { IS_RECORD: true, INTERRUPTED: true }).stopped;
-  }
-});
-
-
-/***/ }),
-
-/***/ 4520:
-/***/ ((__unused_webpack_module, __unused_webpack_exports, __webpack_require__) => {
-
-
-var $ = __webpack_require__(6518);
-var call = __webpack_require__(9565);
-var aCallable = __webpack_require__(9306);
-var anObject = __webpack_require__(8551);
-var getIteratorDirect = __webpack_require__(1767);
-var createIteratorProxy = __webpack_require__(9462);
-var callWithSafeIterationClosing = __webpack_require__(6319);
-var IS_PURE = __webpack_require__(6395);
-
-var IteratorProxy = createIteratorProxy(function () {
-  var iterator = this.iterator;
-  var predicate = this.predicate;
-  var next = this.next;
-  var result, done, value;
-  while (true) {
-    result = anObject(call(next, iterator));
-    done = this.done = !!result.done;
-    if (done) return;
-    value = result.value;
-    if (callWithSafeIterationClosing(iterator, predicate, [value, this.counter++], true)) return value;
-  }
-});
-
-// `Iterator.prototype.filter` method
-// https://github.com/tc39/proposal-iterator-helpers
-$({ target: 'Iterator', proto: true, real: true, forced: IS_PURE }, {
-  filter: function filter(predicate) {
-    anObject(this);
-    aCallable(predicate);
-    return new IteratorProxy(getIteratorDirect(this), {
-      predicate: predicate
-    });
-  }
-});
-
-
-/***/ }),
-
-/***/ 3949:
-/***/ ((__unused_webpack_module, __unused_webpack_exports, __webpack_require__) => {
-
-
-var $ = __webpack_require__(6518);
-var iterate = __webpack_require__(2652);
-var aCallable = __webpack_require__(9306);
-var anObject = __webpack_require__(8551);
-var getIteratorDirect = __webpack_require__(1767);
-
-// `Iterator.prototype.forEach` method
-// https://github.com/tc39/proposal-iterator-helpers
-$({ target: 'Iterator', proto: true, real: true }, {
-  forEach: function forEach(fn) {
-    anObject(this);
-    aCallable(fn);
-    var record = getIteratorDirect(this);
-    var counter = 0;
-    iterate(record, function (value) {
-      fn(value, counter++);
-    }, { IS_RECORD: true });
-  }
-});
-
-
-/***/ }),
-
-/***/ 1454:
-/***/ ((__unused_webpack_module, __unused_webpack_exports, __webpack_require__) => {
-
-
-var $ = __webpack_require__(6518);
-var map = __webpack_require__(713);
-var IS_PURE = __webpack_require__(6395);
-
-// `Iterator.prototype.map` method
-// https://github.com/tc39/proposal-iterator-helpers
-$({ target: 'Iterator', proto: true, real: true, forced: IS_PURE }, {
-  map: map
-});
-
-
-/***/ }),
-
-/***/ 7550:
-/***/ ((__unused_webpack_module, __unused_webpack_exports, __webpack_require__) => {
-
-
-var $ = __webpack_require__(6518);
-var iterate = __webpack_require__(2652);
-var aCallable = __webpack_require__(9306);
-var anObject = __webpack_require__(8551);
-var getIteratorDirect = __webpack_require__(1767);
-
-// `Iterator.prototype.some` method
-// https://github.com/tc39/proposal-iterator-helpers
-$({ target: 'Iterator', proto: true, real: true }, {
-  some: function some(predicate) {
-    anObject(this);
-    aCallable(predicate);
-    var record = getIteratorDirect(this);
-    var counter = 0;
-    return iterate(record, function (value, stop) {
-      if (predicate(value, counter++)) return stop();
-    }, { IS_RECORD: true, INTERRUPTED: true }).stopped;
-  }
-});
-
-
-/***/ }),
-
-/***/ 8335:
-/***/ ((__unused_webpack_module, __unused_webpack_exports, __webpack_require__) => {
-
-
-var $ = __webpack_require__(6518);
-var DESCRIPTORS = __webpack_require__(3724);
-var globalThis = __webpack_require__(4576);
-var getBuiltIn = __webpack_require__(7751);
-var uncurryThis = __webpack_require__(9504);
-var call = __webpack_require__(9565);
-var isCallable = __webpack_require__(4901);
-var isObject = __webpack_require__(34);
-var isArray = __webpack_require__(4376);
-var hasOwn = __webpack_require__(9297);
-var toString = __webpack_require__(655);
-var lengthOfArrayLike = __webpack_require__(6198);
-var createProperty = __webpack_require__(4659);
-var fails = __webpack_require__(9039);
-var parseJSONString = __webpack_require__(8235);
-var NATIVE_SYMBOL = __webpack_require__(4495);
-
-var JSON = globalThis.JSON;
-var Number = globalThis.Number;
-var SyntaxError = globalThis.SyntaxError;
-var nativeParse = JSON && JSON.parse;
-var enumerableOwnProperties = getBuiltIn('Object', 'keys');
-// eslint-disable-next-line es/no-object-getownpropertydescriptor -- safe
-var getOwnPropertyDescriptor = Object.getOwnPropertyDescriptor;
-var at = uncurryThis(''.charAt);
-var slice = uncurryThis(''.slice);
-var exec = uncurryThis(/./.exec);
-var push = uncurryThis([].push);
-
-var IS_DIGIT = /^\d$/;
-var IS_NON_ZERO_DIGIT = /^[1-9]$/;
-var IS_NUMBER_START = /^[\d-]$/;
-var IS_WHITESPACE = /^[\t\n\r ]$/;
-
-var PRIMITIVE = 0;
-var OBJECT = 1;
-
-var $parse = function (source, reviver) {
-  source = toString(source);
-  var context = new Context(source, 0, '');
-  var root = context.parse();
-  var value = root.value;
-  var endIndex = context.skip(IS_WHITESPACE, root.end);
-  if (endIndex < source.length) {
-    throw new SyntaxError('Unexpected extra character: "' + at(source, endIndex) + '" after the parsed data at: ' + endIndex);
-  }
-  return isCallable(reviver) ? internalize({ '': value }, '', reviver, root) : value;
-};
-
-var internalize = function (holder, name, reviver, node) {
-  var val = holder[name];
-  var unmodified = node && val === node.value;
-  var context = unmodified && typeof node.source == 'string' ? { source: node.source } : {};
-  var elementRecordsLen, keys, len, i, P;
-  if (isObject(val)) {
-    var nodeIsArray = isArray(val);
-    var nodes = unmodified ? node.nodes : nodeIsArray ? [] : {};
-    if (nodeIsArray) {
-      elementRecordsLen = nodes.length;
-      len = lengthOfArrayLike(val);
-      for (i = 0; i < len; i++) {
-        internalizeProperty(val, i, internalize(val, '' + i, reviver, i < elementRecordsLen ? nodes[i] : undefined));
-      }
-    } else {
-      keys = enumerableOwnProperties(val);
-      len = lengthOfArrayLike(keys);
-      for (i = 0; i < len; i++) {
-        P = keys[i];
-        internalizeProperty(val, P, internalize(val, P, reviver, hasOwn(nodes, P) ? nodes[P] : undefined));
-      }
-    }
-  }
-  return call(reviver, holder, name, val, context);
-};
-
-var internalizeProperty = function (object, key, value) {
-  if (DESCRIPTORS) {
-    var descriptor = getOwnPropertyDescriptor(object, key);
-    if (descriptor && !descriptor.configurable) return;
-  }
-  if (value === undefined) delete object[key];
-  else createProperty(object, key, value);
-};
-
-var Node = function (value, end, source, nodes) {
-  this.value = value;
-  this.end = end;
-  this.source = source;
-  this.nodes = nodes;
-};
-
-var Context = function (source, index) {
-  this.source = source;
-  this.index = index;
-};
-
-// https://www.json.org/json-en.html
-Context.prototype = {
-  fork: function (nextIndex) {
-    return new Context(this.source, nextIndex);
-  },
-  parse: function () {
-    var source = this.source;
-    var i = this.skip(IS_WHITESPACE, this.index);
-    var fork = this.fork(i);
-    var chr = at(source, i);
-    if (exec(IS_NUMBER_START, chr)) return fork.number();
-    switch (chr) {
-      case '{':
-        return fork.object();
-      case '[':
-        return fork.array();
-      case '"':
-        return fork.string();
-      case 't':
-        return fork.keyword(true);
-      case 'f':
-        return fork.keyword(false);
-      case 'n':
-        return fork.keyword(null);
-    } throw new SyntaxError('Unexpected character: "' + chr + '" at: ' + i);
-  },
-  node: function (type, value, start, end, nodes) {
-    return new Node(value, end, type ? null : slice(this.source, start, end), nodes);
-  },
-  object: function () {
-    var source = this.source;
-    var i = this.index + 1;
-    var expectKeypair = false;
-    var object = {};
-    var nodes = {};
-    while (i < source.length) {
-      i = this.until(['"', '}'], i);
-      if (at(source, i) === '}' && !expectKeypair) {
-        i++;
-        break;
-      }
-      // Parsing the key
-      var result = this.fork(i).string();
-      var key = result.value;
-      i = result.end;
-      i = this.until([':'], i) + 1;
-      // Parsing value
-      i = this.skip(IS_WHITESPACE, i);
-      result = this.fork(i).parse();
-      createProperty(nodes, key, result);
-      createProperty(object, key, result.value);
-      i = this.until([',', '}'], result.end);
-      var chr = at(source, i);
-      if (chr === ',') {
-        expectKeypair = true;
-        i++;
-      } else if (chr === '}') {
-        i++;
-        break;
-      }
-    }
-    return this.node(OBJECT, object, this.index, i, nodes);
-  },
-  array: function () {
-    var source = this.source;
-    var i = this.index + 1;
-    var expectElement = false;
-    var array = [];
-    var nodes = [];
-    while (i < source.length) {
-      i = this.skip(IS_WHITESPACE, i);
-      if (at(source, i) === ']' && !expectElement) {
-        i++;
-        break;
-      }
-      var result = this.fork(i).parse();
-      push(nodes, result);
-      push(array, result.value);
-      i = this.until([',', ']'], result.end);
-      if (at(source, i) === ',') {
-        expectElement = true;
-        i++;
-      } else if (at(source, i) === ']') {
-        i++;
-        break;
-      }
-    }
-    return this.node(OBJECT, array, this.index, i, nodes);
-  },
-  string: function () {
-    var index = this.index;
-    var parsed = parseJSONString(this.source, this.index + 1);
-    return this.node(PRIMITIVE, parsed.value, index, parsed.end);
-  },
-  number: function () {
-    var source = this.source;
-    var startIndex = this.index;
-    var i = startIndex;
-    if (at(source, i) === '-') i++;
-    if (at(source, i) === '0') i++;
-    else if (exec(IS_NON_ZERO_DIGIT, at(source, i))) i = this.skip(IS_DIGIT, i + 1);
-    else throw new SyntaxError('Failed to parse number at: ' + i);
-    if (at(source, i) === '.') i = this.skip(IS_DIGIT, i + 1);
-    if (at(source, i) === 'e' || at(source, i) === 'E') {
-      i++;
-      if (at(source, i) === '+' || at(source, i) === '-') i++;
-      var exponentStartIndex = i;
-      i = this.skip(IS_DIGIT, i);
-      if (exponentStartIndex === i) throw new SyntaxError("Failed to parse number's exponent value at: " + i);
-    }
-    return this.node(PRIMITIVE, Number(slice(source, startIndex, i)), startIndex, i);
-  },
-  keyword: function (value) {
-    var keyword = '' + value;
-    var index = this.index;
-    var endIndex = index + keyword.length;
-    if (slice(this.source, index, endIndex) !== keyword) throw new SyntaxError('Failed to parse value at: ' + index);
-    return this.node(PRIMITIVE, value, index, endIndex);
-  },
-  skip: function (regex, i) {
-    var source = this.source;
-    for (; i < source.length; i++) if (!exec(regex, at(source, i))) break;
-    return i;
-  },
-  until: function (array, i) {
-    i = this.skip(IS_WHITESPACE, i);
-    var chr = at(this.source, i);
-    for (var j = 0; j < array.length; j++) if (array[j] === chr) return i;
-    throw new SyntaxError('Unexpected character: "' + chr + '" at: ' + i);
-  }
-};
-
-var NO_SOURCE_SUPPORT = fails(function () {
-  var unsafeInt = '9007199254740993';
-  var source;
-  nativeParse(unsafeInt, function (key, value, context) {
-    source = context.source;
-  });
-  return source !== unsafeInt;
-});
-
-var PROPER_BASE_PARSE = NATIVE_SYMBOL && !fails(function () {
-  // Safari 9 bug
-  return 1 / nativeParse('-0 \t') !== -Infinity;
-});
-
-// `JSON.parse` method
-// https://tc39.es/ecma262/#sec-json.parse
-// https://github.com/tc39/proposal-json-parse-with-source
-$({ target: 'JSON', stat: true, forced: NO_SOURCE_SUPPORT }, {
-  parse: function parse(text, reviver) {
-    return PROPER_BASE_PARSE && !isCallable(reviver) ? nativeParse(text) : $parse(text, reviver);
-  }
-});
-
-
-/***/ }),
-
-/***/ 4603:
-/***/ ((__unused_webpack_module, __unused_webpack_exports, __webpack_require__) => {
-
-
-var defineBuiltIn = __webpack_require__(6840);
-var uncurryThis = __webpack_require__(9504);
-var toString = __webpack_require__(655);
-var validateArgumentsLength = __webpack_require__(2812);
-
-var $URLSearchParams = URLSearchParams;
-var URLSearchParamsPrototype = $URLSearchParams.prototype;
-var append = uncurryThis(URLSearchParamsPrototype.append);
-var $delete = uncurryThis(URLSearchParamsPrototype['delete']);
-var forEach = uncurryThis(URLSearchParamsPrototype.forEach);
-var push = uncurryThis([].push);
-var params = new $URLSearchParams('a=1&a=2&b=3');
-
-params['delete']('a', 1);
-// `undefined` case is a Chromium 117 bug
-// https://bugs.chromium.org/p/v8/issues/detail?id=14222
-params['delete']('b', undefined);
-
-if (params + '' !== 'a=2') {
-  defineBuiltIn(URLSearchParamsPrototype, 'delete', function (name /* , value */) {
-    var length = arguments.length;
-    var $value = length < 2 ? undefined : arguments[1];
-    if (length && $value === undefined) return $delete(this, name);
-    var entries = [];
-    forEach(this, function (v, k) { // also validates `this`
-      push(entries, { key: k, value: v });
-    });
-    validateArgumentsLength(length, 1);
-    var key = toString(name);
-    var value = toString($value);
-    var index = 0;
-    var dindex = 0;
-    var found = false;
-    var entriesLength = entries.length;
-    var entry;
-    while (index < entriesLength) {
-      entry = entries[index++];
-      if (found || entry.key === key) {
-        found = true;
-        $delete(this, entry.key);
-      } else dindex++;
-    }
-    while (dindex < entriesLength) {
-      entry = entries[dindex++];
-      if (!(entry.key === key && entry.value === value)) append(this, entry.key, entry.value);
-    }
-  }, { enumerable: true, unsafe: true });
-}
-
-
-/***/ }),
-
-/***/ 7566:
-/***/ ((__unused_webpack_module, __unused_webpack_exports, __webpack_require__) => {
-
-
-var defineBuiltIn = __webpack_require__(6840);
-var uncurryThis = __webpack_require__(9504);
-var toString = __webpack_require__(655);
-var validateArgumentsLength = __webpack_require__(2812);
-
-var $URLSearchParams = URLSearchParams;
-var URLSearchParamsPrototype = $URLSearchParams.prototype;
-var getAll = uncurryThis(URLSearchParamsPrototype.getAll);
-var $has = uncurryThis(URLSearchParamsPrototype.has);
-var params = new $URLSearchParams('a=1');
-
-// `undefined` case is a Chromium 117 bug
-// https://bugs.chromium.org/p/v8/issues/detail?id=14222
-if (params.has('a', 2) || !params.has('a', undefined)) {
-  defineBuiltIn(URLSearchParamsPrototype, 'has', function has(name /* , value */) {
-    var length = arguments.length;
-    var $value = length < 2 ? undefined : arguments[1];
-    if (length && $value === undefined) return $has(this, name);
-    var values = getAll(this, name); // also validates `this`
-    validateArgumentsLength(length, 1);
-    var value = toString($value);
-    var index = 0;
-    while (index < values.length) {
-      if (values[index++] === value) return true;
-    } return false;
-  }, { enumerable: true, unsafe: true });
-}
-
-
-/***/ }),
-
-/***/ 8721:
-/***/ ((__unused_webpack_module, __unused_webpack_exports, __webpack_require__) => {
-
-
-var DESCRIPTORS = __webpack_require__(3724);
-var uncurryThis = __webpack_require__(9504);
-var defineBuiltInAccessor = __webpack_require__(2106);
-
-var URLSearchParamsPrototype = URLSearchParams.prototype;
-var forEach = uncurryThis(URLSearchParamsPrototype.forEach);
-
-// `URLSearchParams.prototype.size` getter
-// https://github.com/whatwg/url/pull/734
-if (DESCRIPTORS && !('size' in URLSearchParamsPrototype)) {
-  defineBuiltInAccessor(URLSearchParamsPrototype, 'size', {
-    get: function size() {
-      var count = 0;
-      forEach(this, function () { count++; });
-      return count;
-    },
-    configurable: true,
-    enumerable: true
-  });
-}
-
-
-/***/ })
-
-/******/ });
-/************************************************************************/
-/******/ // The module cache
-/******/ var __webpack_module_cache__ = {};
-/******/ 
-/******/ // The require function
-/******/ function __webpack_require__(moduleId) {
-/******/ 	// Check if module is in cache
-/******/ 	var cachedModule = __webpack_module_cache__[moduleId];
-/******/ 	if (cachedModule !== undefined) {
-/******/ 		return cachedModule.exports;
-/******/ 	}
-/******/ 	// Create a new module (and put it into the cache)
-/******/ 	var module = __webpack_module_cache__[moduleId] = {
-/******/ 		// no module.id needed
-/******/ 		// no module.loaded needed
-/******/ 		exports: {}
-/******/ 	};
-/******/ 
-/******/ 	// Execute the module function
-/******/ 	__webpack_modules__[moduleId].call(module.exports, module, module.exports, __webpack_require__);
-/******/ 
-/******/ 	// Return the exports of the module
-/******/ 	return module.exports;
-/******/ }
+/******/ // The require scope
+/******/ var __webpack_require__ = {};
 /******/ 
 /************************************************************************/
 /******/ /* webpack/runtime/define property getters */
@@ -3651,40 +51,7 @@ __webpack_require__.d(__webpack_exports__, {
   PDFViewerApplicationOptions: () => (/* reexport */ AppOptions)
 });
 
-// EXTERNAL MODULE: ./node_modules/core-js/modules/es.array.push.js
-var es_array_push = __webpack_require__(4114);
-// EXTERNAL MODULE: ./node_modules/core-js/modules/es.set.difference.v2.js
-var es_set_difference_v2 = __webpack_require__(7642);
-// EXTERNAL MODULE: ./node_modules/core-js/modules/es.set.intersection.v2.js
-var es_set_intersection_v2 = __webpack_require__(8004);
-// EXTERNAL MODULE: ./node_modules/core-js/modules/es.set.is-disjoint-from.v2.js
-var es_set_is_disjoint_from_v2 = __webpack_require__(3853);
-// EXTERNAL MODULE: ./node_modules/core-js/modules/es.set.is-subset-of.v2.js
-var es_set_is_subset_of_v2 = __webpack_require__(5876);
-// EXTERNAL MODULE: ./node_modules/core-js/modules/es.set.is-superset-of.v2.js
-var es_set_is_superset_of_v2 = __webpack_require__(2475);
-// EXTERNAL MODULE: ./node_modules/core-js/modules/es.set.symmetric-difference.v2.js
-var es_set_symmetric_difference_v2 = __webpack_require__(5024);
-// EXTERNAL MODULE: ./node_modules/core-js/modules/es.set.union.v2.js
-var es_set_union_v2 = __webpack_require__(1698);
-// EXTERNAL MODULE: ./node_modules/core-js/modules/web.url-search-params.delete.js
-var web_url_search_params_delete = __webpack_require__(4603);
-// EXTERNAL MODULE: ./node_modules/core-js/modules/web.url-search-params.has.js
-var web_url_search_params_has = __webpack_require__(7566);
-// EXTERNAL MODULE: ./node_modules/core-js/modules/web.url-search-params.size.js
-var web_url_search_params_size = __webpack_require__(8721);
 ;// ./web/ui_utils.js
-
-
-
-
-
-
-
-
-
-
-
 const DEFAULT_SCALE_VALUE = "auto";
 const DEFAULT_SCALE = 1.0;
 const DEFAULT_SCALE_DELTA = 1.1;
@@ -4559,11 +926,7 @@ class AppOptions {
   }
 }
 
-// EXTERNAL MODULE: ./node_modules/core-js/modules/esnext.json.parse.js
-var esnext_json_parse = __webpack_require__(8335);
 ;// ./web/pdf_link_service.js
-
-
 
 const DEFAULT_LINK_REL = "noopener noreferrer nofollow";
 const LinkTarget = {
@@ -4909,12 +1272,6 @@ class SimpleLinkService extends PDFLinkService {
   setDocument(pdfDocument, baseUrl = null) {}
 }
 
-// EXTERNAL MODULE: ./node_modules/core-js/modules/es.promise.with-resolvers.js
-var es_promise_with_resolvers = __webpack_require__(4628);
-// EXTERNAL MODULE: ./node_modules/core-js/modules/esnext.iterator.constructor.js
-var esnext_iterator_constructor = __webpack_require__(8992);
-// EXTERNAL MODULE: ./node_modules/core-js/modules/esnext.iterator.some.js
-var esnext_iterator_some = __webpack_require__(7550);
 ;// ./web/pdfjs.js
 const {
   AbortException,
@@ -4954,6 +1311,7 @@ const {
   RenderingCancelledException,
   setLayerDimensions,
   shadow,
+  stopEvent,
   TextLayer,
   UnexpectedResponseException,
   Util,
@@ -4963,8 +1321,6 @@ const {
 } = globalThis.pdfjsLib;
 
 ;// ./web/event_utils.js
-
-
 const WaitOnType = {
   EVENT: "event",
   TIMEOUT: "timeout"
@@ -5235,7 +1591,6 @@ class FluentDateTime extends FluentType {
 }
 ;// ./node_modules/@fluent/bundle/esm/resolver.js
 
-
 const MAX_PLACEABLES = 100;
 const FSI = "\u2068";
 const PDI = "\u2069";
@@ -5455,7 +1810,6 @@ function resolvePattern(scope, value) {
   return resolveComplexPattern(scope, value);
 }
 ;// ./node_modules/@fluent/bundle/esm/scope.js
-
 class Scope {
   constructor(bundle, errors, args) {
     this.dirty = new WeakSet();
@@ -5550,7 +1904,6 @@ function getMemoizerForLocale(locales) {
 
 
 
-
 class FluentBundle {
   constructor(locales, {
     functions,
@@ -5615,7 +1968,6 @@ class FluentBundle {
   }
 }
 ;// ./node_modules/@fluent/bundle/esm/resource.js
-
 const RE_MESSAGE_START = /^(-?[a-zA-Z][\w-]*) *= */gm;
 const RE_ATTRIBUTE_START = /\.([a-zA-Z][\w-]*) *= */y;
 const RE_VARIANT_START = /\*?\[/y;
@@ -5998,10 +2350,7 @@ class Indent {
 
 
 
-// EXTERNAL MODULE: ./node_modules/core-js/modules/esnext.iterator.map.js
-var esnext_iterator_map = __webpack_require__(1454);
 ;// ./node_modules/@fluent/dom/esm/overlay.js
-
 const reOverlay = /<|&#?\w+;/;
 const TEXT_LEVEL_ELEMENTS = {
   "http://www.w3.org/1999/xhtml": ["em", "strong", "small", "s", "cite", "q", "dfn", "abbr", "data", "time", "code", "var", "samp", "kbd", "sub", "sup", "i", "b", "u", "mark", "bdi", "bdo", "span", "br", "wbr"]
@@ -6152,10 +2501,6 @@ function shallowPopulateUsing(fromElement, toElement) {
   overlayAttributes(fromElement, toElement);
   return toElement;
 }
-// EXTERNAL MODULE: ./node_modules/core-js/modules/esnext.iterator.filter.js
-var esnext_iterator_filter = __webpack_require__(4520);
-// EXTERNAL MODULE: ./node_modules/core-js/modules/esnext.iterator.for-each.js
-var esnext_iterator_for_each = __webpack_require__(3949);
 ;// ./node_modules/cached-iterable/src/cached_iterable.mjs
 class CachedIterable extends Array {
   static from(iterable) {
@@ -6166,7 +2511,6 @@ class CachedIterable extends Array {
   }
 }
 ;// ./node_modules/cached-iterable/src/cached_sync_iterable.mjs
-
 
 class CachedSyncIterable extends CachedIterable {
   constructor(iterable) {
@@ -6202,7 +2546,6 @@ class CachedSyncIterable extends CachedIterable {
   }
 }
 ;// ./node_modules/cached-iterable/src/cached_async_iterable.mjs
-
 
 class CachedAsyncIterable extends CachedIterable {
   constructor(iterable) {
@@ -6243,17 +2586,6 @@ class CachedAsyncIterable extends CachedIterable {
 
 
 ;// ./node_modules/@fluent/dom/esm/localization.js
-
-
-
-
-
-
-
-
-
-
-
 
 class Localization {
   constructor(resourceIds = [], generateBundles) {
@@ -6369,16 +2701,6 @@ function keysFromBundle(method, bundle, keys, translations) {
   return missingIds;
 }
 ;// ./node_modules/@fluent/dom/esm/dom_localization.js
-
-
-
-
-
-
-
-
-
-
 
 
 const L10NID_ATTR_NAME = "data-l10n-id";
@@ -6545,14 +2867,6 @@ class DOMLocalization extends Localization {
 
 
 ;// ./web/l10n.js
-
-
-
-
-
-
-
-
 class L10n {
   #dir;
   #elements;
@@ -6651,10 +2965,6 @@ const GenericL10n = null;
 
 
 
-
-
-
-
 function createBundle(lang, text) {
   const resource = new FluentResource(text);
   const bundle = new FluentBundle(lang);
@@ -6723,7 +3033,7 @@ class genericl10n_GenericL10n extends L10n {
     yield this.#createBundleFallback(lang);
   }
   static async #createBundleFallback(lang) {
-    const text = "pdfjs-previous-button =\n    .title = Previous Page\npdfjs-previous-button-label = Previous\npdfjs-next-button =\n    .title = Next Page\npdfjs-next-button-label = Next\npdfjs-page-input =\n    .title = Page\npdfjs-of-pages = of { $pagesCount }\npdfjs-page-of-pages = ({ $pageNumber } of { $pagesCount })\npdfjs-zoom-out-button =\n    .title = Zoom Out\npdfjs-zoom-out-button-label = Zoom Out\npdfjs-zoom-in-button =\n    .title = Zoom In\npdfjs-zoom-in-button-label = Zoom In\npdfjs-zoom-select =\n    .title = Zoom\npdfjs-presentation-mode-button =\n    .title = Switch to Presentation Mode\npdfjs-presentation-mode-button-label = Presentation Mode\npdfjs-open-file-button =\n    .title = Open File\npdfjs-open-file-button-label = Open\npdfjs-print-button =\n    .title = Print\npdfjs-print-button-label = Print\npdfjs-save-button =\n    .title = Save\npdfjs-save-button-label = Save\npdfjs-download-button =\n    .title = Download\npdfjs-download-button-label = Download\npdfjs-bookmark-button =\n    .title = Current Page (View URL from Current Page)\npdfjs-bookmark-button-label = Current Page\npdfjs-tools-button =\n    .title = Tools\npdfjs-tools-button-label = Tools\npdfjs-first-page-button =\n    .title = Go to First Page\npdfjs-first-page-button-label = Go to First Page\npdfjs-last-page-button =\n    .title = Go to Last Page\npdfjs-last-page-button-label = Go to Last Page\npdfjs-page-rotate-cw-button =\n    .title = Rotate Clockwise\npdfjs-page-rotate-cw-button-label = Rotate Clockwise\npdfjs-page-rotate-ccw-button =\n    .title = Rotate Counterclockwise\npdfjs-page-rotate-ccw-button-label = Rotate Counterclockwise\npdfjs-cursor-text-select-tool-button =\n    .title = Enable Text Selection Tool\npdfjs-cursor-text-select-tool-button-label = Text Selection Tool\npdfjs-cursor-hand-tool-button =\n    .title = Enable Hand Tool\npdfjs-cursor-hand-tool-button-label = Hand Tool\npdfjs-scroll-page-button =\n    .title = Use Page Scrolling\npdfjs-scroll-page-button-label = Page Scrolling\npdfjs-scroll-vertical-button =\n    .title = Use Vertical Scrolling\npdfjs-scroll-vertical-button-label = Vertical Scrolling\npdfjs-scroll-horizontal-button =\n    .title = Use Horizontal Scrolling\npdfjs-scroll-horizontal-button-label = Horizontal Scrolling\npdfjs-scroll-wrapped-button =\n    .title = Use Wrapped Scrolling\npdfjs-scroll-wrapped-button-label = Wrapped Scrolling\npdfjs-spread-none-button =\n    .title = Do not join page spreads\npdfjs-spread-none-button-label = No Spreads\npdfjs-spread-odd-button =\n    .title = Join page spreads starting with odd-numbered pages\npdfjs-spread-odd-button-label = Odd Spreads\npdfjs-spread-even-button =\n    .title = Join page spreads starting with even-numbered pages\npdfjs-spread-even-button-label = Even Spreads\npdfjs-document-properties-button =\n    .title = Document Properties\u2026\npdfjs-document-properties-button-label = Document Properties\u2026\npdfjs-document-properties-file-name = File name:\npdfjs-document-properties-file-size = File size:\npdfjs-document-properties-size-kb = { NUMBER($kb, maximumSignificantDigits: 3) } KB ({ $b } bytes)\npdfjs-document-properties-size-mb = { NUMBER($mb, maximumSignificantDigits: 3) } MB ({ $b } bytes)\npdfjs-document-properties-title = Title:\npdfjs-document-properties-author = Author:\npdfjs-document-properties-subject = Subject:\npdfjs-document-properties-keywords = Keywords:\npdfjs-document-properties-creation-date = Creation Date:\npdfjs-document-properties-modification-date = Modification Date:\npdfjs-document-properties-date-time-string = { DATETIME($dateObj, dateStyle: \"short\", timeStyle: \"medium\") }\npdfjs-document-properties-creator = Creator:\npdfjs-document-properties-producer = PDF Producer:\npdfjs-document-properties-version = PDF Version:\npdfjs-document-properties-page-count = Page Count:\npdfjs-document-properties-page-size = Page Size:\npdfjs-document-properties-page-size-unit-inches = in\npdfjs-document-properties-page-size-unit-millimeters = mm\npdfjs-document-properties-page-size-orientation-portrait = portrait\npdfjs-document-properties-page-size-orientation-landscape = landscape\npdfjs-document-properties-page-size-name-a-three = A3\npdfjs-document-properties-page-size-name-a-four = A4\npdfjs-document-properties-page-size-name-letter = Letter\npdfjs-document-properties-page-size-name-legal = Legal\npdfjs-document-properties-page-size-dimension-string = { $width } \xD7 { $height } { $unit } ({ $orientation })\npdfjs-document-properties-page-size-dimension-name-string = { $width } \xD7 { $height } { $unit } ({ $name }, { $orientation })\npdfjs-document-properties-linearized = Fast Web View:\npdfjs-document-properties-linearized-yes = Yes\npdfjs-document-properties-linearized-no = No\npdfjs-document-properties-close-button = Close\npdfjs-print-progress-message = Preparing document for printing\u2026\npdfjs-print-progress-percent = { $progress }%\npdfjs-print-progress-close-button = Cancel\npdfjs-printing-not-supported = Warning: Printing is not fully supported by this browser.\npdfjs-printing-not-ready = Warning: The PDF is not fully loaded for printing.\npdfjs-toggle-sidebar-button =\n    .title = Toggle Sidebar\npdfjs-toggle-sidebar-notification-button =\n    .title = Toggle Sidebar (document contains outline/attachments/layers)\npdfjs-toggle-sidebar-button-label = Toggle Sidebar\npdfjs-document-outline-button =\n    .title = Show Document Outline (double-click to expand/collapse all items)\npdfjs-document-outline-button-label = Document Outline\npdfjs-attachments-button =\n    .title = Show Attachments\npdfjs-attachments-button-label = Attachments\npdfjs-layers-button =\n    .title = Show Layers (double-click to reset all layers to the default state)\npdfjs-layers-button-label = Layers\npdfjs-thumbs-button =\n    .title = Show Thumbnails\npdfjs-thumbs-button-label = Thumbnails\npdfjs-current-outline-item-button =\n    .title = Find Current Outline Item\npdfjs-current-outline-item-button-label = Current Outline Item\npdfjs-findbar-button =\n    .title = Find in Document\npdfjs-findbar-button-label = Find\npdfjs-additional-layers = Additional Layers\npdfjs-thumb-page-title =\n    .title = Page { $page }\npdfjs-thumb-page-canvas =\n    .aria-label = Thumbnail of Page { $page }\npdfjs-find-input =\n    .title = Find\n    .placeholder = Find in document\u2026\npdfjs-find-previous-button =\n    .title = Find the previous occurrence of the phrase\npdfjs-find-previous-button-label = Previous\npdfjs-find-next-button =\n    .title = Find the next occurrence of the phrase\npdfjs-find-next-button-label = Next\npdfjs-find-highlight-checkbox = Highlight All\npdfjs-find-match-case-checkbox-label = Match Case\npdfjs-find-match-diacritics-checkbox-label = Match Diacritics\npdfjs-find-entire-word-checkbox-label = Whole Words\npdfjs-find-reached-top = Reached top of document, continued from bottom\npdfjs-find-reached-bottom = Reached end of document, continued from top\npdfjs-find-match-count =\n    { $total ->\n        [one] { $current } of { $total } match\n       *[other] { $current } of { $total } matches\n    }\npdfjs-find-match-count-limit =\n    { $limit ->\n        [one] More than { $limit } match\n       *[other] More than { $limit } matches\n    }\npdfjs-find-not-found = Phrase not found\npdfjs-page-scale-width = Page Width\npdfjs-page-scale-fit = Page Fit\npdfjs-page-scale-auto = Automatic Zoom\npdfjs-page-scale-actual = Actual Size\npdfjs-page-scale-percent = { $scale }%\npdfjs-page-landmark =\n    .aria-label = Page { $page }\npdfjs-loading-error = An error occurred while loading the PDF.\npdfjs-invalid-file-error = Invalid or corrupted PDF file.\npdfjs-missing-file-error = Missing PDF file.\npdfjs-unexpected-response-error = Unexpected server response.\npdfjs-rendering-error = An error occurred while rendering the page.\npdfjs-annotation-date-time-string = { DATETIME($dateObj, dateStyle: \"short\", timeStyle: \"medium\") }\npdfjs-text-annotation-type =\n    .alt = [{ $type } Annotation]\npdfjs-password-label = Enter the password to open this PDF file.\npdfjs-password-invalid = Invalid password. Please try again.\npdfjs-password-ok-button = OK\npdfjs-password-cancel-button = Cancel\npdfjs-web-fonts-disabled = Web fonts are disabled: unable to use embedded PDF fonts.\npdfjs-editor-free-text-button =\n    .title = Text\npdfjs-editor-free-text-button-label = Text\npdfjs-editor-ink-button =\n    .title = Draw\npdfjs-editor-ink-button-label = Draw\npdfjs-editor-stamp-button =\n    .title = Add or edit images\npdfjs-editor-stamp-button-label = Add or edit images\npdfjs-editor-highlight-button =\n    .title = Highlight\npdfjs-editor-highlight-button-label = Highlight\npdfjs-highlight-floating-button1 =\n    .title = Highlight\n    .aria-label = Highlight\npdfjs-highlight-floating-button-label = Highlight\npdfjs-editor-remove-ink-button =\n    .title = Remove drawing\npdfjs-editor-remove-freetext-button =\n    .title = Remove text\npdfjs-editor-remove-stamp-button =\n    .title = Remove image\npdfjs-editor-remove-highlight-button =\n    .title = Remove highlight\npdfjs-editor-free-text-color-input = Color\npdfjs-editor-free-text-size-input = Size\npdfjs-editor-ink-color-input = Color\npdfjs-editor-ink-thickness-input = Thickness\npdfjs-editor-ink-opacity-input = Opacity\npdfjs-editor-stamp-add-image-button =\n    .title = Add image\npdfjs-editor-stamp-add-image-button-label = Add image\npdfjs-editor-free-highlight-thickness-input = Thickness\npdfjs-editor-free-highlight-thickness-title =\n    .title = Change thickness when highlighting items other than text\npdfjs-free-text2 =\n    .aria-label = Text Editor\n    .default-content = Start typing\u2026\npdfjs-ink =\n    .aria-label = Draw Editor\npdfjs-ink-canvas =\n    .aria-label = User-created image\npdfjs-editor-alt-text-button =\n    .aria-label = Alt text\npdfjs-editor-alt-text-button-label = Alt text\npdfjs-editor-alt-text-edit-button =\n    .aria-label = Edit alt text\npdfjs-editor-alt-text-dialog-label = Choose an option\npdfjs-editor-alt-text-dialog-description = Alt text (alternative text) helps when people can\u2019t see the image or when it doesn\u2019t load.\npdfjs-editor-alt-text-add-description-label = Add a description\npdfjs-editor-alt-text-add-description-description = Aim for 1-2 sentences that describe the subject, setting, or actions.\npdfjs-editor-alt-text-mark-decorative-label = Mark as decorative\npdfjs-editor-alt-text-mark-decorative-description = This is used for ornamental images, like borders or watermarks.\npdfjs-editor-alt-text-cancel-button = Cancel\npdfjs-editor-alt-text-save-button = Save\npdfjs-editor-alt-text-decorative-tooltip = Marked as decorative\npdfjs-editor-alt-text-textarea =\n    .placeholder = For example, \u201CA young man sits down at a table to eat a meal\u201D\npdfjs-editor-resizer-top-left =\n    .aria-label = Top left corner \u2014 resize\npdfjs-editor-resizer-top-middle =\n    .aria-label = Top middle \u2014 resize\npdfjs-editor-resizer-top-right =\n    .aria-label = Top right corner \u2014 resize\npdfjs-editor-resizer-middle-right =\n    .aria-label = Middle right \u2014 resize\npdfjs-editor-resizer-bottom-right =\n    .aria-label = Bottom right corner \u2014 resize\npdfjs-editor-resizer-bottom-middle =\n    .aria-label = Bottom middle \u2014 resize\npdfjs-editor-resizer-bottom-left =\n    .aria-label = Bottom left corner \u2014 resize\npdfjs-editor-resizer-middle-left =\n    .aria-label = Middle left \u2014 resize\npdfjs-editor-highlight-colorpicker-label = Highlight color\npdfjs-editor-colorpicker-button =\n    .title = Change color\npdfjs-editor-colorpicker-dropdown =\n    .aria-label = Color choices\npdfjs-editor-colorpicker-yellow =\n    .title = Yellow\npdfjs-editor-colorpicker-green =\n    .title = Green\npdfjs-editor-colorpicker-blue =\n    .title = Blue\npdfjs-editor-colorpicker-pink =\n    .title = Pink\npdfjs-editor-colorpicker-red =\n    .title = Red\npdfjs-editor-highlight-show-all-button-label = Show all\npdfjs-editor-highlight-show-all-button =\n    .title = Show all\npdfjs-editor-new-alt-text-dialog-edit-label = Edit alt text (image description)\npdfjs-editor-new-alt-text-dialog-add-label = Add alt text (image description)\npdfjs-editor-new-alt-text-textarea =\n    .placeholder = Write your description here\u2026\npdfjs-editor-new-alt-text-description = Short description for people who can\u2019t see the image or when the image doesn\u2019t load.\npdfjs-editor-new-alt-text-disclaimer1 = This alt text was created automatically and may be inaccurate.\npdfjs-editor-new-alt-text-disclaimer-learn-more-url = Learn more\npdfjs-editor-new-alt-text-create-automatically-button-label = Create alt text automatically\npdfjs-editor-new-alt-text-not-now-button = Not now\npdfjs-editor-new-alt-text-error-title = Couldn\u2019t create alt text automatically\npdfjs-editor-new-alt-text-error-description = Please write your own alt text or try again later.\npdfjs-editor-new-alt-text-error-close-button = Close\npdfjs-editor-new-alt-text-ai-model-downloading-progress = Downloading alt text AI model ({ $downloadedSize } of { $totalSize } MB)\n    .aria-valuetext = Downloading alt text AI model ({ $downloadedSize } of { $totalSize } MB)\npdfjs-editor-new-alt-text-added-button =\n    .aria-label = Alt text added\npdfjs-editor-new-alt-text-added-button-label = Alt text added\npdfjs-editor-new-alt-text-missing-button =\n    .aria-label = Missing alt text\npdfjs-editor-new-alt-text-missing-button-label = Missing alt text\npdfjs-editor-new-alt-text-to-review-button =\n    .aria-label = Review alt text\npdfjs-editor-new-alt-text-to-review-button-label = Review alt text\npdfjs-editor-new-alt-text-generated-alt-text-with-disclaimer = Created automatically: { $generatedAltText }\npdfjs-image-alt-text-settings-button =\n    .title = Image alt text settings\npdfjs-image-alt-text-settings-button-label = Image alt text settings\npdfjs-editor-alt-text-settings-dialog-label = Image alt text settings\npdfjs-editor-alt-text-settings-automatic-title = Automatic alt text\npdfjs-editor-alt-text-settings-create-model-button-label = Create alt text automatically\npdfjs-editor-alt-text-settings-create-model-description = Suggests descriptions to help people who can\u2019t see the image or when the image doesn\u2019t load.\npdfjs-editor-alt-text-settings-download-model-label = Alt text AI model ({ $totalSize } MB)\npdfjs-editor-alt-text-settings-ai-model-description = Runs locally on your device so your data stays private. Required for automatic alt text.\npdfjs-editor-alt-text-settings-delete-model-button = Delete\npdfjs-editor-alt-text-settings-download-model-button = Download\npdfjs-editor-alt-text-settings-downloading-model-button = Downloading\u2026\npdfjs-editor-alt-text-settings-editor-title = Alt text editor\npdfjs-editor-alt-text-settings-show-dialog-button-label = Show alt text editor right away when adding an image\npdfjs-editor-alt-text-settings-show-dialog-description = Helps you make sure all your images have alt text.\npdfjs-editor-alt-text-settings-close-button = Close";
+    const text = "pdfjs-previous-button =\n    .title = Previous Page\npdfjs-previous-button-label = Previous\npdfjs-next-button =\n    .title = Next Page\npdfjs-next-button-label = Next\npdfjs-page-input =\n    .title = Page\npdfjs-of-pages = of { $pagesCount }\npdfjs-page-of-pages = ({ $pageNumber } of { $pagesCount })\npdfjs-zoom-out-button =\n    .title = Zoom Out\npdfjs-zoom-out-button-label = Zoom Out\npdfjs-zoom-in-button =\n    .title = Zoom In\npdfjs-zoom-in-button-label = Zoom In\npdfjs-zoom-select =\n    .title = Zoom\npdfjs-presentation-mode-button =\n    .title = Switch to Presentation Mode\npdfjs-presentation-mode-button-label = Presentation Mode\npdfjs-open-file-button =\n    .title = Open File\npdfjs-open-file-button-label = Open\npdfjs-print-button =\n    .title = Print\npdfjs-print-button-label = Print\npdfjs-save-button =\n    .title = Save\npdfjs-save-button-label = Save\npdfjs-download-button =\n    .title = Download\npdfjs-download-button-label = Download\npdfjs-bookmark-button =\n    .title = Current Page (View URL from Current Page)\npdfjs-bookmark-button-label = Current Page\npdfjs-tools-button =\n    .title = Tools\npdfjs-tools-button-label = Tools\npdfjs-first-page-button =\n    .title = Go to First Page\npdfjs-first-page-button-label = Go to First Page\npdfjs-last-page-button =\n    .title = Go to Last Page\npdfjs-last-page-button-label = Go to Last Page\npdfjs-page-rotate-cw-button =\n    .title = Rotate Clockwise\npdfjs-page-rotate-cw-button-label = Rotate Clockwise\npdfjs-page-rotate-ccw-button =\n    .title = Rotate Counterclockwise\npdfjs-page-rotate-ccw-button-label = Rotate Counterclockwise\npdfjs-cursor-text-select-tool-button =\n    .title = Enable Text Selection Tool\npdfjs-cursor-text-select-tool-button-label = Text Selection Tool\npdfjs-cursor-hand-tool-button =\n    .title = Enable Hand Tool\npdfjs-cursor-hand-tool-button-label = Hand Tool\npdfjs-scroll-page-button =\n    .title = Use Page Scrolling\npdfjs-scroll-page-button-label = Page Scrolling\npdfjs-scroll-vertical-button =\n    .title = Use Vertical Scrolling\npdfjs-scroll-vertical-button-label = Vertical Scrolling\npdfjs-scroll-horizontal-button =\n    .title = Use Horizontal Scrolling\npdfjs-scroll-horizontal-button-label = Horizontal Scrolling\npdfjs-scroll-wrapped-button =\n    .title = Use Wrapped Scrolling\npdfjs-scroll-wrapped-button-label = Wrapped Scrolling\npdfjs-spread-none-button =\n    .title = Do not join page spreads\npdfjs-spread-none-button-label = No Spreads\npdfjs-spread-odd-button =\n    .title = Join page spreads starting with odd-numbered pages\npdfjs-spread-odd-button-label = Odd Spreads\npdfjs-spread-even-button =\n    .title = Join page spreads starting with even-numbered pages\npdfjs-spread-even-button-label = Even Spreads\npdfjs-document-properties-button =\n    .title = Document Properties\u2026\npdfjs-document-properties-button-label = Document Properties\u2026\npdfjs-document-properties-file-name = File name:\npdfjs-document-properties-file-size = File size:\npdfjs-document-properties-size-kb = { NUMBER($kb, maximumSignificantDigits: 3) } KB ({ $b } bytes)\npdfjs-document-properties-size-mb = { NUMBER($mb, maximumSignificantDigits: 3) } MB ({ $b } bytes)\npdfjs-document-properties-title = Title:\npdfjs-document-properties-author = Author:\npdfjs-document-properties-subject = Subject:\npdfjs-document-properties-keywords = Keywords:\npdfjs-document-properties-creation-date = Creation Date:\npdfjs-document-properties-modification-date = Modification Date:\npdfjs-document-properties-date-time-string = { DATETIME($dateObj, dateStyle: \"short\", timeStyle: \"medium\") }\npdfjs-document-properties-creator = Creator:\npdfjs-document-properties-producer = PDF Producer:\npdfjs-document-properties-version = PDF Version:\npdfjs-document-properties-page-count = Page Count:\npdfjs-document-properties-page-size = Page Size:\npdfjs-document-properties-page-size-unit-inches = in\npdfjs-document-properties-page-size-unit-millimeters = mm\npdfjs-document-properties-page-size-orientation-portrait = portrait\npdfjs-document-properties-page-size-orientation-landscape = landscape\npdfjs-document-properties-page-size-name-a-three = A3\npdfjs-document-properties-page-size-name-a-four = A4\npdfjs-document-properties-page-size-name-letter = Letter\npdfjs-document-properties-page-size-name-legal = Legal\npdfjs-document-properties-page-size-dimension-string = { $width } \xD7 { $height } { $unit } ({ $orientation })\npdfjs-document-properties-page-size-dimension-name-string = { $width } \xD7 { $height } { $unit } ({ $name }, { $orientation })\npdfjs-document-properties-linearized = Fast Web View:\npdfjs-document-properties-linearized-yes = Yes\npdfjs-document-properties-linearized-no = No\npdfjs-document-properties-close-button = Close\npdfjs-print-progress-message = Preparing document for printing\u2026\npdfjs-print-progress-percent = { $progress }%\npdfjs-print-progress-close-button = Cancel\npdfjs-printing-not-supported = Warning: Printing is not fully supported by this browser.\npdfjs-printing-not-ready = Warning: The PDF is not fully loaded for printing.\npdfjs-toggle-sidebar-button =\n    .title = Toggle Sidebar\npdfjs-toggle-sidebar-notification-button =\n    .title = Toggle Sidebar (document contains outline/attachments/layers)\npdfjs-toggle-sidebar-button-label = Toggle Sidebar\npdfjs-document-outline-button =\n    .title = Show Document Outline (double-click to expand/collapse all items)\npdfjs-document-outline-button-label = Document Outline\npdfjs-attachments-button =\n    .title = Show Attachments\npdfjs-attachments-button-label = Attachments\npdfjs-layers-button =\n    .title = Show Layers (double-click to reset all layers to the default state)\npdfjs-layers-button-label = Layers\npdfjs-thumbs-button =\n    .title = Show Thumbnails\npdfjs-thumbs-button-label = Thumbnails\npdfjs-current-outline-item-button =\n    .title = Find Current Outline Item\npdfjs-current-outline-item-button-label = Current Outline Item\npdfjs-findbar-button =\n    .title = Find in Document\npdfjs-findbar-button-label = Find\npdfjs-additional-layers = Additional Layers\npdfjs-thumb-page-title =\n    .title = Page { $page }\npdfjs-thumb-page-canvas =\n    .aria-label = Thumbnail of Page { $page }\npdfjs-find-input =\n    .title = Find\n    .placeholder = Find in document\u2026\npdfjs-find-previous-button =\n    .title = Find the previous occurrence of the phrase\npdfjs-find-previous-button-label = Previous\npdfjs-find-next-button =\n    .title = Find the next occurrence of the phrase\npdfjs-find-next-button-label = Next\npdfjs-find-highlight-checkbox = Highlight All\npdfjs-find-match-case-checkbox-label = Match Case\npdfjs-find-match-diacritics-checkbox-label = Match Diacritics\npdfjs-find-entire-word-checkbox-label = Whole Words\npdfjs-find-reached-top = Reached top of document, continued from bottom\npdfjs-find-reached-bottom = Reached end of document, continued from top\npdfjs-find-match-count =\n    { $total ->\n        [one] { $current } of { $total } match\n       *[other] { $current } of { $total } matches\n    }\npdfjs-find-match-count-limit =\n    { $limit ->\n        [one] More than { $limit } match\n       *[other] More than { $limit } matches\n    }\npdfjs-find-not-found = Phrase not found\npdfjs-page-scale-width = Page Width\npdfjs-page-scale-fit = Page Fit\npdfjs-page-scale-auto = Automatic Zoom\npdfjs-page-scale-actual = Actual Size\npdfjs-page-scale-percent = { $scale }%\npdfjs-page-landmark =\n    .aria-label = Page { $page }\npdfjs-loading-error = An error occurred while loading the PDF.\npdfjs-invalid-file-error = Invalid or corrupted PDF file.\npdfjs-missing-file-error = Missing PDF file.\npdfjs-unexpected-response-error = Unexpected server response.\npdfjs-rendering-error = An error occurred while rendering the page.\npdfjs-annotation-date-time-string = { DATETIME($dateObj, dateStyle: \"short\", timeStyle: \"medium\") }\npdfjs-text-annotation-type =\n    .alt = [{ $type } Annotation]\npdfjs-password-label = Enter the password to open this PDF file.\npdfjs-password-invalid = Invalid password. Please try again.\npdfjs-password-ok-button = OK\npdfjs-password-cancel-button = Cancel\npdfjs-web-fonts-disabled = Web fonts are disabled: unable to use embedded PDF fonts.\npdfjs-editor-free-text-button =\n    .title = Text\npdfjs-editor-free-text-button-label = Text\npdfjs-editor-ink-button =\n    .title = Draw\npdfjs-editor-ink-button-label = Draw\npdfjs-editor-stamp-button =\n    .title = Add or edit images\npdfjs-editor-stamp-button-label = Add or edit images\npdfjs-editor-highlight-button =\n    .title = Highlight\npdfjs-editor-highlight-button-label = Highlight\npdfjs-highlight-floating-button1 =\n    .title = Highlight\n    .aria-label = Highlight\npdfjs-highlight-floating-button-label = Highlight\npdfjs-editor-remove-ink-button =\n    .title = Remove drawing\npdfjs-editor-remove-freetext-button =\n    .title = Remove text\npdfjs-editor-remove-stamp-button =\n    .title = Remove image\npdfjs-editor-remove-highlight-button =\n    .title = Remove highlight\npdfjs-editor-free-text-color-input = Color\npdfjs-editor-free-text-size-input = Size\npdfjs-editor-ink-color-input = Color\npdfjs-editor-ink-thickness-input = Thickness\npdfjs-editor-ink-opacity-input = Opacity\npdfjs-editor-stamp-add-image-button =\n    .title = Add image\npdfjs-editor-stamp-add-image-button-label = Add image\npdfjs-editor-free-highlight-thickness-input = Thickness\npdfjs-editor-free-highlight-thickness-title =\n    .title = Change thickness when highlighting items other than text\npdfjs-free-text2 =\n    .aria-label = Text Editor\n    .default-content = Start typing\u2026\npdfjs-ink =\n    .aria-label = Draw Editor\npdfjs-ink-canvas =\n    .aria-label = User-created image\npdfjs-editor-alt-text-button =\n    .aria-label = Alt text\npdfjs-editor-alt-text-button-label = Alt text\npdfjs-editor-alt-text-edit-button =\n    .aria-label = Edit alt text\npdfjs-editor-alt-text-dialog-label = Choose an option\npdfjs-editor-alt-text-dialog-description = Alt text (alternative text) helps when people can\u2019t see the image or when it doesn\u2019t load.\npdfjs-editor-alt-text-add-description-label = Add a description\npdfjs-editor-alt-text-add-description-description = Aim for 1-2 sentences that describe the subject, setting, or actions.\npdfjs-editor-alt-text-mark-decorative-label = Mark as decorative\npdfjs-editor-alt-text-mark-decorative-description = This is used for ornamental images, like borders or watermarks.\npdfjs-editor-alt-text-cancel-button = Cancel\npdfjs-editor-alt-text-save-button = Save\npdfjs-editor-alt-text-decorative-tooltip = Marked as decorative\npdfjs-editor-alt-text-textarea =\n    .placeholder = For example, \u201CA young man sits down at a table to eat a meal\u201D\npdfjs-editor-resizer-top-left =\n    .aria-label = Top left corner \u2014 resize\npdfjs-editor-resizer-top-middle =\n    .aria-label = Top middle \u2014 resize\npdfjs-editor-resizer-top-right =\n    .aria-label = Top right corner \u2014 resize\npdfjs-editor-resizer-middle-right =\n    .aria-label = Middle right \u2014 resize\npdfjs-editor-resizer-bottom-right =\n    .aria-label = Bottom right corner \u2014 resize\npdfjs-editor-resizer-bottom-middle =\n    .aria-label = Bottom middle \u2014 resize\npdfjs-editor-resizer-bottom-left =\n    .aria-label = Bottom left corner \u2014 resize\npdfjs-editor-resizer-middle-left =\n    .aria-label = Middle left \u2014 resize\npdfjs-editor-highlight-colorpicker-label = Highlight color\npdfjs-editor-colorpicker-button =\n    .title = Change color\npdfjs-editor-colorpicker-dropdown =\n    .aria-label = Color choices\npdfjs-editor-colorpicker-yellow =\n    .title = Yellow\npdfjs-editor-colorpicker-green =\n    .title = Green\npdfjs-editor-colorpicker-blue =\n    .title = Blue\npdfjs-editor-colorpicker-pink =\n    .title = Pink\npdfjs-editor-colorpicker-red =\n    .title = Red\npdfjs-editor-highlight-show-all-button-label = Show all\npdfjs-editor-highlight-show-all-button =\n    .title = Show all\npdfjs-editor-new-alt-text-dialog-edit-label = Edit alt text (image description)\npdfjs-editor-new-alt-text-dialog-add-label = Add alt text (image description)\npdfjs-editor-new-alt-text-textarea =\n    .placeholder = Write your description here\u2026\npdfjs-editor-new-alt-text-description = Short description for people who can\u2019t see the image or when the image doesn\u2019t load.\npdfjs-editor-new-alt-text-disclaimer1 = This alt text was created automatically and may be inaccurate.\npdfjs-editor-new-alt-text-disclaimer-learn-more-url = Learn more\npdfjs-editor-new-alt-text-create-automatically-button-label = Create alt text automatically\npdfjs-editor-new-alt-text-not-now-button = Not now\npdfjs-editor-new-alt-text-error-title = Couldn\u2019t create alt text automatically\npdfjs-editor-new-alt-text-error-description = Please write your own alt text or try again later.\npdfjs-editor-new-alt-text-error-close-button = Close\npdfjs-editor-new-alt-text-ai-model-downloading-progress = Downloading alt text AI model ({ $downloadedSize } of { $totalSize } MB)\n    .aria-valuetext = Downloading alt text AI model ({ $downloadedSize } of { $totalSize } MB)\npdfjs-editor-new-alt-text-added-button =\n    .aria-label = Alt text added\npdfjs-editor-new-alt-text-added-button-label = Alt text added\npdfjs-editor-new-alt-text-missing-button =\n    .aria-label = Missing alt text\npdfjs-editor-new-alt-text-missing-button-label = Missing alt text\npdfjs-editor-new-alt-text-to-review-button =\n    .aria-label = Review alt text\npdfjs-editor-new-alt-text-to-review-button-label = Review alt text\npdfjs-editor-new-alt-text-generated-alt-text-with-disclaimer = Created automatically: { $generatedAltText }\npdfjs-image-alt-text-settings-button =\n    .title = Image alt text settings\npdfjs-image-alt-text-settings-button-label = Image alt text settings\npdfjs-editor-alt-text-settings-dialog-label = Image alt text settings\npdfjs-editor-alt-text-settings-automatic-title = Automatic alt text\npdfjs-editor-alt-text-settings-create-model-button-label = Create alt text automatically\npdfjs-editor-alt-text-settings-create-model-description = Suggests descriptions to help people who can\u2019t see the image or when the image doesn\u2019t load.\npdfjs-editor-alt-text-settings-download-model-label = Alt text AI model ({ $totalSize } MB)\npdfjs-editor-alt-text-settings-ai-model-description = Runs locally on your device so your data stays private. Required for automatic alt text.\npdfjs-editor-alt-text-settings-delete-model-button = Delete\npdfjs-editor-alt-text-settings-download-model-button = Download\npdfjs-editor-alt-text-settings-downloading-model-button = Downloading\u2026\npdfjs-editor-alt-text-settings-editor-title = Alt text editor\npdfjs-editor-alt-text-settings-show-dialog-button-label = Show alt text editor right away when adding an image\npdfjs-editor-alt-text-settings-show-dialog-description = Helps you make sure all your images have alt text.\npdfjs-editor-alt-text-settings-close-button = Close\npdfjs-editor-undo-bar-message-highlight = Highlight removed\npdfjs-editor-undo-bar-message-freetext = Text removed\npdfjs-editor-undo-bar-message-ink = Drawing removed\npdfjs-editor-undo-bar-message-stamp = Image removed\npdfjs-editor-undo-bar-message-multiple =\n    { $count ->\n        [one] { $count } annotation removed\n       *[other] { $count } annotations removed\n    }\npdfjs-editor-undo-bar-undo-button =\n    .title = Undo\npdfjs-editor-undo-bar-undo-button-label = Undo\npdfjs-editor-undo-bar-close-button =\n    .title = Close\npdfjs-editor-undo-bar-close-button-label = Close";
     return createBundle(lang, text);
   }
 }
@@ -6780,8 +3090,6 @@ class GenericScripting {
 }
 
 ;// ./web/genericcom.js
-
-
 
 
 
@@ -6884,7 +3192,7 @@ class FakeMLManager {
     return new Promise(resolve => {
       setTimeout(() => {
         resolve(data ? {
-          output: "Fake alt text"
+          output: "Fake alt text."
         } : {
           error: true
         });
@@ -6897,13 +3205,6 @@ class FakeMLManager {
 }
 
 ;// ./web/new_alt_text_manager.js
-
-
-
-
-
-
-
 
 class NewAltTextManager {
   #boundCancel = this.#cancel.bind(this);
@@ -7256,6 +3557,9 @@ class NewAltTextManager {
     this.#currentEditor = null;
     this.#uiManager = null;
   }
+  #extractWords(text) {
+    return new Set(text.toLowerCase().split(/[^\p{L}\p{N}]+/gu).filter(x => !!x));
+  }
   #save() {
     const altText = this.#textarea.value.trim();
     this.#currentEditor.altTextData = {
@@ -7264,8 +3568,8 @@ class NewAltTextManager {
     };
     this.#currentEditor.altTextData.guessedAltText = this.#guessedAltText;
     if (this.#guessedAltText && this.#guessedAltText !== altText) {
-      const guessedWords = new Set(this.#guessedAltText.split(/\s+/));
-      const words = new Set(altText.split(/\s+/));
+      const guessedWords = this.#extractWords(this.#guessedAltText);
+      const words = this.#extractWords(altText);
       this.#currentEditor._reportTelemetry({
         action: "pdfjs.image.alt_text.user_edit",
         data: {
@@ -7793,7 +4097,6 @@ class AnnotationEditorParams {
 }
 
 ;// ./web/caret_browsing.js
-
 const PRECISION = 1e-1;
 class CaretBrowsingMode {
   #mainContainer;
@@ -8011,9 +4314,6 @@ class CaretBrowsingMode {
 
 ;// ./web/download_manager.js
 
-
-
-
 function download(blobUrl, filename) {
   const a = document.createElement("a");
   if (!a.click) {
@@ -8081,6 +4381,92 @@ class DownloadManager {
   }
 }
 
+;// ./web/editor_undo_bar.js
+
+class EditorUndoBar {
+  #closeButton = null;
+  #container;
+  #eventBus = null;
+  #focusTimeout = null;
+  #initController = null;
+  isOpen = false;
+  #message;
+  #showController = null;
+  #undoButton;
+  static #l10nMessages = Object.freeze({
+    highlight: "pdfjs-editor-undo-bar-message-highlight",
+    freetext: "pdfjs-editor-undo-bar-message-freetext",
+    stamp: "pdfjs-editor-undo-bar-message-stamp",
+    ink: "pdfjs-editor-undo-bar-message-ink",
+    _multiple: "pdfjs-editor-undo-bar-message-multiple"
+  });
+  constructor({
+    container,
+    message,
+    undoButton,
+    closeButton
+  }, eventBus) {
+    this.#container = container;
+    this.#message = message;
+    this.#undoButton = undoButton;
+    this.#closeButton = closeButton;
+    this.#eventBus = eventBus;
+  }
+  destroy() {
+    this.#initController?.abort();
+    this.#initController = null;
+    this.hide();
+  }
+  show(undoAction, messageData) {
+    if (!this.#initController) {
+      this.#initController = new AbortController();
+      const opts = {
+        signal: this.#initController.signal
+      };
+      const boundHide = this.hide.bind(this);
+      this.#container.addEventListener("contextmenu", noContextMenu, opts);
+      this.#closeButton.addEventListener("click", boundHide, opts);
+      this.#eventBus._on("beforeprint", boundHide, opts);
+      this.#eventBus._on("download", boundHide, opts);
+    }
+    this.hide();
+    if (typeof messageData === "string") {
+      this.#message.setAttribute("data-l10n-id", EditorUndoBar.#l10nMessages[messageData]);
+    } else {
+      this.#message.setAttribute("data-l10n-id", EditorUndoBar.#l10nMessages._multiple);
+      this.#message.setAttribute("data-l10n-args", JSON.stringify({
+        count: messageData
+      }));
+    }
+    this.isOpen = true;
+    this.#container.hidden = false;
+    this.#showController = new AbortController();
+    this.#undoButton.addEventListener("click", () => {
+      undoAction();
+      this.hide();
+    }, {
+      signal: this.#showController.signal
+    });
+    this.#focusTimeout = setTimeout(() => {
+      this.#container.focus();
+      this.#focusTimeout = null;
+    }, 100);
+  }
+  hide() {
+    if (!this.isOpen) {
+      return;
+    }
+    this.isOpen = false;
+    this.#container.hidden = true;
+    this.#showController?.abort();
+    this.#showController = null;
+    if (this.#focusTimeout) {
+      clearTimeout(this.#focusTimeout);
+      this.#focusTimeout = null;
+    }
+  }
+}
+
 ;// ./web/overlay_manager.js
 class OverlayManager {
   #overlays = new WeakMap();
@@ -8130,7 +4516,6 @@ class OverlayManager {
 }
 
 ;// ./web/password_prompt.js
-
 
 class PasswordPrompt {
   #activeCapability = null;
@@ -8301,7 +4686,6 @@ class BaseTreeViewer {
 ;// ./web/pdf_attachment_viewer.js
 
 
-
 class PDFAttachmentViewer extends BaseTreeViewer {
   constructor(options) {
     super(options);
@@ -8397,6 +4781,7 @@ class PDFAttachmentViewer extends BaseTreeViewer {
 }
 
 ;// ./web/grab_to_pan.js
+
 const CSS_CLASS_GRAB = "grab-to-pan-grab";
 class GrabToPan {
   #activateAC = null;
@@ -8466,8 +4851,7 @@ class GrabToPan {
       capture: true,
       signal: this.#scrollAC.signal
     });
-    event.preventDefault();
-    event.stopPropagation();
+    stopEvent(event);
     const focusedElement = document.activeElement;
     if (focusedElement && !focusedElement.contains(event.target)) {
       focusedElement.blur();
@@ -8622,7 +5006,6 @@ class PDFCursorTools {
 ;// ./web/pdf_document_properties.js
 
 
-
 const NON_METRIC_LOCALES = ["en-us", "en-lr", "my"];
 const US_PAGE_NAMES = {
   "8.5x11": "pdfjs-document-properties-page-size-name-letter",
@@ -8667,13 +5050,11 @@ class PDFDocumentProperties {
       this.#updateUI();
       return;
     }
-    const {
+    const [{
       info,
       contentLength
-    } = await this.pdfDocument.getMetadata();
-    const [fileName, fileSize, creationDate, modificationDate, pageSize, isLinearized] = await Promise.all([this._fileNameLookup(), this.#parseFileSize(contentLength), this.#parseDate(info.CreationDate), this.#parseDate(info.ModDate), this.pdfDocument.getPage(currentPageNumber).then(pdfPage => {
-      return this.#parsePageSize(getPageSizeInches(pdfPage), pagesRotation);
-    }), this.#parseLinearization(info.IsLinearized)]);
+    }, pdfPage] = await Promise.all([this.pdfDocument.getMetadata(), this.pdfDocument.getPage(currentPageNumber)]);
+    const [fileName, fileSize, creationDate, modificationDate, pageSize, isLinearized] = await Promise.all([this._fileNameLookup(), this.#parseFileSize(contentLength), this.#parseDate(info.CreationDate), this.#parseDate(info.ModDate), this.#parsePageSize(getPageSizeInches(pdfPage), pagesRotation), this.#parseLinearization(info.IsLinearized)]);
     this.#fieldData = Object.freeze({
       fileName,
       fileSize,
@@ -8808,7 +5189,6 @@ class PDFDocumentProperties {
 }
 
 ;// ./web/pdf_find_utils.js
-
 const CharacterType = {
   SPACE: 0,
   ALPHA_LETTER: 1,
@@ -8885,18 +5265,6 @@ function getNormalizeWithNFKC() {
 ;// ./web/pdf_find_controller.js
 
 
-
-
-
-
-
-
-
-
-
-
-
-
 const FindState = {
   FOUND: 0,
   NOT_FOUND: 1,
@@ -8971,7 +5339,7 @@ function normalize(text) {
     rawDiacriticsPositions.push([m[0].length, m.index]);
   }
   let normalized = text.normalize("NFD");
-  const positions = [[0, 0]];
+  const positions = [0, 0];
   let rawDiacriticsIndex = 0;
   let syllableIndex = 0;
   let shift = 0;
@@ -8984,7 +5352,7 @@ function normalize(text) {
       const replacement = CHARACTERS_TO_NORMALIZE[p1];
       const jj = replacement.length;
       for (let j = 1; j < jj; j++) {
-        positions.push([i - shift + j, shift - j]);
+        positions.push(i - shift + j, shift - j);
       }
       shift -= jj - 1;
       return replacement;
@@ -8997,7 +5365,7 @@ function normalize(text) {
       }
       const jj = replacement.length;
       for (let j = 1; j < jj; j++) {
-        positions.push([i - shift + j, shift - j]);
+        positions.push(i - shift + j, shift - j);
       }
       shift -= jj - 1;
       return replacement;
@@ -9007,11 +5375,11 @@ function normalize(text) {
       if (i + eol === rawDiacriticsPositions[rawDiacriticsIndex]?.[1]) {
         ++rawDiacriticsIndex;
       } else {
-        positions.push([i - 1 - shift + 1, shift - 1]);
+        positions.push(i - 1 - shift + 1, shift - 1);
         shift -= 1;
         shiftOrigin += 1;
       }
-      positions.push([i - shift + 1, shift]);
+      positions.push(i - shift + 1, shift);
       shiftOrigin += 1;
       eol += 1;
       return p3.charAt(0);
@@ -9026,13 +5394,13 @@ function normalize(text) {
         ++rawDiacriticsIndex;
       }
       for (let j = 1; j <= jj; j++) {
-        positions.push([i - 1 - shift + j, shift - j]);
+        positions.push(i - 1 - shift + j, shift - j);
       }
       shift -= jj;
       shiftOrigin += jj;
       if (hasTrailingDashEOL) {
         i += len - 1;
-        positions.push([i - shift + 1, 1 + shift]);
+        positions.push(i - shift + 1, 1 + shift);
         shift += 1;
         shiftOrigin += 1;
         eol += 1;
@@ -9041,15 +5409,13 @@ function normalize(text) {
       return p4;
     }
     if (p5) {
-      positions.push([i - shift + 3, 1 + shift]);
-      shift += 1;
       shiftOrigin += 1;
       eol += 1;
       return p5.replace("\n", "");
     }
     if (p6) {
       const len = p6.length - 2;
-      positions.push([i - shift + len, 1 + shift]);
+      positions.push(i - shift + len, 1 + shift);
       shift += 1;
       shiftOrigin += 1;
       eol += 1;
@@ -9057,13 +5423,13 @@ function normalize(text) {
     }
     if (p7) {
       const len = p7.length - 1;
-      positions.push([i - shift + len, shift]);
+      positions.push(i - shift + len, shift);
       shiftOrigin += 1;
       eol += 1;
       return p7.slice(0, -1);
     }
     if (p8) {
-      positions.push([i - shift + 1, shift - 1]);
+      positions.push(i - shift + 1, shift - 1);
       shift -= 1;
       shiftOrigin += 1;
       eol += 1;
@@ -9073,32 +5439,39 @@ function normalize(text) {
       const newCharLen = syllablePositions[syllableIndex][0] - 1;
       ++syllableIndex;
       for (let j = 1; j <= newCharLen; j++) {
-        positions.push([i - (shift - j), shift - j]);
+        positions.push(i - (shift - j), shift - j);
       }
       shift -= newCharLen;
       shiftOrigin += newCharLen;
     }
     return p9;
   });
-  positions.push([normalized.length, shift]);
-  return [normalized, positions, hasDiacritics];
+  positions.push(normalized.length, shift);
+  const starts = new Uint32Array(positions.length >> 1);
+  const shifts = new Int32Array(positions.length >> 1);
+  for (let i = 0, ii = positions.length; i < ii; i += 2) {
+    starts[i >> 1] = positions[i];
+    shifts[i >> 1] = positions[i + 1];
+  }
+  return [normalized, [starts, shifts], hasDiacritics];
 }
 function getOriginalIndex(diffs, pos, len) {
   if (!diffs) {
     return [pos, len];
   }
+  const [starts, shifts] = diffs;
   const start = pos;
   const end = pos + len - 1;
-  let i = binarySearchFirstItem(diffs, x => x[0] >= start);
-  if (diffs[i][0] > start) {
+  let i = binarySearchFirstItem(starts, x => x >= start);
+  if (starts[i] > start) {
     --i;
   }
-  let j = binarySearchFirstItem(diffs, x => x[0] >= end, i);
-  if (diffs[j][0] > end) {
+  let j = binarySearchFirstItem(starts, x => x >= end, i);
+  if (starts[j] > end) {
     --j;
   }
-  const oldStart = start + diffs[i][1];
-  const oldEnd = end + diffs[j][1];
+  const oldStart = start + shifts[i];
+  const oldEnd = end + shifts[j];
   const oldLen = oldEnd + 1 - oldStart;
   return [oldStart, oldLen];
 }
@@ -10271,7 +6644,6 @@ function isDestArraysEqual(firstDest, secondDest) {
 
 ;// ./web/pdf_layer_viewer.js
 
-
 class PDFLayerViewer extends BaseTreeViewer {
   constructor(options) {
     super(options);
@@ -10441,8 +6813,6 @@ class PDFLayerViewer extends BaseTreeViewer {
 }
 
 ;// ./web/pdf_outline_viewer.js
-
-
 
 
 class PDFOutlineViewer extends BaseTreeViewer {
@@ -10997,8 +7367,6 @@ class PDFPresentationMode {
   }
 }
 
-// EXTERNAL MODULE: ./node_modules/core-js/modules/esnext.iterator.every.js
-var esnext_iterator_every = __webpack_require__(3215);
 ;// ./web/xfa_layer_builder.js
 
 class XfaLayerBuilder {
@@ -11092,12 +7460,6 @@ function getXfaHtmlForPrinting(printContainer, pdfDocument) {
 }
 
 ;// ./web/pdf_print_service.js
-
-
-
-
-
-
 
 
 let activeService = null;
@@ -11476,14 +7838,6 @@ class PDFRenderingQueue {
 }
 
 ;// ./web/pdf_scripting_manager.js
-
-
-
-
-
-
-
-
 
 
 class PDFScriptingManager {
@@ -12462,7 +8816,6 @@ class PDFThumbnailView {
 ;// ./web/pdf_thumbnail_viewer.js
 
 
-
 const THUMBNAIL_SCROLL_MARGIN = -19;
 const THUMBNAIL_SELECTED_CLASS = "selected";
 class PDFThumbnailViewer {
@@ -12929,7 +9282,6 @@ class DrawLayerBuilder {
 
 ;// ./web/struct_tree_layer_builder.js
 
-
 const PDF_ROLE_TO_HTML_ROLE = {
   Document: null,
   DocumentFragment: null,
@@ -13134,8 +9486,6 @@ class StructTreeLayerBuilder {
 
 ;// ./web/text_accessibility.js
 
-
-
 class TextAccessibilityManager {
   #enabled = false;
   #textChildren = null;
@@ -13287,7 +9637,6 @@ class TextAccessibilityManager {
 }
 
 ;// ./web/text_highlighter.js
-
 class TextHighlighter {
   #eventAbortController = null;
   constructor({
@@ -13510,15 +9859,6 @@ class TextHighlighter {
 ;// ./web/text_layer_builder.js
 
 
-
-
-
-
-
-
-
-
-
 class TextLayerBuilder {
   #enablePermissions = false;
   #onAppend = null;
@@ -13607,8 +9947,7 @@ class TextLayerBuilder {
         const selection = document.getSelection();
         event.clipboardData.setData("text/plain", removeNullCharacters(normalizeUnicode(selection.toString())));
       }
-      event.preventDefault();
-      event.stopPropagation();
+      stopEvent(event);
     });
     TextLayerBuilder.#textLayers.set(div, end);
     TextLayerBuilder.#enableGlobalSelectionListener();
@@ -13707,7 +10046,6 @@ class TextLayerBuilder {
 }
 
 ;// ./web/pdf_page_view.js
-
 
 
 
@@ -14532,18 +10870,6 @@ class PDFPageView {
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
 const DEFAULT_CACHE_SIZE = 10;
 const PagesCountLimit = {
   FORCE_SCROLL_MODE_PAGE: 10000,
@@ -14609,6 +10935,7 @@ class PDFViewer {
   #annotationEditorUIManager = null;
   #annotationMode = AnnotationMode.ENABLE_FORMS;
   #containerTopLeft = null;
+  #editorUndoBar = null;
   #enableHWA = false;
   #enableHighlightFloatingButton = false;
   #enablePermissions = false;
@@ -14627,7 +10954,7 @@ class PDFViewer {
   #scaleTimeoutId = null;
   #textLayerMode = TextLayerMode.ENABLE;
   constructor(options) {
-    const viewerVersion = "4.8.69";
+    const viewerVersion = "4.9.155";
     if (version !== viewerVersion) {
       throw new Error(`The API version "${version}" does not match the Viewer version "${viewerVersion}".`);
     }
@@ -14645,6 +10972,7 @@ class PDFViewer {
     this.downloadManager = options.downloadManager || null;
     this.findController = options.findController || null;
     this.#altTextManager = options.altTextManager || null;
+    this.#editorUndoBar = options.editorUndoBar || null;
     if (this.findController) {
       this.findController.onIsPageVisible = pageNumber => this._getVisiblePages().ids.has(pageNumber);
     }
@@ -14942,8 +11270,7 @@ class PDFViewer {
     } = selection;
     if (anchorNode && focusNode && selection.containsNode(this.#hiddenCopyElement)) {
       if (this.#getAllTextInProgress || textLayerMode === TextLayerMode.ENABLE_PERMISSIONS) {
-        event.preventDefault();
-        event.stopPropagation();
+        stopEvent(event);
         return;
       }
       this.#getAllTextInProgress = true;
@@ -14967,8 +11294,7 @@ class PDFViewer {
         ac.abort();
         classList.remove("copyAll");
       });
-      event.preventDefault();
-      event.stopPropagation();
+      stopEvent(event);
     }
   }
   setDocument(pdfDocument) {
@@ -15059,7 +11385,7 @@ class PDFViewer {
         if (pdfDocument.isPureXfa) {
           console.warn("Warning: XFA-editing is not implemented.");
         } else if (isValidAnnotationEditorMode(mode)) {
-          this.#annotationEditorUIManager = new AnnotationEditorUIManager(this.container, viewer, this.#altTextManager, eventBus, pdfDocument, pageColors, this.#annotationEditorHighlightColors, this.#enableHighlightFloatingButton, this.#enableUpdatedAddImage, this.#enableNewAltTextWhenAddingImage, this.#mlManager);
+          this.#annotationEditorUIManager = new AnnotationEditorUIManager(this.container, viewer, this.#altTextManager, eventBus, pdfDocument, pageColors, this.#annotationEditorHighlightColors, this.#enableHighlightFloatingButton, this.#enableUpdatedAddImage, this.#enableNewAltTextWhenAddingImage, this.#mlManager, this.#editorUndoBar);
           eventBus.dispatch("annotationeditoruimanager", {
             source: this,
             uiManager: this.#annotationEditorUIManager
@@ -16148,7 +12474,6 @@ class PDFViewer {
 ;// ./web/secondary_toolbar.js
 
 
-
 class SecondaryToolbar {
   #opts;
   constructor(options, eventBus) {
@@ -16720,8 +13045,6 @@ class Toolbar {
 }
 
 ;// ./web/view_history.js
-
-
 const DEFAULT_VIEW_HISTORY_CACHE_SIZE = 20;
 class ViewHistory {
   constructor(fingerprint, cacheSize = DEFAULT_VIEW_HISTORY_CACHE_SIZE) {
@@ -16822,14 +13145,8 @@ class ViewHistory {
 
 
 
-
-
-
-
-
-
-
 const FORCE_PAGES_LOADED_TIMEOUT = 10000;
+const MIN_TOUCH_DISTANCE_TO_PINCH = 35 / (window.devicePixelRatio || 1);
 const ViewOnLoad = {
   UNKNOWN: -1,
   PREVIOUS: 0,
@@ -16891,9 +13208,11 @@ const PDFViewerApplication = {
   _title: document.title,
   _printAnnotationStoragePromise: null,
   _touchInfo: null,
+  _isPinching: false,
   _isCtrlKeyDown: false,
   _caretBrowsing: null,
   _isScrolling: false,
+  editorUndoBar: null,
   async initialize(appConfig) {
     this.appConfig = appConfig;
     try {
@@ -17053,6 +13372,9 @@ const PDFViewerApplication = {
     } else {
       altTextManager = appConfig.altTextDialog ? new AltTextManager(appConfig.altTextDialog, container, this.overlayManager, eventBus) : null;
     }
+    if (appConfig.editorUndoBar) {
+      this.editorUndoBar = new EditorUndoBar(appConfig.editorUndoBar, eventBus);
+    }
     const enableHWA = AppOptions.get("enableHWA");
     const pdfViewer = new PDFViewer({
       container,
@@ -17062,6 +13384,7 @@ const PDFViewerApplication = {
       linkService: pdfLinkService,
       downloadManager,
       altTextManager,
+      editorUndoBar: this.editorUndoBar,
       findController,
       scriptingManager: AppOptions.get("enableScripting") && pdfScriptingManager,
       l10n,
@@ -17223,8 +13546,7 @@ const PDFViewerApplication = {
       for (const item of evt.dataTransfer.items) {
         if (item.type === "application/pdf") {
           evt.dataTransfer.dropEffect = evt.dataTransfer.effectAllowed === "copy" ? "copy" : "move";
-          evt.preventDefault();
-          evt.stopPropagation();
+          stopEvent(evt);
           return;
         }
       }
@@ -17233,8 +13555,7 @@ const PDFViewerApplication = {
       if (evt.dataTransfer.files?.[0].type !== "application/pdf") {
         return;
       }
-      evt.preventDefault();
-      evt.stopPropagation();
+      stopEvent(evt);
       eventBus.dispatch("fileinputchange", {
         source: this,
         fileInput: evt.dataTransfer
@@ -18516,10 +14837,10 @@ function onTouchStart(evt) {
     [touch0, touch1] = [touch1, touch0];
   }
   this._touchInfo = {
-    touch0X: touch0.pageX,
-    touch0Y: touch0.pageY,
-    touch1X: touch1.pageX,
-    touch1Y: touch1.pageY
+    touch0X: touch0.screenX,
+    touch0Y: touch0.screenY,
+    touch1X: touch1.screenX,
+    touch1Y: touch1.screenY
   };
 }
 function onTouchMove(evt) {
@@ -18536,12 +14857,12 @@ function onTouchMove(evt) {
     [touch0, touch1] = [touch1, touch0];
   }
   const {
-    pageX: page0X,
-    pageY: page0Y
+    screenX: screen0X,
+    screenY: screen0Y
   } = touch0;
   const {
-    pageX: page1X,
-    pageY: page1Y
+    screenX: screen1X,
+    screenY: screen1Y
   } = touch1;
   const {
     touch0X: pTouch0X,
@@ -18549,45 +14870,25 @@ function onTouchMove(evt) {
     touch1X: pTouch1X,
     touch1Y: pTouch1Y
   } = _touchInfo;
-  if (Math.abs(pTouch0X - page0X) <= 1 && Math.abs(pTouch0Y - page0Y) <= 1 && Math.abs(pTouch1X - page1X) <= 1 && Math.abs(pTouch1Y - page1Y) <= 1) {
+  const prevGapX = pTouch1X - pTouch0X;
+  const prevGapY = pTouch1Y - pTouch0Y;
+  const currGapX = screen1X - screen0X;
+  const currGapY = screen1Y - screen0Y;
+  const distance = Math.hypot(currGapX, currGapY) || 1;
+  const pDistance = Math.hypot(prevGapX, prevGapY) || 1;
+  if (!this._isPinching && Math.abs(pDistance - distance) <= MIN_TOUCH_DISTANCE_TO_PINCH) {
     return;
   }
-  _touchInfo.touch0X = page0X;
-  _touchInfo.touch0Y = page0Y;
-  _touchInfo.touch1X = page1X;
-  _touchInfo.touch1Y = page1Y;
-  if (pTouch0X === page0X && pTouch0Y === page0Y) {
-    const v1X = pTouch1X - page0X;
-    const v1Y = pTouch1Y - page0Y;
-    const v2X = page1X - page0X;
-    const v2Y = page1Y - page0Y;
-    const det = v1X * v2Y - v1Y * v2X;
-    if (Math.abs(det) > 0.02 * Math.hypot(v1X, v1Y) * Math.hypot(v2X, v2Y)) {
-      return;
-    }
-  } else if (pTouch1X === page1X && pTouch1Y === page1Y) {
-    const v1X = pTouch0X - page1X;
-    const v1Y = pTouch0Y - page1Y;
-    const v2X = page0X - page1X;
-    const v2Y = page0Y - page1Y;
-    const det = v1X * v2Y - v1Y * v2X;
-    if (Math.abs(det) > 0.02 * Math.hypot(v1X, v1Y) * Math.hypot(v2X, v2Y)) {
-      return;
-    }
-  } else {
-    const diff0X = page0X - pTouch0X;
-    const diff1X = page1X - pTouch1X;
-    const diff0Y = page0Y - pTouch0Y;
-    const diff1Y = page1Y - pTouch1Y;
-    const dotProduct = diff0X * diff1X + diff0Y * diff1Y;
-    if (dotProduct >= 0) {
-      return;
-    }
-  }
+  _touchInfo.touch0X = screen0X;
+  _touchInfo.touch0Y = screen0Y;
+  _touchInfo.touch1X = screen1X;
+  _touchInfo.touch1Y = screen1Y;
   evt.preventDefault();
-  const origin = [(page0X + page1X) / 2, (page0Y + page1Y) / 2];
-  const distance = Math.hypot(page0X - page1X, page0Y - page1Y) || 1;
-  const pDistance = Math.hypot(pTouch0X - pTouch1X, pTouch0Y - pTouch1Y) || 1;
+  if (!this._isPinching) {
+    this._isPinching = true;
+    return;
+  }
+  const origin = [(screen0X + screen1X) / 2, (screen0Y + screen1Y) / 2];
   if (supportsPinchToZoom) {
     const newScaleFactor = this._accumulateFactor(pdfViewer.currentScale, distance / pDistance, "_touchUnusedFactor");
     this.updateZoom(null, newScaleFactor, origin);
@@ -18605,8 +14906,9 @@ function onTouchEnd(evt) {
   this._touchInfo = null;
   this._touchUnusedTicks = 0;
   this._touchUnusedFactor = 1;
+  this._isPinching = false;
 }
-function onClick(evt) {
+function closeSecondaryToolbar(evt) {
   if (!this.secondaryToolbar?.isOpen) {
     return;
   }
@@ -18615,6 +14917,18 @@ function onClick(evt) {
     this.secondaryToolbar.close();
   }
 }
+function closeEditorUndoBar(evt) {
+  if (!this.editorUndoBar?.isOpen) {
+    return;
+  }
+  if (this.appConfig.secondaryToolbar?.toolbar.contains(evt.target)) {
+    this.editorUndoBar.hide();
+  }
+}
+function onClick(evt) {
+  closeSecondaryToolbar.call(this, evt);
+  closeEditorUndoBar.call(this, evt);
+}
 function onKeyUp(evt) {
   if (evt.key === "Control") {
     this._isCtrlKeyDown = false;
@@ -18622,6 +14936,9 @@ function onKeyUp(evt) {
 }
 function onKeyDown(evt) {
   this._isCtrlKeyDown = evt.key === "Control";
+  if (this.editorUndoBar?.isOpen && evt.keyCode !== 9 && evt.keyCode !== 16 && !((evt.keyCode === 13 || evt.keyCode === 32) && getActiveOrFocusedElement() === this.appConfig.editorUndoBar.undoButton)) {
+    this.editorUndoBar.hide();
+  }
   if (this.overlayManager.active) {
     return;
   }
@@ -18905,8 +15222,8 @@ function beforeUnload(evt) {
 
 
 
-const pdfjsVersion = "4.8.69";
-const pdfjsBuild = "3634dab10";
+const pdfjsVersion = "4.9.155";
+const pdfjsBuild = "a4eb8407c";
 const AppConstants = {
   LinkTarget: LinkTarget,
   RenderingStates: RenderingStates,
@@ -19071,7 +15388,13 @@ function getViewerConfiguration() {
       editorFreeHighlightThickness: document.getElementById("editorFreeHighlightThickness"),
       editorHighlightShowAll: document.getElementById("editorHighlightShowAll")
     },
-    printContainer: document.getElementById("printContainer")
+    printContainer: document.getElementById("printContainer"),
+    editorUndoBar: {
+      container: document.getElementById("editorUndoBar"),
+      message: document.getElementById("editorUndoBarMessage"),
+      undoButton: document.getElementById("editorUndoBarUndoButton"),
+      closeButton: document.getElementById("editorUndoBarCloseButton")
+    }
   };
 }
 function webViewerLoad() {
