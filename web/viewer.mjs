@@ -20006,7 +20006,7 @@ const PDFViewerApplication = {
   },
   setTitle(title = this._title) {
     this._title = title;
-    if (this.isViewerEmbedded) {
+    if (this.isViewerEmbedded && !location.protocol.endsWith("-extension:")) {
       return;
     }
     const editorIndicator = this._hasAnnotationEditors && !this.pdfRenderingQueue.printing;
