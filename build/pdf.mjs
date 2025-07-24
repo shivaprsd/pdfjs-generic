@@ -6537,7 +6537,7 @@ class StatTimer {
 }
 function isValidFetchUrl(url, baseUrl) {
   const res = baseUrl ? URL.parse(url, baseUrl) : URL.parse(url);
-  return res?.protocol === "http:" || res?.protocol === "https:";
+  return res?.protocol === "http:" || res?.protocol === "https:" || res?.protocol.endsWith("-extension:");
 }
 function noContextMenu(e) {
   e.preventDefault();
