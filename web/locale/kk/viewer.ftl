@@ -291,6 +291,8 @@ pdfjs-editor-color-picker-free-text-input =
 pdfjs-editor-free-text-button-label = Мәтін
 pdfjs-editor-ink-button =
     .title = Сурет салу
+pdfjs-editor-color-picker-ink-input =
+    .title = Сызба түсін өзгерту
 pdfjs-editor-ink-button-label = Сурет салу
 pdfjs-editor-stamp-button =
     .title = Суреттерді қосу немесе түзету
@@ -306,12 +308,22 @@ pdfjs-comment-floating-button =
     .title = Түсіндірме
     .aria-label = Түсіндірме
 pdfjs-comment-floating-button-label = Түсіндірме
+pdfjs-editor-comment-button =
+    .title = Түсіндірме
+    .aria-label = Түсіндірме
+pdfjs-editor-comment-button-label = Түсіндірме
 pdfjs-editor-signature-button =
     .title = Қолтаңбаны қосу
 pdfjs-editor-signature-button-label = Қолтаңбаны қосу
 
 ## Default editor aria labels
 
+# “Highlight” is a noun, the string is used on the editor for highlights.
+pdfjs-editor-highlight-editor =
+    .aria-label = Ерекшелеу түзеткіші
+# “Drawing” is a noun, the string is used on the editor for drawings.
+pdfjs-editor-ink-editor =
+    .aria-label = Сурет салу түзеткіші
 # Used when a signature editor is selected/hovered.
 # Variables:
 #   $description (String) - a string describing/labeling the signature.
@@ -362,6 +374,21 @@ pdfjs-editor-add-saved-signature-button =
 pdfjs-free-text2 =
     .aria-label = Мәтін түзеткіші
     .default-content = Теріп бастаңыз…
+# Used to show how many comments are present in the pdf file.
+# Variables:
+#   $count (Number) - the number of comments.
+pdfjs-editor-comments-sidebar-title =
+    { $count ->
+        [one] Түсіндірмелер
+       *[other] Түсіндірмелер
+    }
+pdfjs-editor-comments-sidebar-close-button =
+    .title = Бүйір панелін жабу
+    .aria-label = Бүйір панелін жабу
+pdfjs-editor-comments-sidebar-close-button-label = Бүйір панелін жабу
+# Instructional copy to add a comment by selecting text or an annotations.
+pdfjs-editor-comments-sidebar-no-comments1 = Назар аударарлық бірдеңе көрдіңіз бе? Оны ерекшелеп, түсіндірме қалдырыңыз.
+pdfjs-editor-comments-sidebar-no-comments-link = Көбірек білу
 
 ## Alt-text dialog
 
@@ -494,6 +521,7 @@ pdfjs-editor-alt-text-settings-close-button = Жабу
 
 ## Accessibility labels (announced by screen readers) for objects added to the editor.
 
+pdfjs-editor-highlight-added-alert = Ерекшелеу қосылды
 pdfjs-editor-freetext-added-alert = Мәтін қосылды
 pdfjs-editor-ink-added-alert = Сызба қосылды
 pdfjs-editor-stamp-added-alert = Сурет қосылды
@@ -567,6 +595,8 @@ pdfjs-editor-add-signature-save-checkbox = Қолтаңбаны сақтау
 pdfjs-editor-add-signature-save-warning-message = Сақталған 5 қолтаңбаның шегіне жеттіңіз. Көбірек сақтау үшін біреуін алып тастаңыз.
 pdfjs-editor-add-signature-image-upload-error-title = Суретті жүктеп жіберу мүмкін емес.
 pdfjs-editor-add-signature-image-upload-error-description = Желі байланысын тексеріңіз немесе басқа бейнені қолданып көріңіз.
+pdfjs-editor-add-signature-image-no-data-error-title = Бұл суретті қолтаңбаға түрлендіру мүмкін емес
+pdfjs-editor-add-signature-image-no-data-error-description = Басқа суретті жүктеп салып көріңіз.
 pdfjs-editor-add-signature-error-close-button = Жабу
 
 ## Dialog buttons
@@ -575,25 +605,33 @@ pdfjs-editor-add-signature-cancel-button = Бас тарту
 pdfjs-editor-add-signature-add-button = Қосу
 pdfjs-editor-edit-signature-update-button = Жаңарту
 
+## Comment popup
+
+pdfjs-editor-edit-comment-popup-button-label = Түсіндірмені түзету
+pdfjs-editor-edit-comment-popup-button =
+    .title = Түсіндірмені түзету
+pdfjs-editor-delete-comment-popup-button-label = Түсіндірмені өшіру
+pdfjs-editor-delete-comment-popup-button =
+    .title = Түсіндірмені өшіру
+pdfjs-show-comment-button =
+    .title = Түсіндірмені көрсету
+
 ##  Edit a comment dialog
 
-pdfjs-editor-edit-comment-actions-button-label = Әрекеттер
-pdfjs-editor-edit-comment-actions-button =
-    .title = Әрекеттер
-pdfjs-editor-edit-comment-close-button-label = Жабу
-pdfjs-editor-edit-comment-close-button =
-    .title = Жабу
-pdfjs-editor-edit-comment-actions-edit-button-label = Түзету
-pdfjs-editor-edit-comment-actions-delete-button-label = Өшіру
-pdfjs-editor-edit-comment-manager-text-input =
-    .placeholder = Пікіріңізді енгізіңіз
-pdfjs-editor-edit-comment-manager-cancel-button = Бас тарту
-pdfjs-editor-edit-comment-manager-save-button = Сақтау
+# An existing comment is edited
+pdfjs-editor-edit-comment-dialog-title-when-editing = Түсіндірмені түзету
+pdfjs-editor-edit-comment-dialog-save-button-when-editing = Жаңарту
+# No existing comment
+pdfjs-editor-edit-comment-dialog-title-when-adding = Түсіндірмені қосу
+pdfjs-editor-edit-comment-dialog-save-button-when-adding = Қосу
+pdfjs-editor-edit-comment-dialog-text-input =
+    .placeholder = Теріп бастаңыз…
+pdfjs-editor-edit-comment-dialog-cancel-button = Бас тарту
 
 ## Edit a comment button in the editor toolbar
 
-pdfjs-editor-edit-comment-button =
-    .title = Пікірді түзету
+pdfjs-editor-add-comment-button =
+    .title = Пікір қосу
 
 ## Main menu for adding/removing signatures
 
