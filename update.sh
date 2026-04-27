@@ -2,7 +2,8 @@
 # Update the PDF.js generic build files
 
 repo='https://github.com/mozilla/pdf.js'
-schema_path='/extensions/chromium/preferences_schema.json'
+schema_repo='https://github.com/shivaprsd/pdfjs-chromium'
+schema_path='extension/preferences_schema.json'
 
 release=$(curl -sLI "$repo/releases/latest" -w '%{url_effective}' -o /dev/null)
 version=$(basename "$release")
@@ -15,7 +16,7 @@ zip_file="pdfjs-${version#v}-legacy-dist.zip"
 curl -fLO "$repo/releases/download/$version/$zip_file"
 echo 'Extracting files...'
 unzip -qo "$zip_file" || exit
-curl -fLO "$repo/raw/refs/tags/$version/$schema_path"
+curl -fLO "$schema_repo/raw/refs/tags/$version/$schema_path" || exit
 
 build=$(awk -F= '/pdfjsBuild/ {print $2}' build/pdf.mjs | tr -d ' ";')
 sed -i '' -e "s/$current/${version#v}/; s/\(build=\).*/\1$build/" VERSION
