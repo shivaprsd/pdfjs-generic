@@ -158,6 +158,10 @@
       "title": "Ignore the zoom argument in destinations",
       "description": "When enabled it will maintain the currently active zoom level, rather than letting the PDF document modify it, when navigating to internal destinations."
     },
+    "enableSelectionRendering": {
+      "type": "boolean",
+      "default": true
+    },
     "imagesRightClickMinSize": {
       "type": "integer",
       "default": -1
@@ -182,6 +186,10 @@
       "default": false,
       "title": "Enable debugging tools",
       "description": "Whether to enable debugging tools."
+    },
+    "postMessageAfterPrintCallback": {
+      "type": "boolean",
+      "default": false
     },
     "sidebarViewOnLoad": {
       "type": "integer",
