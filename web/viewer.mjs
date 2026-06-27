@@ -24262,7 +24262,8 @@ const PDFViewerApplication = {
       });
       renderingQueue.setThumbnailViewer(this.pdfThumbnailViewer);
     }
-    if (!this.isViewerEmbedded && !AppOptions.get("disableHistory")) {
+    const isExtensionContext = !this.isViewerEmbedded || window.name === "browserExtensionFrame";
+    if (isExtensionContext && !AppOptions.get("disableHistory")) {
       this.pdfHistory = new PDFHistory({
         linkService,
         eventBus
