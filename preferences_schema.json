@@ -60,6 +60,12 @@
       "type": "boolean",
       "default": false
     },
+    "disableTelemetry": {
+      "type": "boolean",
+      "default": false,
+      "title": "Disable telemetry",
+      "description": "Whether to prevent the extension from reporting the extension and browser version to the extension developers."
+    },
     "enableAltText": {
       "type": "boolean",
       "default": false
@@ -119,7 +125,15 @@
       "title": "Enable active content (JavaScript) in PDFs",
       "description": "Whether to allow execution of active content (JavaScript) by PDF files."
     },
+    "enableSelectionRendering": {
+      "type": "boolean",
+      "default": true
+    },
     "enableSignatureEditor": {
+      "type": "boolean",
+      "default": false
+    },
+    "enableSignatureVerification": {
       "type": "boolean",
       "default": false
     },
@@ -157,10 +171,6 @@
       "default": false,
       "title": "Ignore the zoom argument in destinations",
       "description": "When enabled it will maintain the currently active zoom level, rather than letting the PDF document modify it, when navigating to internal destinations."
-    },
-    "enableSelectionRendering": {
-      "type": "boolean",
-      "default": true
     },
     "imagesRightClickMinSize": {
       "type": "integer",
@@ -296,12 +306,6 @@
     "enableXfa": {
       "type": "boolean",
       "default": true
-    },
-    "disableTelemetry": {
-      "type": "boolean",
-      "default": false,
-      "title": "Disable telemetry",
-      "description": "Whether to prevent the extension from reporting the extension and browser version to the extension developers."
     },
     "disablePageMode": {
       "description": "DEPRECATED.",
