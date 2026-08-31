@@ -104,6 +104,10 @@
       "type": "boolean",
       "default": false
     },
+    "enableNova": {
+      "type": "boolean",
+      "default": true
+    },
     "enableOptimizedPartialRendering": {
       "type": "boolean",
       "default": false,
