@@ -297,6 +297,10 @@
       "title": "Disable streaming for requests",
       "description": "Whether to disable streaming for requests (not recommended)."
     },
+    "disableWorkerRendering": {
+      "type": "boolean",
+      "default": true
+    },
     "enableHWA": {
       "type": "boolean",
       "default": true,
